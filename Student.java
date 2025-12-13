@@ -1,24 +1,22 @@
-package com.example.studentdb;
-
 public class Student {
-    private String studentId;
+    private String id;
+    private String name;
 
-    public Student(String studentId) {
-        this.studentId = studentId;
+    public Student(String id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
-    public String getStudentId() {
-        return studentId;
+    public String getId() {
+        return id;
     }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public String getName() {
+        return name;
     }
 
     @Override
     public String toString() {
-        return "Student{" +
-                "studentId='" + studentId + '\'' +
-                '}';
+        return name + " (" + id + ")";
     }
 }
