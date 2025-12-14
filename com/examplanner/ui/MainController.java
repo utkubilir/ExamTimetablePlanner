@@ -1,25 +1,29 @@
 package com.examplanner.ui;
 
+
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// --- BAĞIMLILIKLAR ---
-// import com.examplanner.domain.*;
-// import com.examplanner.services.*;
-// import com.examplanner.persistence.*;
+import com.examplanner.domain.*;
+import com.examplanner.services.*;
+import com.examplanner.persistence.*;
 
 public class MainController {
 
-    // --- FXML BİLEŞENLERİ ---
+    // --- FXML UI BİLEŞENLERİ ---
     @FXML private Button btnDataImport;
     @FXML private Button btnTimetable;
     @FXML private Button btnDashboard;
@@ -30,43 +34,53 @@ public class MainController {
     @FXML private VBox viewDashboard;
     @FXML private VBox sidebar;
 
-    // Status Labelları
+    @FXML private GridPane timetableGrid;
+
+    // Durum Etiketleri
     @FXML private Label lblCoursesStatus;
     @FXML private Label lblClassroomsStatus;
     @FXML private Label lblAttendanceStatus;
     @FXML private Label lblStudentsStatus;
 
     // --- VERİ LİSTELERİ ---
-    // private List<Course> courses = new ArrayList<>();
-    // private List<Classroom> classrooms = new ArrayList<>();
-    // private List<Student> students = new ArrayList<>();
-    // private List<Enrollment> enrollments = new ArrayList<>();
-    // private ExamTimetable currentTimetable;
+    private List<Course> courses = new ArrayList<>();
+    private List<Classroom> classrooms = new ArrayList<>();
+    private List<Student> students = new ArrayList<>();
+    private List<Enrollment> enrollments = new ArrayList<>();
 
-    // --- SERVİSLER  ---
-    // private DataImportService dataImportService = new DataImportService();
-    // private DataRepository repository = new DataRepository();
+    private ExamTimetable currentTimetable;
+
+    // --- SERVİSLER ---
+    private DataImportService dataImportService = new DataImportService();
+    private SchedulerService schedulerService = new SchedulerService();
+    private DataRepository repository = new DataRepository();
 
     @FXML
     public void initialize() {
-        // Uygulama açılınca import ekranını göster
         showDataImport();
-
-        // Veritabanı bağlantısı henüz yok, o yüzden kapalı:
-        // loadDataFromDatabase();
-    }
-
-    /*
-    private void loadDataFromDatabase() {
-        List<Course> loadedCourses = repository.loadCourses();
-        if (!loadedCourses.isEmpty()) {
-            this.courses = loadedCourses;
-            updateStatus(lblCoursesStatus, "Loaded from DB (" + courses.size() + ")", true);
+        // Veritabanı varsa yüklemeyi dene, yoksa geç
+        try {
+            loadDataFromDatabase();
+        } catch (Exception e) {
+            System.out.println("Database connection skipped.");
         }
     }
-    */
 
-    // --- NAVİGASYON ---
+    private void loadDataFromDatabase() {
+        // Repository boş gelebilir diye try-catch içinde basit kontrol
+        try {
+            List<Course> dbCourses = repository.loadCourses();
+            if (dbCourses != null && !dbCourses.isEmpty()) {
+                this.courses = dbCourses;
+                updateStatus(lblCoursesStatus, "Loaded from DB (" + courses.size() + ")", true);
+            }
+            // Diğer yüklemeler buraya eklenebilir...
+        } catch (Exception e) {
+            // Sessizce geç
+        }
+    }
+
+    // --- EKRAN GEÇİŞLERİ ---
     @FXML
     private void showDataImport() {
         setViewVisible(viewDataImport);
@@ -81,6 +95,7 @@ public class MainController {
         setActive(btnTimetable);
         setInactive(btnDataImport);
         setInactive(btnDashboard);
+        refreshTimetableDisplay();
     }
 
     @FXML
@@ -95,18 +110,20 @@ public class MainController {
         if(viewDataImport != null) viewDataImport.setVisible(false);
         if(viewTimetable != null) viewTimetable.setVisible(false);
         if(viewDashboard != null) viewDashboard.setVisible(false);
-
         if(targetView != null) targetView.setVisible(true);
     }
 
-    // --- CSV YÜKLEME BUTONLARI ---
+    // --- CSV YÜKLEME ---
     @FXML
     private void handleLoadCourses() {
         File file = chooseFile("Load Courses CSV");
         if (file != null) {
-            // courses = dataImportService.loadCourses(file); //
-            // repository.saveCourses(courses);
-            updateStatus(lblCoursesStatus, file.getName() + " selected (Waiting for Backend)", true);
+            try {
+                courses = dataImportService.loadCourses(file);
+                updateStatus(lblCoursesStatus, file.getName() + " • " + courses.size() + " courses", true);
+            } catch (Exception e) {
+                showError("Import Error", e.getMessage());
+            }
         }
     }
 
@@ -114,8 +131,12 @@ public class MainController {
     private void handleLoadClassrooms() {
         File file = chooseFile("Load Classrooms CSV");
         if (file != null) {
-            // classrooms = dataImportService.loadClassrooms(file);
-            updateStatus(lblClassroomsStatus, file.getName() + " selected (Waiting for Backend)", true);
+            try {
+                classrooms = dataImportService.loadClassrooms(file);
+                updateStatus(lblClassroomsStatus, file.getName() + " • " + classrooms.size() + " rooms", true);
+            } catch (Exception e) {
+                showError("Import Error", e.getMessage());
+            }
         }
     }
 
@@ -123,21 +144,129 @@ public class MainController {
     private void handleLoadStudents() {
         File file = chooseFile("Load Students CSV");
         if (file != null) {
-            // students = dataImportService.loadStudents(file);
-            updateStatus(lblStudentsStatus, file.getName() + " selected (Waiting for Backend)", true);
+            try {
+                students = dataImportService.loadStudents(file);
+                updateStatus(lblStudentsStatus, file.getName() + " • " + students.size() + " students", true);
+            } catch (Exception e) {
+                showError("Import Error", e.getMessage());
+            }
         }
     }
 
     @FXML
     private void handleLoadAttendance() {
-        File file = chooseFile("Load Attendance CSV");
+        if (courses.isEmpty() || students.isEmpty()) {
+            showError("Missing Data", "Please load Courses and Students first.");
+            return;
+        }
+        File file = chooseFile("Load Enrollment CSV");
         if (file != null) {
-            // enrollments = dataImportService.loadAttendance(file, courses, students);
-            updateStatus(lblAttendanceStatus, file.getName() + " selected (Waiting for Backend)", true);
+            try {
+                enrollments = dataImportService.loadAttendance(file, courses, students);
+                updateStatus(lblAttendanceStatus, file.getName() + " • " + enrollments.size() + " entries", true);
+            } catch (Exception e) {
+                showError("Import Error", e.getMessage());
+            }
         }
     }
 
-    // --- YARDIMCI METODLAR ---
+    // --- [GÖREV 12] ASENKRON İŞLEM (Hatanın Çözüldüğü Yer) ---
+    @FXML
+    private void handleGenerateTimetable() {
+        // Basit kontrol
+        if (courses.isEmpty() || classrooms.isEmpty()) {
+            showError("Missing Data", "Cannot generate timetable without Courses and Classrooms.");
+            return;
+        }
+
+        // UI Kilitleme Metodunu Çağırıyoruz (Aşağıda tanımlı)
+        setLoadingState(true);
+
+        // TASK Tanımlama
+        Task<ExamTimetable> task = new Task<>() {
+            @Override
+            protected ExamTimetable call() throws Exception {
+                updateMessage("Initializing Scheduler...");
+                Thread.sleep(500);
+
+                updateMessage("Running Algorithm...");
+                LocalDate startDate = LocalDate.now().plusDays(1);
+
+                // --- DÜZELTİLMİŞ KISIM BURASI ---
+                return schedulerService.generateTimetable(
+                        courses,
+                        classrooms,
+                        enrollments,
+                        startDate,
+                        false,
+                        new ArrayList<LocalDate>()
+                );
+            }
+        };
+
+        // Başarılı olursa
+        task.setOnSucceeded(e -> {
+            setLoadingState(false);
+            this.currentTimetable = task.getValue();
+            if (currentTimetable != null) {
+                showTimetable();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Success");
+                alert.setHeaderText("Generation Complete");
+                alert.setContentText("Timetable creates successfully!");
+                alert.showAndWait();
+            } else {
+                showError("Failed", "No valid schedule found.");
+            }
+        });
+
+        // Hata olursa
+        task.setOnFailed(e -> {
+            setLoadingState(false);
+            Throwable ex = task.getException();
+            ex.printStackTrace();
+            showError("Error", "Generation failed: " + ex.getMessage());
+        });
+
+        // Buton yazısını güncelle
+        task.messageProperty().addListener((obs, old, newVal) -> {
+            if(btnGenerateTimetable != null) btnGenerateTimetable.setText(newVal);
+        });
+
+        // Thread'i başlat
+        new Thread(task).start();
+    }
+
+    private void refreshTimetableDisplay() {
+        if (timetableGrid == null || currentTimetable == null) return;
+        timetableGrid.getChildren().clear();
+
+        // Basit listeleme (Yer tutucu)
+        int row = 1;
+        for (Exam exam : currentTimetable.getExams()) {
+            if (exam.getSlot() != null) {
+                String text = exam.getCourse().getCode() + " @ " +
+                        exam.getSlot().getDate() + " " + exam.getSlot().getStartTime();
+                timetableGrid.add(new Label(text), 0, row++);
+            }
+        }
+    }
+
+    // --- İŞTE EKSİK OLAN YARDIMCI METOT ---
+    // Bu metodu eklemediğin için hata alıyordun. Şimdi burada.
+    private void setLoadingState(boolean loading) {
+        if (btnGenerateTimetable != null) {
+            btnGenerateTimetable.setDisable(loading);
+            btnGenerateTimetable.setText(loading ? "Processing..." : "Generate Timetable");
+        }
+        if (btnDataImport != null) btnDataImport.setDisable(loading);
+        if (btnTimetable != null) btnTimetable.setDisable(loading);
+
+        if (viewDataImport != null && viewDataImport.getScene() != null) {
+            viewDataImport.getScene().setCursor(loading ? javafx.scene.Cursor.WAIT : javafx.scene.Cursor.DEFAULT);
+        }
+    }
+
     @FXML
     private void handleExit() {
         Platform.exit();
@@ -147,8 +276,6 @@ public class MainController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-
-        // Null check ekledim ki sahne hazır değilse patlamasın
         if (btnDataImport != null && btnDataImport.getScene() != null) {
             return fileChooser.showOpenDialog(btnDataImport.getScene().getWindow());
         }
@@ -171,80 +298,10 @@ public class MainController {
     }
 
     private void setActive(Button btn) {
-        if (btn != null && !btn.getStyleClass().contains("active")) {
-            btn.getStyleClass().add("active");
-        }
+        if (btn != null && !btn.getStyleClass().contains("active")) btn.getStyleClass().add("active");
     }
 
     private void setInactive(Button btn) {
-        if (btn != null) {
-            btn.getStyleClass().remove("active");
-        }
-    }
-
-    @FXML
-    private void handleGenerateTimetable() {
-        System.out.println("=== GENERATE TIMETABLE BUTTON CLICKED ===");
-
-        // 1. Veri Kontrolü
-        /*
-        if (courses.isEmpty() || classrooms.isEmpty() || enrollments.isEmpty()) {
-            showError("Missing Data", "Please load Courses, Classrooms, and Attendance data first.");
-            return;
-        }
-        */
-
-        setLoadingState(true);
-
-        // 2. Asenkron Task Yapısı
-        Task<Object> task = new Task<>() {
-            @Override
-            protected Object call() throws Exception {
-                System.out.println("Starting timetable generation...");
-
-                // --- ORİJİNAL LOGIC (Backend gelince burayı açacaksın) ---
-                /*
-                LocalDate startDate = LocalDate.now().plusDays(1);
-                boolean strictMode = false; // Checkbox varsa: chkStrictConstraints.isSelected();
-
-                // Furkan'ın servisini çağıran asıl kod:
-                return schedulerService.generateTimetable(courses, classrooms, enrollments, startDate, strictMode, new ArrayList<>());
-                */
-
-                // Şimdilik hata vermesin diye boş dönüyoruz
-                Thread.sleep(1000);
-                return null;
-            }
-        };
-
-        // 3. İşlem Başarılı Olunca
-        task.setOnSucceeded(e -> {
-            System.out.println("Timetable generated successfully!");
-
-            // --- SONUÇLARI KAYDETME VE GÖSTERME ---
-            /*
-            this.currentTimetable = (ExamTimetable) task.getValue();
-            repository.saveTimetable(currentTimetable);
-            refreshTimetable();
-            showTimetable();
-            */
-
-            setLoadingState(false);
-
-            // Geçici Bilgi Mesajı
-            System.out.println("Logic executed (Waiting for SchedulerService)");
-        });
-
-        // 4. Hata Olursa
-        task.setOnFailed(e -> {
-            Throwable ex = task.getException();
-            System.err.println("ERROR during timetable generation:");
-            ex.printStackTrace();
-            showError("Scheduling Failed", "Could not generate timetable.\nError: " + ex.getMessage());
-            setLoadingState(false);
-        });
-
-        // 5. Thread'i Başlat
-        new Thread(task).start();
+        if (btn != null) btn.getStyleClass().remove("active");
     }
 }

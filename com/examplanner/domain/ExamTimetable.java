@@ -1,3 +1,5 @@
+package com.examplanner.domain;
+
 import java.util.ArrayList;
 import java.util.List;
 

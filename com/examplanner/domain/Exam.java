@@ -1,3 +1,5 @@
+package com.examplanner.domain;
+
 public class Exam {
     private Course course;
     private Classroom classroom;

@@ -1,3 +1,5 @@
+package com.examplanner.domain;
+
 public class Classroom {
     private String id;
     private String name;

@@ -28,7 +28,7 @@ public class DatabaseManager {
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
-            pstmt.setString(1, student.getStudentId());
+            pstmt.setString(1, student.getId());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Error inserting student: " + e.getMessage());
