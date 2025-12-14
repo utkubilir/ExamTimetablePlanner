@@ -184,7 +184,67 @@ public class MainController {
 
     @FXML
     private void handleGenerateTimetable() {
-        System.out.println("LOG: Generate Timetable tıklandı. Backend servisi bekleniyor.");
-        showError("Not Implemented", "Waiting for Scheduling Service integration.");
+        System.out.println("=== GENERATE TIMETABLE BUTTON CLICKED ===");
+
+        // 1. Veri Kontrolü
+        /*
+        if (courses.isEmpty() || classrooms.isEmpty() || enrollments.isEmpty()) {
+            showError("Missing Data", "Please load Courses, Classrooms, and Attendance data first.");
+            return;
+        }
+        */
+
+        setLoadingState(true);
+
+        // 2. Asenkron Task Yapısı
+        Task<Object> task = new Task<>() {
+            @Override
+            protected Object call() throws Exception {
+                System.out.println("Starting timetable generation...");
+
+                // --- ORİJİNAL LOGIC (Backend gelince burayı açacaksın) ---
+                /*
+                LocalDate startDate = LocalDate.now().plusDays(1);
+                boolean strictMode = false; // Checkbox varsa: chkStrictConstraints.isSelected();
+
+                // Furkan'ın servisini çağıran asıl kod:
+                return schedulerService.generateTimetable(courses, classrooms, enrollments, startDate, strictMode, new ArrayList<>());
+                */
+
+                // Şimdilik hata vermesin diye boş dönüyoruz
+                Thread.sleep(1000);
+                return null;
+            }
+        };
+
+        // 3. İşlem Başarılı Olunca
+        task.setOnSucceeded(e -> {
+            System.out.println("Timetable generated successfully!");
+
+            // --- SONUÇLARI KAYDETME VE GÖSTERME ---
+            /*
+            this.currentTimetable = (ExamTimetable) task.getValue();
+            repository.saveTimetable(currentTimetable);
+            refreshTimetable();
+            showTimetable();
+            */
+
+            setLoadingState(false);
+
+            // Geçici Bilgi Mesajı
+            System.out.println("Logic executed (Waiting for SchedulerService)");
+        });
+
+        // 4. Hata Olursa
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            System.err.println("ERROR during timetable generation:");
+            ex.printStackTrace();
+            showError("Scheduling Failed", "Could not generate timetable.\nError: " + ex.getMessage());
+            setLoadingState(false);
+        });
+
+        // 5. Thread'i Başlat
+        new Thread(task).start();
     }
 }
