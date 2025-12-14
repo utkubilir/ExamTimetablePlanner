@@ -191,3 +191,84 @@
 .exam-card-blue .exam-card-detail {
     -fx-text-fill: #1E40AF;
 }
+
+.timetable-grid {
+    -fx-background-color: white;
+    -fx-padding: 20;
+    -fx-hgap: 10;
+    -fx-vgap: 10;
+}
+
+.grid-header {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-size: 12px;
+    -fx-padding: 10;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.time-label {
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-size: 12px;
+    -fx-padding: 10;
+}
+
+.text-success {
+    -fx-text-fill: -fx-color-success;
+}
+
+.text-error {
+    -fx-text-fill: -fx-color-error;
+}
+
+.dialog-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-window {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 20, 0, 0, 10);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -fx-color-border;
+    -fx-padding: 0;
+}
+
+.modal-header {
+    -fx-background-color: -fx-color-bg;
+    -fx-padding: 20 20 10 20;
+    -fx-border-color: transparent transparent -fx-color-border transparent;
+    -fx-border-width: 1;
+}
+
+.modal-content {
+    -fx-padding: 20;
+    -fx-background-color: white;
+}
+
+.student-list-cell {
+    -fx-padding: 8 12;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -fx-color-border transparent;
+    -fx-border-width: 0.5;
+}
+
+.student-list-view {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.student-list-view .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.student-list-view .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-color-text;
+    -fx-font-size: 13px;
+}
+
+.student-list-view .list-cell:even {
+    -fx-background-color: #F9FAFB;
+}
