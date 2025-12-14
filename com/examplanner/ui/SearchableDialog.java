@@ -33,3 +33,19 @@ public class SearchableDialog<T> extends Dialog<T> {
                 return filterLogic.test(item, newValue.toLowerCase());
             });
         });
+        VBox content = new VBox(10);
+        content.getChildren().addAll(searchField, listView);
+        getDialogPane().setContent(content);
+
+        ButtonType okButtonType = new ButtonType("Select", ButtonBar.ButtonData.OK_DONE);
+        getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+        setResultConverter(dialogButton -> {
+            if (dialogButton == okButtonType) {
+                return listView.getSelectionModel().getSelectedItem();
+            }
+            return null;
+        });
+
+    }
+}
