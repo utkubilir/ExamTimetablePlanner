@@ -91,3 +91,103 @@
     -fx-font-size: 12px;
     -fx-text-fill: -fx-color-text-secondary;
 }
+
+.primary-button {
+    -fx-background-color: -fx-color-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: derive(-fx-color-primary, -10%);
+}
+
+.secondary-button {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-color-text;
+    -fx-border-color: -fx-color-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #F3F4F6;
+}
+
+.exam-card {
+    -fx-background-color: white;
+    -fx-background-radius: 6;
+    -fx-border-color: -fx-color-primary-light;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.02), 4, 0, 0, 2);
+}
+
+.exam-card-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-primary;
+    -fx-font-size: 13px;
+}
+
+.exam-card-detail {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+.exam-card-purple {
+    -fx-background-color: #F3E8FF;
+    -fx-border-color: #D8B4FE;
+}
+
+.exam-card-purple .exam-card-title {
+    -fx-text-fill: #7E22CE;
+}
+
+.exam-card-purple .exam-card-detail {
+    -fx-text-fill: #6B21A8;
+}
+
+.exam-card-orange {
+    -fx-background-color: #FFEDD5;
+    -fx-border-color: #FDBA74;
+}
+
+.exam-card-orange .exam-card-title {
+    -fx-text-fill: #C2410C;
+}
+
+.exam-card-orange .exam-card-detail {
+    -fx-text-fill: #9A3412;
+}
+
+.exam-card-pink {
+    -fx-background-color: #FCE7F3;
+    -fx-border-color: #FBCFE8;
+}
+
+.exam-card-pink .exam-card-title {
+    -fx-text-fill: #BE185D;
+}
+
+.exam-card-pink .exam-card-detail {
+    -fx-text-fill: #9D174D;
+}
+
+.exam-card-blue {
+    -fx-background-color: #DBEAFE;
+    -fx-border-color: #BFDBFE;
+}
+
+.exam-card-blue .exam-card-title {
+    -fx-text-fill: #1D4ED8;
+}
+
+.exam-card-blue .exam-card-detail {
+    -fx-text-fill: #1E40AF;
+}
