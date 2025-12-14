@@ -19,6 +19,11 @@ public class ConstraintChecker {
         if (students.size() > candidateExam.getClassroom().getCapacity()) return false;
         if (!isClassroomAvailable(candidateExam.getClassroom(), candidateExam.getSlot(), state.getExams())) return false;
 
+        for (Student s : students) {
+            if (violatesDailyLimit(s, candidateExam.getSlot(), state)) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -34,5 +39,9 @@ public class ConstraintChecker {
             if (exam.getClassroom().getId().equals(classroom.getId()) && exam.getSlot().overlaps(slot)) return false;
         }
         return true;
+    }
+    public boolean violatesDailyLimit(Student student, ExamSlot slot, ScheduleState state) {
+        int count = state.getExamsCountForStudentDate(student.getId(), slot.getDate());
+        return count >= maxExamsPerDay;
     }
 }
