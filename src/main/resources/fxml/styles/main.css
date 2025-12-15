@@ -1,0 +1,130 @@
+```css
+/* =============================================================================
+   İZMİR EKONOMİ ÜNİVERSİTESİ - EXAM PLANNER THEME
+   React/Tailwind Tasarımının JavaFX Karşılığı
+   ============================================================================= */
+
+/* 1. GENEL AYARLAR (Global) */
+.root {
+    -fx-font-family: 'Segoe UI', 'Helvetica', sans-serif; /* Modern Font */
+    -fx-font-size: 14px;
+    -fx-background-color: #F9FAFB; /* Tailwind: bg-gray-50 (Arkaplan Rengi) */
+    -fx-text-fill: #111827;        /* Tailwind: text-gray-900 (Ana Metin Rengi) */
+}
+
+/* =============================================================================
+HEADER (Üst Menü)
+   ============================================================================= */
+
+/* Header Paneli */
+.header-panel {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #E5E7EB transparent; /* Sadece alt kenarlık */
+    -fx-border-width: 1;
+    -fx-padding: 15 25; /* Yukarı/Aşağı 15px, Sağ/Sol 25px */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 5, 0, 0, 2); /* Hafif gölge */
+}
+
+/* Header Başlık Metni (H1) */
+.header-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827; /* Koyu Gri */
+}
+
+/* =============================================================================
+BUTONLAR
+   ============================================================================= */
+
+/* PRIMARY BUTTON (Generate Timetable) - İEÜ Moru */
+.btn-primary {
+    -fx-background-color: #4C1A57;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 8; /* Rounded-lg */
+    -fx-border-radius: 8;
+    -fx-padding: 9 20;        /* Yükseklik ve Genişlik dolgusu */
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #3a1242; /* Üzerine gelince koyulaşır */
+    -fx-effect: dropshadow(three-pass-box, rgba(76, 26, 87, 0.3), 8, 0, 0, 4); /* Mor gölge */
+}
+
+.btn-primary:pressed {
+    -fx-background-color: #280c2e;
+}
+
+/* SECONDARY BUTTON (Filters, Conflicts) - Beyaz ve Gri Kenarlık */
+.btn-secondary {
+    -fx-background-color: white;
+    -fx-border-color: #D1D5DB; /* Gray-300 */
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #374151;    /* Gray-700 */
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #F9FAFB; /* Gray-50 */
+    -fx-border-color: #9CA3AF;     /* Gray-400 */
+}
+
+/* ACTIVE STATE (Filtre Açıkken Butonun Rengi) */
+.btn-secondary-active {
+    -fx-background-color: #FAF5FF; /* Purple-50 */
+    -fx-border-color: #D8B4FE;     /* Purple-300 */
+    -fx-text-fill: #6B21A8;        /* Purple-700 */
+}
+
+/* CONFLICT BUTTON (Turuncu Uyarı Butonu) */
+.btn-conflict {
+    -fx-background-color: #FFF7ED; /* Orange-50 */
+    -fx-border-color: #FDBA74;     /* Orange-300 */
+    -fx-text-fill: #C2410C;        /* Orange-700 */
+}
+
+/* =============================================================================
+PANELLER VE KARTLAR
+   ============================================================================= */
+
+/* Yan Paneller (Sidebar) */
+.sidebar {
+    -fx-background-color: white;
+    -fx-border-color: transparent #E5E7EB transparent transparent; /* Sadece sağ kenarlık */
+    -fx-border-width: 1;
+}
+
+/* Sağ Panel (Conflict Panel) */
+.sidebar-right {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent transparent #E5E7EB; /* Sadece sol kenarlık */
+    -fx-border-width: 1;
+}
+
+/* Kart - Normal Ders */
+.card-exam {
+    -fx-background-color: #FAF5FF; /* Purple-50 */
+    -fx-border-color: #E9D5FF;     /* Purple-200 */
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 10;
+}
+
+/* Kart - Çakışma (Conflict) */
+.card-conflict {
+    -fx-background-color: #FFF7ED; /* Orange-50 */
+    -fx-border-color: #FDBA74;     /* Orange-300 */
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 10;
+}
+```
