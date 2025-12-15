@@ -123,6 +123,21 @@
     -fx-background-color: #F3F4F6;
 }
 
+.danger-button {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-color-error;
+    -fx-border-color: -fx-color-error;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.danger-button:hover {
+    -fx-background-color: #FEF2F2;
+}
+
 /* Exam Card in Grid */
 .exam-card {
     -fx-background-color: white;

@@ -225,4 +225,18 @@ public class DataRepository {
 
         return new ExamTimetable(exams, enrollments);
     }
+
+    public void clearAllData() {
+        String[] tables = { "exams", "enrollments", "students", "classrooms", "courses" };
+        try (Connection conn = DatabaseManager.connect();
+                Statement stmt = conn.createStatement()) {
+            conn.setAutoCommit(false);
+            for (String table : tables) {
+                stmt.execute("DELETE FROM " + table);
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

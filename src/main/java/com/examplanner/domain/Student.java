@@ -19,6 +19,9 @@ public class Student {
 
     @Override
     public String toString() {
+        if (name != null && name.equals(id)) {
+            return name;
+        }
         return name + " (" + id + ")";
     }
 }

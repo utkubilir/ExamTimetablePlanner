@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,20 +22,18 @@ public class DataImportService {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty())
+                line = line.trim();
+                // Skip empty lines or headers
+                if (line.isEmpty() || line.startsWith("ALL OF THE"))
                     continue;
-                String[] parts = parseRow(line);
 
-                if (parts.length >= 3) {
-                    String code = parts[0];
-                    String name = parts[1];
-                    try {
-                        int duration = Integer.parseInt(parts[2]);
-                        courses.add(new Course(code, name, duration));
-                    } catch (NumberFormatException e) {
-                        // Skip invalid lines (like headers)
-                    }
-                }
+                // Format: <CourseCode> (Single column)
+                // Use Code as Name, Default duration 60
+                String code = line;
+                String name = line;
+                int duration = 60;
+
+                courses.add(new Course(code, name, duration));
             }
         }
         return courses;
@@ -45,17 +44,20 @@ public class DataImportService {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty())
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("ALL OF THE"))
                     continue;
-                String[] parts = parseRow(line);
-                if (parts.length >= 3) {
-                    String id = parts[0];
-                    String name = parts[1];
+
+                // Format: Name;Capacity
+                String[] parts = line.split(";");
+                if (parts.length >= 2) {
+                    String name = parts[0].trim();
                     try {
-                        int capacity = Integer.parseInt(parts[2]);
-                        classrooms.add(new Classroom(id, name, capacity));
+                        int capacity = Integer.parseInt(parts[1].trim());
+                        // Use Name (e.g., Classroom_01) as ID as well
+                        classrooms.add(new Classroom(name, name, capacity));
                     } catch (NumberFormatException e) {
-                        System.err.println("Skipping invalid classroom line: " + line);
+                        System.err.println("Skipping invalid capacity in line: " + line);
                     }
                 }
             }
@@ -68,18 +70,16 @@ public class DataImportService {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty())
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("ALL OF THE"))
                     continue;
-                String[] parts = parseRow(line);
-                if (parts.length >= 2) {
-                    String id = parts[0];
-                    String name = parts[1];
-                    // Basic validation to avoid reading headers as data
-                    if (id.equalsIgnoreCase("studentId") || id.equalsIgnoreCase("id"))
-                        continue;
 
-                    students.add(new Student(id, name));
-                }
+                // Format: <StudentID> (Single column)
+                // Use ID as Name
+                String id = line;
+                String name = line;
+
+                students.add(new Student(id, name));
             }
         }
         return students;
@@ -88,6 +88,8 @@ public class DataImportService {
     public List<Enrollment> loadAttendance(File file, List<Course> courses, List<Student> existingStudents)
             throws IOException {
         List<Enrollment> enrollments = new ArrayList<>();
+
+        // Quick lookup maps
         Map<String, Course> courseMap = new HashMap<>();
         for (Course c : courses) {
             courseMap.put(c.getCode(), c);
@@ -102,86 +104,61 @@ public class DataImportService {
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
+            String currentCourseCode = null;
+
             while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty())
+                line = line.trim();
+                if (line.isEmpty())
                     continue;
-                String[] parts = parseRow(line);
-                // Support both 2-column (ID, Course) and 3-column (ID, Name, Course) formats
-                if (parts.length >= 2) {
-                    String studentId = parts[0];
-                    String courseCode;
-                    String studentName = ""; // Optional if student exists
 
-                    if (parts.length >= 3) {
-                        // Format: ID, Name, Course
-                        studentName = parts[1];
-                        courseCode = parts[2];
-                    } else {
-                        // Format: ID, Course
-                        courseCode = parts[1];
-                    }
-
-                    if (studentId.equalsIgnoreCase("studentId") || courseCode.equalsIgnoreCase("courseCode"))
+                // If line doesn't start with [, assume it is a Course Code
+                if (!line.startsWith("[")) {
+                    // Check if it's a known course code or just a label
+                    // Sample file has lines like "CourseCode_01"
+                    currentCourseCode = line;
+                } else {
+                    // It is the student list line: ['Std_ID_170', 'Std_ID_077', ...]
+                    if (currentCourseCode == null)
                         continue;
 
-                    Student student = studentMap.get(studentId);
-
-                    // If student not found but name is provided in CSV, create them
-                    if (student == null && !studentName.isEmpty()) {
-                        student = new Student(studentId, studentName);
-                        studentMap.put(studentId, student);
-                    } else if (student == null) {
-                        // If we only have ID and student doesn't exist, we can't create a valid student
-                        // object without a name (or use ID as name)
-                        // For now, let's warn and skip to match strictness, OR fallback to using ID as
-                        // name?
-                        // Let's use ID as name as fallback to be helpful
-                        student = new Student(studentId, "Unknown (" + studentId + ")");
-                        studentMap.put(studentId, student);
+                    Course course = courseMap.get(currentCourseCode);
+                    if (course == null) {
+                        System.err.println("Course code not found during import: " + currentCourseCode);
+                        continue;
                     }
 
-                    Course course = courseMap.get(courseCode);
+                    // Remove brackets and split by comma
+                    String content = line.substring(1, line.length() - 1); // remove [ and ]
+                    // content is: 'Std_ID_170', 'Std_ID_077', ...
 
-                    if (course != null) {
+                    if (content.isEmpty())
+                        continue;
+
+                    String[] studentIds = content.split(",");
+                    for (String rawId : studentIds) {
+                        String sId = rawId.trim();
+                        // Remove single quotes if present
+                        if (sId.startsWith("'") && sId.endsWith("'")) {
+                            sId = sId.substring(1, sId.length() - 1);
+                        }
+
+                        // Find or create student (if logically allowed, but better to match existing)
+                        Student student = studentMap.get(sId);
+                        if (student == null) {
+                            // If student wasn't loaded in the student file, we can optionally create a
+                            // placeholder
+                            // or skip. Given the user context "import all", creating placeholder is safer.
+                            student = new Student(sId, sId);
+                            studentMap.put(sId, student);
+                            // Also maybe add to existingStudents list if we were passing it back,
+                            // but here we just need verification object
+                        }
+
                         enrollments.add(new Enrollment(student, course));
-                    } else {
-                        System.err.println("Course not found for code: " + courseCode);
                     }
                 }
             }
         }
         return enrollments;
-    }
-
-    private String[] parseRow(String line) {
-        // Simple heuristic: if generic CSV, check split.
-        // Prefer semicolon if present and not seemingly just part of text.
-        // Actually, just split by whichever delimiter appears to separate fields.
-
-        String[] commaParts = line.split(",");
-        String[] semiParts = line.split(";");
-
-        String[] parts;
-        if (semiParts.length > commaParts.length) {
-            parts = semiParts;
-        } else {
-            parts = commaParts;
-        }
-
-        for (int i = 0; i < parts.length; i++) {
-            parts[i] = clean(parts[i]);
-        }
-        return parts;
-    }
-
-    private String clean(String input) {
-        if (input == null)
-            return "";
-        // Strip BOM if present (Zero Width No-Break Space)
-        String trimmed = input.replace("\uFEFF", "").trim();
-        if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
-            return trimmed.substring(1, trimmed.length() - 1).trim();
-        }
-        return trimmed;
     }
 }

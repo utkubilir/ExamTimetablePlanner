@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SchedulerService {
@@ -28,7 +27,7 @@ public class SchedulerService {
             List<Enrollment> enrollments, LocalDate startDate, boolean useStrictConstraints,
             List<LocalDate> blackoutDates) {
 
-        long minGap = useStrictConstraints ? 120 : 30; // 120 mins (2h) if strict, else 30 mins
+        long minGap = useStrictConstraints ? 180 : 180; // 180 mins (3h) per requirements
 
         System.out.println("Applying Constraints: MinGap=" + minGap + "m, MaxExams=2");
         constraintChecker.setMinGapMinutes(minGap);
@@ -41,8 +40,14 @@ public class SchedulerService {
 
         // Sort courses by difficulty (e.g. number of students enrolled) to fail fast
         // Or just by duration. Let's sort by number of students descending.
+        // OPTIMIZATION: Pre-calculate course enrollment counts for sorting
+        Map<String, Long> enrollmentCounts = enrollments.stream()
+                .collect(Collectors.groupingBy(e -> e.getCourse().getCode(), Collectors.counting()));
+
+        // Sort courses by difficulty (number of students enrolled)
         List<Course> sortedCourses = new ArrayList<>(courses);
-        sortedCourses.sort(Comparator.comparingInt((Course c) -> getStudentCount(c, enrollments)).reversed());
+        sortedCourses.sort(
+                Comparator.comparingLong((Course c) -> enrollmentCounts.getOrDefault(c.getCode(), 0L)).reversed());
 
         // Calculate a smart lower bound for the number of days
         int days = calculateMinDaysNeeded(courses, classrooms, enrollments);
@@ -155,6 +160,9 @@ public class SchedulerService {
         Course course = courses.get(index);
         attemptCounter.incrementAndGet(); // We can increment here directly
 
+        // Retrieve students ONCE for this course
+        List<com.examplanner.domain.Student> students = state.getStudentsForCourse(course.getCode());
+
         // Try all days, all classrooms, all time slots
         for (int d = 0; d < maxDays; d++) {
             LocalDate date = startDate.plusDays(d);
@@ -163,33 +171,24 @@ public class SchedulerService {
                 // SKIP BLACKOUT DATE
                 continue;
             }
-            // Skip weekends if needed? Assuming continuous days for now.
+
+            // PRUNING: Check if ANY enrolled student already has max exams on this day.
+            boolean dayForbidden = false;
+            for (com.examplanner.domain.Student s : students) {
+                if (state.getExamsCountForStudentDate(s.getId(), date) >= 2) {
+                    dayForbidden = true;
+                    break;
+                }
+            }
+            if (dayForbidden)
+                continue;
 
             for (Classroom classroom : classrooms) {
-                // Check capacity first to prune
-                // Note: using state.getStudentsForCourse which is fast O(1) map lookup
-                if (!constraintChecker.fitsCapacity(classroom, course,
-                        state.getStudentsForCourse(course.getCode()).isEmpty() ? Map.of()
-                                : Map.of(course.getCode(), state.getStudentsForCourse(course.getCode())))) {
-                    // Actually fitsCapacity needs map, but we can refactor it or just construct a
-                    // temporary check.
-                    // Let's look at fitsCapacity in ConstraintChecker...
-                    // It takes Map<String, List<Student>>.
-                    // We have access to the full map in attemptSchedule but deeper here we don't
-                    // pass it?
-                    // Wait, ScheduleState has getStudentsForCourse!
-                    // But ConstraintChecker.fitsCapacity signature expects the MAP.
-                    // Let's quickly simplify the Logic here without calling ConstraintChecker's
-                    // map-based method if it's annoying.
-                    // Or just check size manually.
-                    int size = state.getStudentsForCourse(course.getCode()).size();
-                    if (size > classroom.getCapacity())
-                        continue;
-                } else {
-                    // If logic above was messy, let's just do:
-                    int size = state.getStudentsForCourse(course.getCode()).size();
-                    if (size > classroom.getCapacity())
-                        continue;
+                // Check Capacity Constraint (O(1))
+                // Note: state.getStudentsForCourse(course.getCode()) is fast O(1)
+                int size = state.getStudentsForCourse(course.getCode()).size();
+                if (size > classroom.getCapacity()) {
+                    continue;
                 }
 
                 // Try start times. 09:00 to 18:30 - duration
@@ -218,10 +217,6 @@ public class SchedulerService {
         }
 
         return false;
-    }
-
-    private int getStudentCount(Course course, List<Enrollment> enrollments) {
-        return (int) enrollments.stream().filter(e -> e.getCourse().getCode().equals(course.getCode())).count();
     }
 
     private int calculateMinDaysNeeded(List<Course> courses, List<Classroom> classrooms, List<Enrollment> enrollments) {

@@ -90,7 +90,10 @@
 
                <Region VBox.vgrow="ALWAYS" />
 
-               <Button fx:id="btnGenerateDataImport" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable" />
+               <HBox spacing="10">
+                  <Button fx:id="btnDeleteData" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleDeleteData" styleClass="danger-button" text="Delete All Data" />
+                  <Button fx:id="btnGenerateDataImport" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable" />
+               </HBox>
             </children>
             <padding>
                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

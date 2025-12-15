@@ -54,6 +54,8 @@ public class MainController {
     private Button btnGenerateDataImport;
     @FXML
     private Button btnGenerateTimetable;
+    @FXML
+    private Button btnDeleteData;
 
     @FXML
     private VBox viewDataImport;
@@ -92,9 +94,11 @@ public class MainController {
     private DataImportService dataImportService = new DataImportService();
     private SchedulerService schedulerService = new SchedulerService();
     private com.examplanner.persistence.DataRepository repository = new com.examplanner.persistence.DataRepository();
+    private com.examplanner.services.ConstraintChecker constraintChecker = new com.examplanner.services.ConstraintChecker();
 
     @FXML
     public void initialize() {
+        constraintChecker.setMinGapMinutes(180); // Default to requirements
         showDataImport();
 
         // Load data from DB
@@ -329,6 +333,43 @@ public class MainController {
         });
 
         new Thread(task).start();
+    }
+
+    @FXML
+    private void handleDeleteData() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete All Data");
+        alert.setHeaderText("Warning: This action cannot be undone!");
+        alert.setContentText(
+                "Are you sure you want to permanently delete ALL courses, students, classrooms, exams, and enrollments?");
+
+        if (alert.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
+            repository.clearAllData();
+
+            courses.clear();
+            classrooms.clear();
+            students.clear();
+            enrollments.clear();
+            blackoutDates.clear();
+            currentTimetable = null;
+
+            lblCoursesStatus.setText("Cleared");
+            lblCoursesStatus.getStyleClass().removeAll("text-success", "text-error");
+
+            lblClassroomsStatus.setText("Cleared");
+            lblClassroomsStatus.getStyleClass().removeAll("text-success", "text-error");
+
+            lblStudentsStatus.setText("Cleared");
+            lblStudentsStatus.getStyleClass().removeAll("text-success", "text-error");
+
+            lblAttendanceStatus.setText("Cleared");
+            lblAttendanceStatus.getStyleClass().removeAll("text-success", "text-error");
+
+            refreshTimetable();
+            refreshDashboard();
+
+            showInformation("Success", "All data has been deleted.");
+        }
     }
 
     private void setLoadingState(boolean loading) {
@@ -642,8 +683,9 @@ public class MainController {
 
         VBox root = new VBox();
         root.getStyleClass().add("modal-window");
-        root.setPrefSize(400, 500);
+        root.setPrefSize(450, 600);
 
+        // Header
         VBox header = new VBox(5);
         header.getStyleClass().add("modal-header");
 
@@ -651,38 +693,100 @@ public class MainController {
         title.getStyleClass().add("section-title");
         title.setStyle("-fx-font-size: 16px;");
 
-        Label subtitle = new Label(exams.size() + " exams found");
+        Label subtitle = new Label(exams.size() + " exams scheduled");
         subtitle.getStyleClass().addAll("label", "text-secondary");
 
         header.getChildren().addAll(title, subtitle);
 
-        VBox content = new VBox();
-        content.getStyleClass().add("modal-content");
-        javafx.scene.layout.VBox.setVgrow(content, javafx.scene.layout.Priority.ALWAYS);
+        // Content (Agenda View)
+        javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        scrollPane.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
 
-        ListView<Exam> listView = new ListView<>();
-        listView.getStyleClass().add("student-list-view");
-        listView.getItems().addAll(exams);
-        listView.setCellFactory(param -> new javafx.scene.control.ListCell<>() {
-            @Override
-            protected void updateItem(Exam item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    String text = item.getCourse().getCode() + " - " + item.getCourse().getName() + "\n" +
-                            "🕒 " + item.getSlot().getDate() + " " + item.getSlot().getStartTime() + "\n" +
-                            "📍 " + item.getClassroom().getName();
-                    setText(text);
-                    getStyleClass().add("student-list-cell");
-                }
+        VBox content = new VBox(10);
+        content.setPadding(new javafx.geometry.Insets(15));
+        content.setStyle("-fx-background-color: white;");
+
+        // Sort exams by Date then Time
+        exams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
+                .thenComparing(e -> e.getSlot().getStartTime()));
+
+        LocalDate lastDate = null;
+        DateTimeFormatter dayHeaderFmt = DateTimeFormatter.ofPattern("EEEE, MMMM d");
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+
+        for (Exam exam : exams) {
+            LocalDate date = exam.getSlot().getDate();
+
+            // New Date Group
+            if (!date.equals(lastDate)) {
+                Label dateHeader = new Label(date.format(dayHeaderFmt));
+                dateHeader.setStyle(
+                        "-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #4B5563; -fx-padding: 10 0 5 0;");
+                if (lastDate != null)
+                    parentSeparator(content); // Add separator between days
+                content.getChildren().add(dateHeader);
+                lastDate = date;
             }
-        });
 
-        javafx.scene.layout.VBox.setVgrow(listView, javafx.scene.layout.Priority.ALWAYS);
-        content.getChildren().add(listView);
+            // Exam Card
+            HBox card = new HBox(15);
+            card.setStyle(
+                    "-fx-background-color: #F9FAFB; -fx-border-color: #E5E7EB; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;");
+            card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
+            // Time Column
+            VBox timeBox = new VBox(2);
+            timeBox.setAlignment(javafx.geometry.Pos.CENTER);
+            timeBox.setMinWidth(60);
+
+            Label lblStart = new Label(exam.getSlot().getStartTime().format(timeFmt));
+            lblStart.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #374151;");
+            Label lblEnd = new Label(exam.getSlot().getEndTime().format(timeFmt));
+            lblEnd.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+
+            timeBox.getChildren().addAll(lblStart, lblEnd);
+
+            // Info Column
+            VBox infoBox = new VBox(2);
+
+            String courseText = exam.getCourse().getCode();
+            if (!exam.getCourse().getName().equals(courseText)) {
+                courseText += " - " + exam.getCourse().getName();
+            }
+            Label lblCourse = new Label(courseText);
+            lblCourse.setWrapText(true);
+            lblCourse.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+            HBox detailsRow = new HBox(10);
+            Label lblRoom = new Label("📍 " + exam.getClassroom().getName());
+            lblRoom.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280;");
+
+            // Duration
+            long duration = java.time.Duration.between(exam.getSlot().getStartTime(), exam.getSlot().getEndTime())
+                    .toMinutes();
+            Label lblDur = new Label("⏱ " + duration + " min");
+            lblDur.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280;");
+
+            detailsRow.getChildren().addAll(lblRoom, lblDur);
+
+            infoBox.getChildren().addAll(lblCourse, detailsRow);
+
+            card.getChildren().addAll(timeBox, infoBox);
+            content.getChildren().add(card);
+        }
+
+        if (exams.isEmpty()) {
+            Label empty = new Label("No exams found for this selection.");
+            empty.setStyle("-fx-text-fill: #9CA3AF; -fx-padding: 20;");
+            content.getChildren().add(empty);
+        }
+
+        scrollPane.setContent(content);
+        javafx.scene.layout.VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
+
+        // Footer
         HBox footer = new HBox();
         footer.setStyle(
                 "-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
@@ -692,7 +796,7 @@ public class MainController {
         closeBtn.setOnAction(e -> dialog.close());
         footer.getChildren().add(closeBtn);
 
-        root.getChildren().addAll(header, content, footer);
+        root.getChildren().addAll(header, scrollPane, footer);
 
         Scene scene = new Scene(root);
         scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
@@ -700,6 +804,14 @@ public class MainController {
 
         dialog.setScene(scene);
         dialog.showAndWait();
+    }
+
+    // Helper for separator
+    private void parentSeparator(VBox container) {
+        javafx.scene.shape.Line line = new javafx.scene.shape.Line(0, 0, 380, 0);
+        line.setStroke(javafx.scene.paint.Color.web("#E5E7EB"));
+        line.setStrokeWidth(1);
+        container.getChildren().add(line);
     }
 
     private void refreshTimetable() {
@@ -861,28 +973,52 @@ public class MainController {
                                 LocalTime newEndTime = newStartTime
                                         .plusMinutes(draggedExam.getCourse().getExamDurationMinutes());
 
-                                // Constrain to 18:00
-                                if (newEndTime.isAfter(LocalTime.of(18, 00))) {
-                                    showError("Invalid Move", "Exam extends beyond 18:00.");
+                                // Constrain to 18:30 (Max End Time)
+                                if (newEndTime.isAfter(LocalTime.of(18, 30))) {
+                                    showError("Invalid Move", "Exam extends beyond 18:30.");
+                                    success = false;
                                 } else {
-                                    // Update Exam Slot
-                                    // TODO: Check Room Availability here?
-                                    // For now, simpler: Just move.
-                                    javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(
-                                            javafx.scene.control.Alert.AlertType.CONFIRMATION);
-                                    confirm.setTitle("Confirm Move");
-                                    confirm.setHeaderText("Re-schedule Exam");
-                                    confirm.setContentText(
-                                            "Move " + courseCode + " to " + targetDate + " at " + newStartTime + "?");
+                                    // VALIDATION (FR13)
+                                    // Create candidate for checking
+                                    // Note: we strictly use the SAME classroom as before
+                                    // (draggedExam.getClassroom())
+                                    // If we wanted to change classroom, we'd need a horizontal drag or specific UI.
+                                    Exam candidate = new Exam(draggedExam.getCourse(), draggedExam.getClassroom(),
+                                            new com.examplanner.domain.ExamSlot(targetDate, newStartTime, newEndTime));
 
-                                    if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
-                                        draggedExam.getSlot().setDate(targetDate);
-                                        draggedExam.getSlot().setStartTime(newStartTime);
-                                        draggedExam.getSlot().setEndTime(newEndTime);
-                                        refreshTimetable(); // Re-render
+                                    // Check constraints
+                                    String error = constraintChecker.checkManualMove(candidate,
+                                            currentTimetable.getExams(), enrollments);
+
+                                    if (error != null) {
+                                        showError("Constraint Violation", error + "\n\nMove rejected.");
+                                        success = false;
+                                    } else {
+                                        // Valid -> Confirm
+                                        javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(
+                                                javafx.scene.control.Alert.AlertType.CONFIRMATION);
+                                        confirm.setTitle("Confirm Move");
+                                        confirm.setHeaderText("Re-schedule Exam");
+                                        confirm.setContentText(
+                                                "Move " + courseCode + " to " + targetDate + " at " + newStartTime
+                                                        + "?");
+
+                                        if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
+                                            draggedExam.getSlot().setDate(targetDate);
+                                            draggedExam.getSlot().setStartTime(newStartTime);
+                                            draggedExam.getSlot().setEndTime(newEndTime);
+
+                                            // Save changes to DB immediately or wait?
+                                            // SRS says "System shall be able to save..." usually implies explicit saves
+                                            // or auto-save.
+                                            // Let's auto-save to be safe.
+                                            repository.saveTimetable(currentTimetable);
+
+                                            refreshTimetable(); // Re-render
+                                            success = true;
+                                        }
                                     }
                                 }
-                                success = true;
                             }
                         }
                     }

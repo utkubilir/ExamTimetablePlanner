@@ -25,6 +25,9 @@ public class Course {
 
     @Override
     public String toString() {
+        if (name != null && name.equals(code)) {
+            return code;
+        }
         return code + " - " + name;
     }
 }
