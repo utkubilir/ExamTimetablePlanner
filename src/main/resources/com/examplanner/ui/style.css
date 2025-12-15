@@ -232,7 +232,9 @@
 .time-label {
     -fx-text-fill: -fx-color-text-secondary;
     -fx-font-size: 12px;
-    -fx-padding: 10;
+    /* Align labels with timetable slot guide lines */
+    -fx-padding: 0 10 0 0;
+    -fx-translate-y: -15;
 }
 
 /* Utility Classes */

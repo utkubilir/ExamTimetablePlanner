@@ -110,11 +110,8 @@
                      <Label styleClass="section-subtitle" text="December 2024 - Final Exams" />
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
-                  <javafx.scene.control.CheckBox fx:id="chkStrictConstraints" text="Strict Mode (2h Gap)" style="-fx-text-fill: -fx-color-text-secondary; -fx-alignment: center;" />
-                  <Region prefWidth="10" />
                   <Button fx:id="btnToolbarFilter" mnemonicParsing="false" onAction="#handleFilter" styleClass="secondary-button" text="Filters" />
                   <Button fx:id="btnConflicts" mnemonicParsing="false" onAction="#handleConflicts" styleClass="secondary-button" text="Conflicts" />
-                  <Button fx:id="btnBlackoutDates" mnemonicParsing="false" onAction="#handleBlackoutDatesConfig" styleClass="secondary-button" text="Blackout Dates" />
                   <Button fx:id="btnExport" mnemonicParsing="false" onAction="#handleExport" styleClass="secondary-button" text="Export CSV" />
                   <Button fx:id="btnGenerateTimetable" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable" />
                </HBox>

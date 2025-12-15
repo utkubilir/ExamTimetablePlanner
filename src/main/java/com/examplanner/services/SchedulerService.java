@@ -24,10 +24,9 @@ public class SchedulerService {
     }
 
     public ExamTimetable generateTimetable(List<Course> courses, List<Classroom> classrooms,
-            List<Enrollment> enrollments, LocalDate startDate, boolean useStrictConstraints,
-            List<LocalDate> blackoutDates) {
+            List<Enrollment> enrollments, LocalDate startDate) {
 
-        long minGap = useStrictConstraints ? 180 : 180; // 180 mins (3h) per requirements
+        long minGap = 180; // 180 mins (3h) per requirements
 
         System.out.println("Applying Constraints: MinGap=" + minGap + "m, MaxExams=2");
         constraintChecker.setMinGapMinutes(minGap);
@@ -80,7 +79,7 @@ public class SchedulerService {
             System.out.println("\n>>> Trying " + mid + " days (Range: " + low + " - " + high + ")");
 
             ExamTimetable result = attemptSchedule(mid, sortedCourses, sortedClassrooms, enrollments, startDate,
-                    maxAttemptsPerDay, courseStudentsMap, blackoutDates);
+                    maxAttemptsPerDay, courseStudentsMap);
 
             if (result != null) {
                 System.out.println(">>> Success with " + mid + " days! Trying fewer...");
@@ -103,8 +102,7 @@ public class SchedulerService {
 
     private ExamTimetable attemptSchedule(int days, List<Course> sortedCourses, List<Classroom> classrooms,
             List<Enrollment> enrollments, LocalDate startDate, int maxAttemptsPerDay,
-            Map<String, List<com.examplanner.domain.Student>> courseStudentsMap,
-            List<LocalDate> blackoutDates) {
+            Map<String, List<com.examplanner.domain.Student>> courseStudentsMap) {
 
         System.out.println("=== ATTEMPTING SCHEDULE WITH " + days + " DAY(S) ===");
 
@@ -117,7 +115,7 @@ public class SchedulerService {
         java.util.concurrent.atomic.AtomicInteger attemptCounter = new java.util.concurrent.atomic.AtomicInteger(0);
 
         boolean success = backtrackWithLimit(0, sortedCourses, state, classrooms, startDate, days,
-                maxAttemptsPerDay, attemptCounter, startTime, timeoutMs, blackoutDates);
+                maxAttemptsPerDay, attemptCounter, startTime, timeoutMs);
         long elapsed = System.currentTimeMillis() - startTime;
 
         if (success) {
@@ -135,8 +133,7 @@ public class SchedulerService {
             List<Classroom> classrooms,
             LocalDate startDate, int maxDays, int maxAttempts,
             java.util.concurrent.atomic.AtomicInteger attemptCounter,
-            long startTime, long timeoutMs,
-            List<LocalDate> blackoutDates) {
+            long startTime, long timeoutMs) {
 
         if (System.currentTimeMillis() - startTime > timeoutMs) {
             if (attemptCounter.get() % 5000 == 0)
@@ -166,11 +163,6 @@ public class SchedulerService {
         // Try all days, all classrooms, all time slots
         for (int d = 0; d < maxDays; d++) {
             LocalDate date = startDate.plusDays(d);
-
-            if (blackoutDates != null && blackoutDates.contains(date)) {
-                // SKIP BLACKOUT DATE
-                continue;
-            }
 
             // PRUNING: Check if ANY enrolled student already has max exams on this day.
             boolean dayForbidden = false;
@@ -204,7 +196,7 @@ public class SchedulerService {
                         state.add(candidate);
 
                         if (backtrackWithLimit(index + 1, courses, state, classrooms, startDate,
-                                maxDays, maxAttempts, attemptCounter, startTime, timeoutMs, blackoutDates)) {
+                                maxDays, maxAttempts, attemptCounter, startTime, timeoutMs)) {
                             return true;
                         }
 
