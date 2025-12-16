@@ -5,6 +5,12 @@ public class Enrollment {
     private Course course;
 
     public Enrollment(Student student, Course course) {
+        if (student == null) {
+            throw new IllegalArgumentException("Student cannot be null");
+        }
+        if (course == null) {
+            throw new IllegalArgumentException("Course cannot be null");
+        }
         this.student = student;
         this.course = course;
     }

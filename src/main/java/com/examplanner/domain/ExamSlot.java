@@ -9,6 +9,18 @@ public class ExamSlot {
     private LocalTime endTime;
 
     public ExamSlot(LocalDate date, LocalTime startTime, LocalTime endTime) {
+        if (date == null) {
+            throw new IllegalArgumentException("Date cannot be null");
+        }
+        if (startTime == null) {
+            throw new IllegalArgumentException("Start time cannot be null");
+        }
+        if (endTime == null) {
+            throw new IllegalArgumentException("End time cannot be null");
+        }
+        if (!endTime.isAfter(startTime)) {
+            throw new IllegalArgumentException("End time must be after start time");
+        }
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
