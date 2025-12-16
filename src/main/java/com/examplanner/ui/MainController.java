@@ -66,6 +66,10 @@ public class MainController {
     @FXML
     private VBox viewDashboard;
     @FXML
+    private VBox viewUserManual;
+    @FXML
+    private Button btnUserManual;
+    @FXML
     private javafx.scene.chart.BarChart<String, Number> chartExamsPerDay;
     @FXML
     private javafx.scene.chart.PieChart chartRoomUsage;
@@ -151,6 +155,7 @@ public class MainController {
         viewDataImport.setVisible(true);
         viewTimetable.setVisible(false);
         viewDashboard.setVisible(false);
+        viewUserManual.setVisible(false);
         if (sidebar != null) {
             sidebar.setVisible(true);
             sidebar.setManaged(true);
@@ -158,6 +163,7 @@ public class MainController {
         setActive(btnDataImport);
         setInactive(btnTimetable);
         setInactive(btnDashboard);
+        setInactive(btnUserManual);
     }
 
     @FXML
@@ -165,6 +171,7 @@ public class MainController {
         viewDataImport.setVisible(false);
         viewTimetable.setVisible(false);
         viewDashboard.setVisible(true);
+        viewUserManual.setVisible(false);
 
         if (sidebar != null) {
             sidebar.setVisible(true);
@@ -174,6 +181,7 @@ public class MainController {
         setActive(btnDashboard);
         setInactive(btnDataImport);
         setInactive(btnTimetable);
+        setInactive(btnUserManual);
 
         refreshDashboard();
     }
@@ -183,6 +191,7 @@ public class MainController {
         viewDataImport.setVisible(false);
         viewDashboard.setVisible(false);
         viewTimetable.setVisible(true);
+        viewUserManual.setVisible(false);
 
         if (sidebar != null) {
             sidebar.setVisible(false);
@@ -191,7 +200,25 @@ public class MainController {
         setActive(btnTimetable);
         setInactive(btnDataImport);
         setInactive(btnDashboard);
+        setInactive(btnUserManual);
         refreshTimetable();
+    }
+
+    @FXML
+    private void showUserManual() {
+        viewDataImport.setVisible(false);
+        viewDashboard.setVisible(false);
+        viewTimetable.setVisible(false);
+        viewUserManual.setVisible(true);
+
+        if (sidebar != null) {
+            sidebar.setVisible(true);
+            sidebar.setManaged(true);
+        }
+        setActive(btnUserManual);
+        setInactive(btnDataImport);
+        setInactive(btnDashboard);
+        setInactive(btnTimetable);
     }
 
     private void setActive(Button btn) {

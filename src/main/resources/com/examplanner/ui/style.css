@@ -317,3 +317,110 @@
     -fx-background-radius: 10;
     -fx-background-insets: 0;
 }
+
+/* User Manual Styles */
+.manual-container {
+    -fx-padding: 10;
+}
+
+.manual-section {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -fx-color-border;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.05), 8, 0, 0, 2);
+}
+
+.manual-section > .title {
+    -fx-background-color: white;
+    -fx-background-radius: 12 12 0 0;
+    -fx-padding: 15 20;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text;
+}
+
+.manual-section > .title > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 5 0 0;
+}
+
+.manual-section > .title > .arrow-button > .arrow {
+    -fx-background-color: -fx-color-text-secondary;
+    -fx-shape: "M 0 0 L 4 4 L 8 0";
+}
+
+.manual-section:expanded > .title {
+    -fx-border-color: transparent transparent -fx-color-border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-radius: 12 12 0 0;
+}
+
+.manual-section > .content {
+    -fx-background-color: white;
+    -fx-background-radius: 0 0 12 12;
+}
+
+.manual-content {
+    -fx-padding: 20;
+    -fx-background-color: white;
+}
+
+.manual-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-color-text;
+    -fx-line-spacing: 4;
+}
+
+.manual-subtitle {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-primary;
+    -fx-padding: 0 0 8 0;
+}
+
+.manual-subsection {
+    -fx-padding: 10 0;
+    -fx-spacing: 5;
+}
+
+.manual-code {
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: #374151;
+    -fx-background-color: #F3F4F6;
+    -fx-padding: 12;
+    -fx-background-radius: 8;
+}
+
+.manual-tip {
+    -fx-background-color: #ECFDF5;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+    -fx-border-color: #10B981;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.manual-tip-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #065F46;
+    -fx-font-style: italic;
+}
+
+.manual-warning {
+    -fx-background-color: #FEF3C7;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+    -fx-border-color: #F59E0B;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.manual-warning-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: #92400E;
+    -fx-font-weight: bold;
+}
