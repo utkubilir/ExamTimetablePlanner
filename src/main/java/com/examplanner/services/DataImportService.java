@@ -148,10 +148,15 @@ public class DataImportService {
     public List<Course> loadCourses(File file) throws IOException {
         ensureKind(file, CsvKind.COURSES);
         List<Course> courses = new ArrayList<>();
+        Map<String, Integer> codeToLine = new HashMap<>(); // Track duplicates
+        int lineNumber = 0;
+        int skippedLines = 0;
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             boolean headerCsv = false;
             while ((line = br.readLine()) != null) {
+                lineNumber++;
                 line = line.trim();
                 // Skip empty lines or headers
                 if (line.isEmpty() || line.startsWith("ALL OF THE"))
@@ -170,38 +175,86 @@ public class DataImportService {
                     String code = parts[0].trim();
                     if (code.equalsIgnoreCase("CourseCode"))
                         continue;
+
+                    // Skip empty codes
+                    if (code.isEmpty()) {
+                        System.err.println("Warning: Skipping line " + lineNumber + " - empty course code");
+                        skippedLines++;
+                        continue;
+                    }
+
+                    // Check for duplicates
+                    if (codeToLine.containsKey(code)) {
+                        System.err.println("Warning: Duplicate course code '" + code + "' at line " + lineNumber +
+                                " (first seen at line " + codeToLine.get(code) + ")");
+                        skippedLines++;
+                        continue;
+                    }
+
                     String name = parts.length >= 2 ? parts[1].trim() : code;
                     int duration = 60;
                     if (parts.length >= 3) {
                         try {
                             duration = Integer.parseInt(parts[2].trim());
+                            if (duration <= 0) {
+                                System.err.println(
+                                        "Warning: Invalid duration at line " + lineNumber + ", using default 60");
+                                duration = 60;
+                            }
                         } catch (NumberFormatException ignored) {
                             duration = 60;
                         }
                     }
+                    codeToLine.put(code, lineNumber);
                     courses.add(new Course(code, name.isEmpty() ? code : name, duration));
                     continue;
                 }
 
                 // Format: <CourseCode> (Single column)
-                // Use Code as Name, Default duration 60
                 String code = line;
-                String name = line;
-                int duration = 60;
 
-                courses.add(new Course(code, name, duration));
+                // Skip empty codes
+                if (code.isEmpty()) {
+                    skippedLines++;
+                    continue;
+                }
+
+                // Check for duplicates
+                if (codeToLine.containsKey(code)) {
+                    System.err.println("Warning: Duplicate course code '" + code + "' at line " + lineNumber);
+                    skippedLines++;
+                    continue;
+                }
+
+                codeToLine.put(code, lineNumber);
+                courses.add(new Course(code, code, 60));
             }
         }
+
+        if (courses.isEmpty()) {
+            throw new IllegalArgumentException("No valid courses found in file. Check file format.");
+        }
+
+        if (skippedLines > 0) {
+            System.out.println(
+                    "Import complete: " + courses.size() + " courses loaded, " + skippedLines + " lines skipped.");
+        }
+
         return courses;
     }
 
     public List<Classroom> loadClassrooms(File file) throws IOException {
         ensureKind(file, CsvKind.CLASSROOMS);
         List<Classroom> classrooms = new ArrayList<>();
+        Map<String, Integer> idToLine = new HashMap<>();
+        int lineNumber = 0;
+        int skippedLines = 0;
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             boolean headerCsv = false;
             while ((line = br.readLine()) != null) {
+                lineNumber++;
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("ALL OF THE"))
                     continue;
@@ -218,12 +271,32 @@ public class DataImportService {
                     String roomId = parts[0].trim();
                     if (roomId.equalsIgnoreCase("RoomID"))
                         continue;
+
+                    if (roomId.isEmpty()) {
+                        System.err.println("Warning: Skipping line " + lineNumber + " - empty room ID");
+                        skippedLines++;
+                        continue;
+                    }
+
+                    if (idToLine.containsKey(roomId)) {
+                        System.err.println("Warning: Duplicate room ID '" + roomId + "' at line " + lineNumber);
+                        skippedLines++;
+                        continue;
+                    }
+
                     String roomName = parts[1].trim();
                     try {
                         int capacity = Integer.parseInt(parts[2].trim());
+                        if (capacity <= 0) {
+                            System.err.println("Warning: Invalid capacity at line " + lineNumber + ", skipping");
+                            skippedLines++;
+                            continue;
+                        }
+                        idToLine.put(roomId, lineNumber);
                         classrooms.add(new Classroom(roomId, roomName.isEmpty() ? roomId : roomName, capacity));
                     } catch (NumberFormatException e) {
-                        System.err.println("Skipping invalid capacity in line: " + line);
+                        System.err.println("Warning: Invalid capacity format at line " + lineNumber);
+                        skippedLines++;
                     }
                     continue;
                 }
@@ -232,26 +305,59 @@ public class DataImportService {
                 String[] parts = line.split(";");
                 if (parts.length >= 2) {
                     String name = parts[0].trim();
+
+                    if (name.isEmpty()) {
+                        skippedLines++;
+                        continue;
+                    }
+
+                    if (idToLine.containsKey(name)) {
+                        System.err.println("Warning: Duplicate room '" + name + "' at line " + lineNumber);
+                        skippedLines++;
+                        continue;
+                    }
+
                     try {
                         int capacity = Integer.parseInt(parts[1].trim());
-                        // Use Name (e.g., Classroom_01) as ID as well
+                        if (capacity <= 0) {
+                            System.err.println("Warning: Invalid capacity at line " + lineNumber + ", skipping");
+                            skippedLines++;
+                            continue;
+                        }
+                        idToLine.put(name, lineNumber);
                         classrooms.add(new Classroom(name, name, capacity));
                     } catch (NumberFormatException e) {
-                        System.err.println("Skipping invalid capacity in line: " + line);
+                        System.err.println("Warning: Invalid capacity format at line " + lineNumber);
+                        skippedLines++;
                     }
                 }
             }
         }
+
+        if (classrooms.isEmpty()) {
+            throw new IllegalArgumentException("No valid classrooms found in file. Check file format.");
+        }
+
+        if (skippedLines > 0) {
+            System.out.println("Import complete: " + classrooms.size() + " classrooms loaded, " + skippedLines
+                    + " lines skipped.");
+        }
+
         return classrooms;
     }
 
     public List<Student> loadStudents(File file) throws IOException {
         ensureKind(file, CsvKind.STUDENTS);
         List<Student> students = new ArrayList<>();
+        Map<String, Integer> idToLine = new HashMap<>();
+        int lineNumber = 0;
+        int skippedLines = 0;
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             boolean headerCsv = false;
             while ((line = br.readLine()) != null) {
+                lineNumber++;
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("ALL OF THE"))
                     continue;
@@ -268,19 +374,53 @@ public class DataImportService {
                     String id = parts[0].trim();
                     if (id.equalsIgnoreCase("StudentID"))
                         continue;
+
+                    if (id.isEmpty()) {
+                        System.err.println("Warning: Skipping line " + lineNumber + " - empty student ID");
+                        skippedLines++;
+                        continue;
+                    }
+
+                    if (idToLine.containsKey(id)) {
+                        System.err.println("Warning: Duplicate student ID '" + id + "' at line " + lineNumber);
+                        skippedLines++;
+                        continue;
+                    }
+
                     String name = parts.length >= 2 ? parts[1].trim() : id;
+                    idToLine.put(id, lineNumber);
                     students.add(new Student(id, name.isEmpty() ? id : name));
                     continue;
                 }
 
                 // Format: <StudentID> (Single column)
-                // Use ID as Name
                 String id = line;
-                String name = line;
 
-                students.add(new Student(id, name));
+                if (id.isEmpty()) {
+                    skippedLines++;
+                    continue;
+                }
+
+                if (idToLine.containsKey(id)) {
+                    System.err.println("Warning: Duplicate student ID '" + id + "' at line " + lineNumber);
+                    skippedLines++;
+                    continue;
+                }
+
+                idToLine.put(id, lineNumber);
+                students.add(new Student(id, id));
             }
         }
+
+        if (students.isEmpty()) {
+            throw new IllegalArgumentException("No valid students found in file. Check file format.");
+        }
+
+        if (skippedLines > 0) {
+            System.out.println(
+                    "Import complete: " + students.size() + " students loaded, " + skippedLines + " lines skipped.");
+        }
+
         return students;
     }
 

@@ -209,16 +209,32 @@ public class MainController {
         File file = chooseFile("Load Courses CSV");
         if (file != null) {
             try {
+                // Clear previous style classes
+                lblCoursesStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+
                 courses = dataImportService.loadCourses(file);
                 repository.saveCourses(courses);
-                lblCoursesStatus.setText(file.getName() + " • " + courses.size() + " courses loaded");
-                lblCoursesStatus.getStyleClass().add("text-success");
+
+                if (courses.isEmpty()) {
+                    lblCoursesStatus.setText("No courses found in file");
+                    lblCoursesStatus.getStyleClass().add("text-warning");
+                    showWarning("Empty Import", "No valid courses found in the file.");
+                } else {
+                    lblCoursesStatus.setText(file.getName() + " • " + courses.size() + " courses loaded");
+                    lblCoursesStatus.getStyleClass().add("text-success");
+                }
             } catch (IllegalArgumentException e) {
-                showWarning("Wrong File Type", e.getMessage());
-                lblCoursesStatus.getStyleClass().add("text-warning"); // Optional: add styling for warnings
+                showWarning("Import Error", e.getMessage());
+                lblCoursesStatus.setText("Import failed");
+                lblCoursesStatus.getStyleClass().add("text-warning");
+            } catch (com.examplanner.persistence.DataAccessException e) {
+                showError("Database Error", "Failed to save courses to database:\n" + e.getMessage());
+                lblCoursesStatus.setText("Database error");
+                lblCoursesStatus.getStyleClass().add("text-error");
             } catch (Exception e) {
                 showError("Error loading courses",
-                        "Your file may be empty or formatted incorrectly.\\nError: " + e.getMessage());
+                        "Your file may be empty or formatted incorrectly.\nError: " + e.getMessage());
+                lblCoursesStatus.setText("Import failed");
                 lblCoursesStatus.getStyleClass().add("text-error");
                 e.printStackTrace();
             }
@@ -230,16 +246,32 @@ public class MainController {
         File file = chooseFile("Load Classrooms CSV");
         if (file != null) {
             try {
+                // Clear previous style classes
+                lblClassroomsStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+
                 classrooms = dataImportService.loadClassrooms(file);
                 repository.saveClassrooms(classrooms);
-                lblClassroomsStatus.setText(file.getName() + " • " + classrooms.size() + " classrooms loaded");
-                lblClassroomsStatus.getStyleClass().add("text-success");
+
+                if (classrooms.isEmpty()) {
+                    lblClassroomsStatus.setText("No classrooms found in file");
+                    lblClassroomsStatus.getStyleClass().add("text-warning");
+                    showWarning("Empty Import", "No valid classrooms found in the file.");
+                } else {
+                    lblClassroomsStatus.setText(file.getName() + " • " + classrooms.size() + " classrooms loaded");
+                    lblClassroomsStatus.getStyleClass().add("text-success");
+                }
             } catch (IllegalArgumentException e) {
-                showWarning("Wrong File Type", e.getMessage());
+                showWarning("Import Error", e.getMessage());
+                lblClassroomsStatus.setText("Import failed");
                 lblClassroomsStatus.getStyleClass().add("text-warning");
+            } catch (com.examplanner.persistence.DataAccessException e) {
+                showError("Database Error", "Failed to save classrooms to database:\n" + e.getMessage());
+                lblClassroomsStatus.setText("Database error");
+                lblClassroomsStatus.getStyleClass().add("text-error");
             } catch (Exception e) {
                 showError("Error loading classrooms",
-                        "Your file may be empty or formatted incorrectly.\\nError: " + e.getMessage());
+                        "Your file may be empty or formatted incorrectly.\nError: " + e.getMessage());
+                lblClassroomsStatus.setText("Import failed");
                 lblClassroomsStatus.getStyleClass().add("text-error");
                 e.printStackTrace();
             }
@@ -251,16 +283,32 @@ public class MainController {
         File file = chooseFile("Load Students CSV");
         if (file != null) {
             try {
+                // Clear previous style classes
+                lblStudentsStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+
                 students = dataImportService.loadStudents(file);
                 repository.saveStudents(students);
-                lblStudentsStatus.setText(file.getName() + " • " + students.size() + " students loaded");
-                lblStudentsStatus.getStyleClass().add("text-success");
+
+                if (students.isEmpty()) {
+                    lblStudentsStatus.setText("No students found in file");
+                    lblStudentsStatus.getStyleClass().add("text-warning");
+                    showWarning("Empty Import", "No valid students found in the file.");
+                } else {
+                    lblStudentsStatus.setText(file.getName() + " • " + students.size() + " students loaded");
+                    lblStudentsStatus.getStyleClass().add("text-success");
+                }
             } catch (IllegalArgumentException e) {
-                showWarning("Wrong File Type", e.getMessage());
+                showWarning("Import Error", e.getMessage());
+                lblStudentsStatus.setText("Import failed");
                 lblStudentsStatus.getStyleClass().add("text-warning");
+            } catch (com.examplanner.persistence.DataAccessException e) {
+                showError("Database Error", "Failed to save students to database:\n" + e.getMessage());
+                lblStudentsStatus.setText("Database error");
+                lblStudentsStatus.getStyleClass().add("text-error");
             } catch (Exception e) {
                 showError("Error loading students",
-                        "Your file may be empty or formatted incorrectly.\\nError: " + e.getMessage());
+                        "Your file may be empty or formatted incorrectly.\nError: " + e.getMessage());
+                lblStudentsStatus.setText("Import failed");
                 lblStudentsStatus.getStyleClass().add("text-error");
                 e.printStackTrace();
             }
@@ -276,16 +324,32 @@ public class MainController {
         File file = chooseFile("Load Attendance CSV");
         if (file != null) {
             try {
+                // Clear previous style classes
+                lblAttendanceStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+
                 enrollments = dataImportService.loadAttendance(file, courses, students);
                 repository.saveEnrollments(enrollments);
-                lblAttendanceStatus.setText(file.getName() + " • " + enrollments.size() + " enrollments loaded");
-                lblAttendanceStatus.getStyleClass().add("text-success");
+
+                if (enrollments.isEmpty()) {
+                    lblAttendanceStatus.setText("No enrollments found in file");
+                    lblAttendanceStatus.getStyleClass().add("text-warning");
+                    showWarning("Empty Import", "No valid enrollments found in the file.");
+                } else {
+                    lblAttendanceStatus.setText(file.getName() + " • " + enrollments.size() + " enrollments loaded");
+                    lblAttendanceStatus.getStyleClass().add("text-success");
+                }
             } catch (IllegalArgumentException e) {
-                showWarning("Wrong File Type", e.getMessage());
+                showWarning("Import Error", e.getMessage());
+                lblAttendanceStatus.setText("Import failed");
                 lblAttendanceStatus.getStyleClass().add("text-warning");
+            } catch (com.examplanner.persistence.DataAccessException e) {
+                showError("Database Error", "Failed to save enrollments to database:\n" + e.getMessage());
+                lblAttendanceStatus.setText("Database error");
+                lblAttendanceStatus.getStyleClass().add("text-error");
             } catch (Exception e) {
                 showError("Error loading attendance",
-                        "Your file may be empty or formatted incorrectly.\\nError: " + e.getMessage());
+                        "Your file may be empty or formatted incorrectly.\nError: " + e.getMessage());
+                lblAttendanceStatus.setText("Import failed");
                 lblAttendanceStatus.getStyleClass().add("text-error");
                 e.printStackTrace();
             }

@@ -26,6 +26,23 @@ public class SchedulerService {
     public ExamTimetable generateTimetable(List<Course> courses, List<Classroom> classrooms,
             List<Enrollment> enrollments, LocalDate startDate) {
 
+        // Pre-condition validation
+        if (courses == null || courses.isEmpty()) {
+            throw new IllegalArgumentException("Courses list cannot be null or empty");
+        }
+        if (classrooms == null || classrooms.isEmpty()) {
+            throw new IllegalArgumentException("Classrooms list cannot be null or empty");
+        }
+        if (enrollments == null || enrollments.isEmpty()) {
+            throw new IllegalArgumentException("Enrollments list cannot be null or empty");
+        }
+        if (startDate == null) {
+            throw new IllegalArgumentException("Start date cannot be null");
+        }
+        if (startDate.isBefore(LocalDate.now())) {
+            System.out.println("Warning: Start date is in the past, scheduling may include past dates");
+        }
+
         long minGap = 180; // 180 mins (3h) per requirements
 
         System.out.println("Applying Constraints: MinGap=" + minGap + "m, MaxExams=2");

@@ -5,7 +5,6 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,20 +13,39 @@ public class DataRepository {
 
     // --- COURSES ---
     public void saveCourses(List<Course> courses) {
+        if (courses == null || courses.isEmpty()) {
+            return;
+        }
         String sql = "INSERT OR REPLACE INTO courses(code, name, duration) VALUES(?,?,?)";
-        try (Connection conn = DatabaseManager.connect();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.connect();
             conn.setAutoCommit(false);
-            for (Course c : courses) {
-                pstmt.setString(1, c.getCode());
-                pstmt.setString(2, c.getName());
-                pstmt.setInt(3, c.getExamDurationMinutes());
-                pstmt.addBatch();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                for (Course c : courses) {
+                    pstmt.setString(1, c.getCode());
+                    pstmt.setString(2, c.getName());
+                    pstmt.setInt(3, c.getExamDurationMinutes());
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+                conn.commit();
             }
-            pstmt.executeBatch();
-            conn.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    /* ignore */ }
+            }
+            throw new DataAccessException("Failed to save courses: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    /* ignore */ }
+            }
         }
     }
 
@@ -44,27 +62,46 @@ public class DataRepository {
                         rs.getInt("duration")));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DataAccessException("Failed to load courses: " + e.getMessage(), e);
         }
         return list;
     }
 
     // --- CLASSROOMS ---
     public void saveClassrooms(List<Classroom> classrooms) {
+        if (classrooms == null || classrooms.isEmpty()) {
+            return;
+        }
         String sql = "INSERT OR REPLACE INTO classrooms(id, name, capacity) VALUES(?,?,?)";
-        try (Connection conn = DatabaseManager.connect();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.connect();
             conn.setAutoCommit(false);
-            for (Classroom c : classrooms) {
-                pstmt.setString(1, c.getId());
-                pstmt.setString(2, c.getName());
-                pstmt.setInt(3, c.getCapacity());
-                pstmt.addBatch();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                for (Classroom c : classrooms) {
+                    pstmt.setString(1, c.getId());
+                    pstmt.setString(2, c.getName());
+                    pstmt.setInt(3, c.getCapacity());
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+                conn.commit();
             }
-            pstmt.executeBatch();
-            conn.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    /* ignore */ }
+            }
+            throw new DataAccessException("Failed to save classrooms: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    /* ignore */ }
+            }
         }
     }
 
@@ -81,26 +118,45 @@ public class DataRepository {
                         rs.getInt("capacity")));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DataAccessException("Failed to load classrooms: " + e.getMessage(), e);
         }
         return list;
     }
 
     // --- STUDENTS ---
     public void saveStudents(List<Student> students) {
+        if (students == null || students.isEmpty()) {
+            return;
+        }
         String sql = "INSERT OR REPLACE INTO students(id, name) VALUES(?,?)";
-        try (Connection conn = DatabaseManager.connect();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.connect();
             conn.setAutoCommit(false);
-            for (Student s : students) {
-                pstmt.setString(1, s.getId());
-                pstmt.setString(2, s.getName());
-                pstmt.addBatch();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                for (Student s : students) {
+                    pstmt.setString(1, s.getId());
+                    pstmt.setString(2, s.getName());
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+                conn.commit();
             }
-            pstmt.executeBatch();
-            conn.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    }
+            }
+            throw new DataAccessException("Failed to save students: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    }
+            }
         }
     }
 
@@ -116,26 +172,45 @@ public class DataRepository {
                         rs.getString("name")));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DataAccessException("Failed to load students: " + e.getMessage(), e);
         }
         return list;
     }
 
     // --- ENROLLMENTS ---
     public void saveEnrollments(List<Enrollment> enrollments) {
+        if (enrollments == null || enrollments.isEmpty()) {
+            return;
+        }
         String sql = "INSERT OR REPLACE INTO enrollments(student_id, course_code) VALUES(?,?)";
-        try (Connection conn = DatabaseManager.connect();
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        Connection conn = null;
+        try {
+            conn = DatabaseManager.connect();
             conn.setAutoCommit(false);
-            for (Enrollment e : enrollments) {
-                pstmt.setString(1, e.getStudent().getId());
-                pstmt.setString(2, e.getCourse().getCode());
-                pstmt.addBatch();
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                for (Enrollment e : enrollments) {
+                    pstmt.setString(1, e.getStudent().getId());
+                    pstmt.setString(2, e.getCourse().getCode());
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+                conn.commit();
             }
-            pstmt.executeBatch();
-            conn.commit();
         } catch (SQLException e) {
-            e.printStackTrace();
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    /* ignore */ }
+            }
+            throw new DataAccessException("Failed to save enrollments: " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    /* ignore */ }
+            }
         }
     }
 
