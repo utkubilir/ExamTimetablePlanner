@@ -299,3 +299,21 @@
 .student-list-view .list-cell:even {
     -fx-background-color: #F9FAFB;
 }
+
+/* Progress Bar */
+.progress-bar {
+    -fx-background-color: #E5E7EB;
+    -fx-background-radius: 10;
+    -fx-pref-height: 12px;
+}
+
+.progress-bar > .track {
+    -fx-background-color: #E5E7EB;
+    -fx-background-radius: 10;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: linear-gradient(to right, #8B5CF6, #A78BFA);
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+}

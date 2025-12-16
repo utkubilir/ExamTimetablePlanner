@@ -11,6 +11,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.ProgressBar?>
 
 <BorderPane prefHeight="800.0" prefWidth="1200.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.examplanner.ui.MainController">
    
@@ -89,6 +90,11 @@
                </VBox>
 
                <Region VBox.vgrow="ALWAYS" />
+
+               <VBox fx:id="progressContainer" alignment="CENTER" spacing="8" visible="false" managed="false">
+                  <Label fx:id="lblProgressStatus" text="Generating timetable..." style="-fx-font-size: 13px; -fx-text-fill: #6B7280;"/>
+                  <ProgressBar fx:id="progressBar" maxWidth="Infinity" prefHeight="20"/>
+               </VBox>
 
                <HBox spacing="10">
                   <Button fx:id="btnDeleteData" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleDeleteData" styleClass="danger-button" text="Delete All Data" />

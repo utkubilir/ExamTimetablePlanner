@@ -82,6 +82,13 @@ public class MainController {
     @FXML
     private GridPane timetableGrid;
 
+    @FXML
+    private javafx.scene.control.ProgressBar progressBar;
+    @FXML
+    private Label lblProgressStatus;
+    @FXML
+    private VBox progressContainer;
+
     private List<Course> courses = new ArrayList<>();
     private List<Classroom> classrooms = new ArrayList<>();
     private List<Student> students = new ArrayList<>();
@@ -390,6 +397,18 @@ public class MainController {
         if (btnGenerateTimetable != null) {
             btnGenerateTimetable.setDisable(loading);
             btnGenerateTimetable.setText(text);
+        }
+
+        // Show/hide progress bar
+        if (progressContainer != null) {
+            progressContainer.setVisible(loading);
+            progressContainer.setManaged(loading);
+        }
+        if (progressBar != null) {
+            progressBar.setProgress(loading ? -1 : 0); // -1 for indeterminate progress
+        }
+        if (lblProgressStatus != null) {
+            lblProgressStatus.setText("Generating timetable... Please wait.");
         }
 
         if (viewDataImport.getScene() != null) {
