@@ -10,21 +10,31 @@ import com.examplanner.domain.ExamTimetable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class SchedulerService {
 
     private ConstraintChecker constraintChecker;
+    private Random random;
 
     public SchedulerService() {
         this.constraintChecker = new ConstraintChecker();
+        this.random = new Random();
     }
 
     public ExamTimetable generateTimetable(List<Course> courses, List<Classroom> classrooms,
             List<Enrollment> enrollments, LocalDate startDate) {
+        // Default: 7 days from start date
+        return generateTimetable(courses, classrooms, enrollments, startDate, startDate.plusDays(6));
+    }
+
+    public ExamTimetable generateTimetable(List<Course> courses, List<Classroom> classrooms,
+            List<Enrollment> enrollments, LocalDate startDate, LocalDate endDate) {
 
         // Pre-condition validation
         if (courses == null || courses.isEmpty()) {
@@ -39,9 +49,19 @@ public class SchedulerService {
         if (startDate == null) {
             throw new IllegalArgumentException("Start date cannot be null");
         }
+        if (endDate == null) {
+            endDate = startDate.plusDays(6); // Default 7 days
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("End date cannot be before start date");
+        }
         if (startDate.isBefore(LocalDate.now())) {
             System.out.println("Warning: Start date is in the past, scheduling may include past dates");
         }
+
+        // Calculate available days from date range
+        int maxDays = (int) (endDate.toEpochDay() - startDate.toEpochDay()) + 1;
+        System.out.println("Date range: " + startDate + " to " + endDate + " (" + maxDays + " days)");
 
         long minGap = 180; // 180 mins (3h) per requirements
 
@@ -54,38 +74,37 @@ public class SchedulerService {
         System.out.println("Available classrooms: " + classrooms.size());
         System.out.println("Total enrollments: " + enrollments.size());
 
-        // Sort courses by difficulty (e.g. number of students enrolled) to fail fast
-        // Or just by duration. Let's sort by number of students descending.
-        // OPTIMIZATION: Pre-calculate course enrollment counts for sorting
+        // RANDOMIZATION: Shuffle courses for different results each time
+        List<Course> shuffledCourses = new ArrayList<>(courses);
+        Collections.shuffle(shuffledCourses, random);
+
+        // Sort by difficulty after shuffle to maintain some optimization
         Map<String, Long> enrollmentCounts = enrollments.stream()
                 .collect(Collectors.groupingBy(e -> e.getCourse().getCode(), Collectors.counting()));
 
-        // Sort courses by difficulty (number of students enrolled)
-        List<Course> sortedCourses = new ArrayList<>(courses);
-        sortedCourses.sort(
+        shuffledCourses.sort(
                 Comparator.comparingLong((Course c) -> enrollmentCounts.getOrDefault(c.getCode(), 0L)).reversed());
 
         // Calculate a smart lower bound for the number of days
-        int days = calculateMinDaysNeeded(courses, classrooms, enrollments);
-        System.out.println("Computed heuristic starting days: " + days);
+        int minDaysNeeded = calculateMinDaysNeeded(courses, classrooms, enrollments);
+        int days = Math.min(minDaysNeeded, maxDays);
+        System.out.println("Computed heuristic starting days: " + days + " (max available: " + maxDays + ")");
 
         // Adjust max attempts based on problem size
-        int maxAttemptsPerDay = courses.size() * classrooms.size() * 2000; // Increased from 500 for 10k scale
+        int maxAttemptsPerDay = courses.size() * classrooms.size() * 2000;
         System.out.println("Max attempts per day configuration: " + maxAttemptsPerDay);
 
-        // OPTIMIZATION: Sort Classrooms by Capacity ASC (Best Fit Heuristic)
-        // This ensures we try the smallest sufficient room first, saving larger rooms
-        // for larger classes.
-        List<Classroom> sortedClassrooms = new ArrayList<>(classrooms);
-        sortedClassrooms.sort(Comparator.comparingInt(Classroom::getCapacity));
+        // RANDOMIZATION: Shuffle classrooms for variety (will still check capacity)
+        List<Classroom> shuffledClassrooms = new ArrayList<>(classrooms);
+        Collections.shuffle(shuffledClassrooms, random);
 
         // Pre-compute lookup maps for optimization
         Map<String, List<com.examplanner.domain.Student>> courseStudentsMap = enrollments.stream()
                 .collect(Collectors.groupingBy(e -> e.getCourse().getCode(),
                         Collectors.mapping(Enrollment::getStudent, Collectors.toList())));
 
-        int low = days; // Heuristic lower bound
-        int high = 50; // Safe upper bound
+        int low = days;
+        int high = maxDays; // Use user-defined max days
         int optimalDays = -1;
         ExamTimetable bestResult = null;
 
@@ -95,7 +114,7 @@ public class SchedulerService {
             int mid = low + (high - low) / 2;
             System.out.println("\n>>> Trying " + mid + " days (Range: " + low + " - " + high + ")");
 
-            ExamTimetable result = attemptSchedule(mid, sortedCourses, sortedClassrooms, enrollments, startDate,
+            ExamTimetable result = attemptSchedule(mid, shuffledCourses, shuffledClassrooms, enrollments, startDate,
                     maxAttemptsPerDay, courseStudentsMap);
 
             if (result != null) {
@@ -113,7 +132,8 @@ public class SchedulerService {
             System.out.println("\n✓ OPTIMAL SCHEDULE FOUND: " + optimalDays + " days.");
             return bestResult;
         } else {
-            throw new RuntimeException("Could not find a schedule even with " + 50 + " days.");
+            throw new RuntimeException(
+                    "Could not find a schedule within " + maxDays + " days. Try extending the date range.");
         }
     }
 
@@ -172,13 +192,31 @@ public class SchedulerService {
         }
 
         Course course = courses.get(index);
-        attemptCounter.incrementAndGet(); // We can increment here directly
+        attemptCounter.incrementAndGet();
 
         // Retrieve students ONCE for this course
         List<com.examplanner.domain.Student> students = state.getStudentsForCourse(course.getCode());
 
-        // Try all days, all classrooms, all time slots
-        for (int d = 0; d < maxDays; d++) {
+        // RANDOMIZATION: Create shuffled list of days
+        List<Integer> dayIndices = new ArrayList<>();
+        for (int i = 0; i < maxDays; i++) {
+            dayIndices.add(i);
+        }
+        Collections.shuffle(dayIndices, random);
+
+        // RANDOMIZATION: Create shuffled list of start times (30-min intervals from
+        // 09:00 to 18:00)
+        List<LocalTime> timeSlots = new ArrayList<>();
+        LocalTime maxStart = LocalTime.of(18, 30).minusMinutes(course.getExamDurationMinutes());
+        LocalTime t = LocalTime.of(9, 0);
+        while (!t.isAfter(maxStart)) {
+            timeSlots.add(t);
+            t = t.plusMinutes(30);
+        }
+        Collections.shuffle(timeSlots, random);
+
+        // Try days in random order
+        for (int d : dayIndices) {
             LocalDate date = startDate.plusDays(d);
 
             // PRUNING: Check if ANY enrolled student already has max exams on this day.
@@ -192,19 +230,16 @@ public class SchedulerService {
             if (dayForbidden)
                 continue;
 
+            // Classrooms are already shuffled, iterate directly
             for (Classroom classroom : classrooms) {
                 // Check Capacity Constraint (O(1))
-                // Note: state.getStudentsForCourse(course.getCode()) is fast O(1)
                 int size = state.getStudentsForCourse(course.getCode()).size();
                 if (size > classroom.getCapacity()) {
                     continue;
                 }
 
-                // Try start times. 09:00 to 18:30 - duration
-                LocalTime startTimeSlot = LocalTime.of(9, 0);
-                LocalTime maxStart = LocalTime.of(18, 30).minusMinutes(course.getExamDurationMinutes());
-
-                while (!startTimeSlot.isAfter(maxStart)) {
+                // Try time slots in random order
+                for (LocalTime startTimeSlot : timeSlots) {
                     LocalTime endTime = startTimeSlot.plusMinutes(course.getExamDurationMinutes());
                     ExamSlot slot = new ExamSlot(date, startTimeSlot, endTime);
                     Exam candidate = new Exam(course, classroom, slot);
@@ -219,8 +254,6 @@ public class SchedulerService {
 
                         state.removeLast(); // Backtrack
                     }
-
-                    startTimeSlot = startTimeSlot.plusMinutes(30); // Increment by 30 mins
                 }
             }
         }

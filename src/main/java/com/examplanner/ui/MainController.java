@@ -14,6 +14,9 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
@@ -417,16 +420,66 @@ public class MainController {
             return;
         }
 
+        // Create date picker dialog
+        Dialog<javafx.util.Pair<LocalDate, LocalDate>> dialog = new Dialog<>();
+        dialog.setTitle("Select Exam Period");
+        dialog.setHeaderText("Choose exam period start and end dates");
+
+        // Set button types
+        ButtonType generateButtonType = new ButtonType("Generate", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(generateButtonType, ButtonType.CANCEL);
+
+        // Create date pickers
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+
+        javafx.scene.control.DatePicker startDatePicker = new javafx.scene.control.DatePicker(
+                LocalDate.now().plusDays(1));
+        javafx.scene.control.DatePicker endDatePicker = new javafx.scene.control.DatePicker(
+                LocalDate.now().plusDays(7));
+
+        grid.add(new Label("Start Date:"), 0, 0);
+        grid.add(startDatePicker, 1, 0);
+        grid.add(new Label("End Date:"), 0, 1);
+        grid.add(endDatePicker, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Convert result
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == generateButtonType) {
+                LocalDate start = startDatePicker.getValue();
+                LocalDate end = endDatePicker.getValue();
+                if (start != null && end != null && !end.isBefore(start)) {
+                    return new javafx.util.Pair<>(start, end);
+                }
+            }
+            return null;
+        });
+
+        java.util.Optional<javafx.util.Pair<LocalDate, LocalDate>> result = dialog.showAndWait();
+
+        if (!result.isPresent()) {
+            return; // User cancelled
+        }
+
+        LocalDate startDate = result.get().getKey();
+        LocalDate endDate = result.get().getValue();
+
+        System.out.println("Selected date range: " + startDate + " to " + endDate);
+
         setLoadingState(true);
 
         Task<ExamTimetable> task = new Task<>() {
             @Override
             protected ExamTimetable call() throws Exception {
                 System.out.println("Starting timetable generation...");
-                LocalDate startDate = LocalDate.now().plusDays(1);
                 System.out.println("Start date: " + startDate);
+                System.out.println("End date: " + endDate);
                 System.out.println("Calling scheduler service...");
-                return schedulerService.generateTimetable(courses, classrooms, enrollments, startDate);
+                return schedulerService.generateTimetable(courses, classrooms, enrollments, startDate, endDate);
             }
         };
 
