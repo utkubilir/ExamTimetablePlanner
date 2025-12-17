@@ -1235,3 +1235,46 @@
 .dark-mode .label {
     -fx-text-fill: -fx-color-text;
 }
+
+/* ===== SPLASH SCREEN ===== */
+.splash-screen {
+    -fx-background-color: linear-gradient(to bottom right, #667eea, #764ba2);
+}
+
+.splash-title {
+    -fx-font-size: 36px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.3), 4, 0, 0, 2);
+}
+
+.splash-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255, 255, 255, 0.85);
+}
+
+.splash-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.7);
+}
+
+.splash-version {
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255, 255, 255, 0.5);
+}
+
+.splash-progress {
+    -fx-pref-height: 8px;
+    -fx-background-radius: 4;
+}
+
+.splash-progress>.track {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+    -fx-background-radius: 4;
+}
+
+.splash-progress>.bar {
+    -fx-background-color: white;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+}
