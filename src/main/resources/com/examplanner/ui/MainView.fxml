@@ -5,6 +5,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -129,13 +132,17 @@
                   <Button fx:id="btnGenerateTimetable" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable" />
                </HBox>
 
-               <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
-                  <content>
-                     <GridPane fx:id="timetableGrid" styleClass="timetable-grid">
-                        <!-- Grid content will be generated dynamically -->
-                     </GridPane>
-                  </content>
-               </ScrollPane>
+               <TableView fx:id="examTableView" styleClass="exam-table" VBox.vgrow="ALWAYS">
+                  <columns>
+                     <TableColumn fx:id="colExamId" text="Exam ID" minWidth="80" maxWidth="100" />
+                     <TableColumn fx:id="colCourseCode" text="Course Code" minWidth="140" />
+                     <TableColumn fx:id="colDay" text="Day" minWidth="50" maxWidth="70" />
+                     <TableColumn fx:id="colTimeSlot" text="Time Slot" minWidth="100" maxWidth="130" />
+                     <TableColumn fx:id="colClassroom" text="Classroom" minWidth="140" />
+                     <TableColumn fx:id="colStudents" text="Students" minWidth="70" maxWidth="90" />
+                     <TableColumn fx:id="colActions" text="Actions" minWidth="80" maxWidth="100" />
+                  </columns>
+               </TableView>
             </children>
             <padding>
                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

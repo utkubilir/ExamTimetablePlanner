@@ -192,17 +192,17 @@ public class DataImportService {
                     }
 
                     String name = parts.length >= 2 ? parts[1].trim() : code;
-                    int duration = 60;
+                    int duration = 120;
                     if (parts.length >= 3) {
                         try {
                             duration = Integer.parseInt(parts[2].trim());
                             if (duration <= 0) {
                                 System.err.println(
-                                        "Warning: Invalid duration at line " + lineNumber + ", using default 60");
-                                duration = 60;
+                                        "Warning: Invalid duration at line " + lineNumber + ", using default 120");
+                                duration = 120;
                             }
                         } catch (NumberFormatException ignored) {
-                            duration = 60;
+                            duration = 120;
                         }
                     }
                     codeToLine.put(code, lineNumber);
@@ -227,7 +227,7 @@ public class DataImportService {
                 }
 
                 codeToLine.put(code, lineNumber);
-                courses.add(new Course(code, code, 60));
+                courses.add(new Course(code, code, 120));
             }
         }
 

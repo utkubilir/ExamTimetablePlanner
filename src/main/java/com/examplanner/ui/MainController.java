@@ -15,7 +15,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
@@ -84,7 +91,21 @@ public class MainController {
     private Label lblStudentsStatus;
 
     @FXML
-    private GridPane timetableGrid;
+    private TableView<Exam> examTableView;
+    @FXML
+    private TableColumn<Exam, String> colExamId;
+    @FXML
+    private TableColumn<Exam, String> colCourseCode;
+    @FXML
+    private TableColumn<Exam, Integer> colDay;
+    @FXML
+    private TableColumn<Exam, String> colTimeSlot;
+    @FXML
+    private TableColumn<Exam, String> colClassroom;
+    @FXML
+    private TableColumn<Exam, Integer> colStudents;
+    @FXML
+    private TableColumn<Exam, Void> colActions;
 
     @FXML
     private javafx.scene.control.ProgressBar progressBar;
@@ -564,57 +585,7 @@ public class MainController {
         }
 
         List<Exam> exams = currentTimetable.getExamsForStudent(student);
-
-        Stage dialog = new Stage();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initStyle(StageStyle.TRANSPARENT);
-
-        VBox root = new VBox();
-        root.getStyleClass().add("modal-window");
-        root.setPrefSize(1000, 700);
-
-        // Header
-        VBox header = new VBox(5);
-        header.getStyleClass().add("modal-header");
-
-        Label title = new Label("Timetable for " + student.getName());
-        title.getStyleClass().add("section-title");
-        title.setStyle("-fx-font-size: 16px;");
-
-        Label subtitle = new Label(exams.size() + " exams scheduled");
-        subtitle.getStyleClass().addAll("label", "text-secondary");
-
-        header.getChildren().addAll(title, subtitle);
-
-        // Content
-        javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
-
-        GridPane grid = new GridPane();
-        grid.getStyleClass().add("timetable-grid");
-        renderTimetableGrid(grid, currentTimetable.getExams(), exams, false);
-        scrollPane.setContent(grid);
-        VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
-
-        // Footer
-        HBox footer = new HBox();
-        footer.setStyle(
-                "-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
-
-        Button closeBtn = new Button("Close");
-        closeBtn.getStyleClass().add("secondary-button");
-        closeBtn.setOnAction(e -> dialog.close());
-        footer.getChildren().add(closeBtn);
-
-        root.getChildren().addAll(header, scrollPane, footer);
-
-        Scene scene = new Scene(root);
-        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
-        scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
-        dialog.setScene(scene);
-        dialog.showAndWait();
+        showFilteredExams("Timetable for " + student.getName(), exams);
     }
 
     private void filterByCourse() {
@@ -919,7 +890,7 @@ public class MainController {
 
         VBox root = new VBox();
         root.getStyleClass().add("modal-window");
-        root.setPrefSize(450, 600);
+        root.setPrefSize(900, 600);
 
         // Header
         VBox header = new VBox(5);
@@ -934,92 +905,186 @@ public class MainController {
 
         header.getChildren().addAll(title, subtitle);
 
-        // Content (Agenda View)
+        // Content - Grid/Calendar View
         javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
-        scrollPane.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
-
-        VBox content = new VBox(10);
-        content.setPadding(new javafx.geometry.Insets(15));
-        content.setStyle("-fx-background-color: white;");
-
-        // Sort exams by Date then Time
-        exams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
-                .thenComparing(e -> e.getSlot().getStartTime()));
-
-        LocalDate lastDate = null;
-        DateTimeFormatter dayHeaderFmt = DateTimeFormatter.ofPattern("EEEE, MMMM d");
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
-
-        for (Exam exam : exams) {
-            LocalDate date = exam.getSlot().getDate();
-
-            // New Date Group
-            if (!date.equals(lastDate)) {
-                Label dateHeader = new Label(date.format(dayHeaderFmt));
-                dateHeader.setStyle(
-                        "-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #4B5563; -fx-padding: 10 0 5 0;");
-                if (lastDate != null)
-                    parentSeparator(content); // Add separator between days
-                content.getChildren().add(dateHeader);
-                lastDate = date;
-            }
-
-            // Exam Card
-            HBox card = new HBox(15);
-            card.setStyle(
-                    "-fx-background-color: #F9FAFB; -fx-border-color: #E5E7EB; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;");
-            card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-            // Time Column
-            VBox timeBox = new VBox(2);
-            timeBox.setAlignment(javafx.geometry.Pos.CENTER);
-            timeBox.setMinWidth(60);
-
-            Label lblStart = new Label(exam.getSlot().getStartTime().format(timeFmt));
-            lblStart.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #374151;");
-            Label lblEnd = new Label(exam.getSlot().getEndTime().format(timeFmt));
-            lblEnd.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
-
-            timeBox.getChildren().addAll(lblStart, lblEnd);
-
-            // Info Column
-            VBox infoBox = new VBox(2);
-
-            String courseText = exam.getCourse().getCode();
-            if (!exam.getCourse().getName().equals(courseText)) {
-                courseText += " - " + exam.getCourse().getName();
-            }
-            Label lblCourse = new Label(courseText);
-            lblCourse.setWrapText(true);
-            lblCourse.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #111827;");
-
-            HBox detailsRow = new HBox(10);
-            Label lblRoom = new Label("📍 " + exam.getClassroom().getName());
-            lblRoom.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280;");
-
-            // Duration
-            long duration = java.time.Duration.between(exam.getSlot().getStartTime(), exam.getSlot().getEndTime())
-                    .toMinutes();
-            Label lblDur = new Label("⏱ " + duration + " min");
-            lblDur.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280;");
-
-            detailsRow.getChildren().addAll(lblRoom, lblDur);
-
-            infoBox.getChildren().addAll(lblCourse, detailsRow);
-
-            card.getChildren().addAll(timeBox, infoBox);
-            content.getChildren().add(card);
-        }
 
         if (exams.isEmpty()) {
+            VBox emptyContent = new VBox();
+            emptyContent.setAlignment(javafx.geometry.Pos.CENTER);
+            emptyContent.setPadding(new javafx.geometry.Insets(50));
             Label empty = new Label("No exams found for this selection.");
-            empty.setStyle("-fx-text-fill: #9CA3AF; -fx-padding: 20;");
-            content.getChildren().add(empty);
+            empty.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 14px;");
+            emptyContent.getChildren().add(empty);
+            scrollPane.setContent(emptyContent);
+        } else {
+            // Build Grid Calendar
+            javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+            grid.setHgap(5);
+            grid.setVgap(0); // No vertical gap - lines will align with rows
+            grid.setPadding(new javafx.geometry.Insets(15));
+            grid.setStyle("-fx-background-color: white;");
+
+            // Constants
+            double SLOT_HEIGHT = 50.0;
+            double PX_PER_HALF_HOUR = SLOT_HEIGHT; // No gap, just slot height
+            int START_HOUR = 9;
+            int END_HOUR = 18;
+            int TOTAL_SLOTS = (END_HOUR - START_HOUR) * 2 + 1;
+
+            // Row constraints
+            javafx.scene.layout.RowConstraints headerRow = new javafx.scene.layout.RowConstraints();
+            headerRow.setMinHeight(40);
+            headerRow.setPrefHeight(40);
+            headerRow.setMaxHeight(40);
+            headerRow.setVgrow(javafx.scene.layout.Priority.NEVER);
+            grid.getRowConstraints().add(headerRow);
+
+            for (int i = 0; i < TOTAL_SLOTS; i++) {
+                javafx.scene.layout.RowConstraints row = new javafx.scene.layout.RowConstraints();
+                row.setMinHeight(SLOT_HEIGHT);
+                row.setPrefHeight(SLOT_HEIGHT);
+                row.setMaxHeight(SLOT_HEIGHT);
+                row.setVgrow(javafx.scene.layout.Priority.NEVER);
+                grid.getRowConstraints().add(row);
+            }
+
+            // Column constraints - Time column
+            javafx.scene.layout.ColumnConstraints timeCol = new javafx.scene.layout.ColumnConstraints();
+            timeCol.setMinWidth(60);
+            timeCol.setPrefWidth(60);
+            grid.getColumnConstraints().add(timeCol);
+
+            // Find start date from all exams in timetable and create 7-day week
+            LocalDate startDate = currentTimetable != null && !currentTimetable.getExams().isEmpty()
+                    ? currentTimetable.getExams().stream()
+                            .map(e -> e.getSlot().getDate())
+                            .min(LocalDate::compareTo)
+                            .orElse(LocalDate.now())
+                    : LocalDate.now();
+
+            List<LocalDate> weekDates = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                weekDates.add(startDate.plusDays(i));
+            }
+
+            // Add column constraints for each day (7 days)
+            for (int i = 0; i < weekDates.size(); i++) {
+                javafx.scene.layout.ColumnConstraints dayCol = new javafx.scene.layout.ColumnConstraints();
+                dayCol.setMinWidth(100);
+                dayCol.setPrefWidth(110);
+                dayCol.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+                grid.getColumnConstraints().add(dayCol);
+            }
+
+            // Time Labels
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+            int row = 1;
+            for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
+                for (int min = 0; min < 60; min += 30) {
+                    if (hour == END_HOUR && min > 0)
+                        break;
+
+                    String timeStr = java.time.LocalTime.of(hour, min).format(timeFormatter);
+                    Label timeLabel = new Label(timeStr);
+                    timeLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+                    javafx.scene.layout.GridPane.setValignment(timeLabel, javafx.geometry.VPos.TOP);
+                    javafx.scene.layout.GridPane.setHalignment(timeLabel, javafx.geometry.HPos.RIGHT);
+                    grid.add(timeLabel, 0, row);
+                    row++;
+                }
+            }
+
+            // Day Headers
+            DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEE");
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d");
+
+            for (int i = 0; i < weekDates.size(); i++) {
+                LocalDate date = weekDates.get(i);
+                VBox dayHeader = new VBox();
+                dayHeader.setAlignment(javafx.geometry.Pos.CENTER);
+                dayHeader.setStyle("-fx-background-color: #F3F4F6; -fx-padding: 8; -fx-background-radius: 6;");
+
+                Label dayLabel = new Label(date.format(dayFormatter));
+                dayLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
+                Label dateLabel = new Label(date.format(dateFormatter));
+                dateLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+
+                dayHeader.getChildren().addAll(dayLabel, dateLabel);
+                grid.add(dayHeader, i + 1, 0);
+            }
+
+            // Place exam cards
+            String[] colors = { "purple", "orange", "pink", "blue", "green", "red" };
+            int colorIdx = 0;
+
+            for (int dayIdx = 0; dayIdx < weekDates.size(); dayIdx++) {
+                LocalDate day = weekDates.get(dayIdx);
+                int colIndex = dayIdx + 1;
+
+                // Create AnchorPane for this day
+                javafx.scene.layout.AnchorPane dayPane = new javafx.scene.layout.AnchorPane();
+                javafx.scene.layout.GridPane.setMargin(dayPane, new javafx.geometry.Insets(10, 0, 0, 0));
+                grid.add(dayPane, colIndex, 1, 1, TOTAL_SLOTS);
+
+                // Add time guide lines
+                for (int i = 0; i <= TOTAL_SLOTS; i++) {
+                    double y = i * PX_PER_HALF_HOUR;
+                    javafx.scene.shape.Line line = new javafx.scene.shape.Line();
+                    line.setStartX(0);
+                    line.setStartY(y);
+                    line.endXProperty().bind(dayPane.widthProperty());
+                    line.setEndY(y);
+                    line.setMouseTransparent(true);
+                    boolean isHourLine = (i % 2 == 0);
+                    line.setStroke(javafx.scene.paint.Color.web("#E5E7EB", isHourLine ? 0.9 : 0.55));
+                    line.setStrokeWidth(isHourLine ? 1.0 : 0.75);
+                    dayPane.getChildren().add(line);
+                }
+
+                // Get exams for this day
+                List<Exam> dayExams = exams.stream()
+                        .filter(e -> e.getSlot().getDate().equals(day))
+                        .sorted(Comparator.comparing(e -> e.getSlot().getStartTime()))
+                        .collect(Collectors.toList());
+
+                // Place exam cards
+                for (Exam exam : dayExams) {
+                    java.time.LocalTime start = exam.getSlot().getStartTime();
+                    int minutesFromStart = (start.getHour() - START_HOUR) * 60 + start.getMinute();
+                    double top = (minutesFromStart / 30.0) * PX_PER_HALF_HOUR;
+                    double height = (exam.getCourse().getExamDurationMinutes() / 30.0) * PX_PER_HALF_HOUR;
+
+                    VBox card = new VBox(2);
+                    String colorClass = "exam-card-" + colors[colorIdx % colors.length];
+                    colorIdx++;
+                    card.getStyleClass().addAll("exam-card", colorClass);
+                    card.setStyle("-fx-padding: 8;");
+
+                    Label courseLabel = new Label(exam.getCourse().getCode());
+                    courseLabel.getStyleClass().add("exam-card-title");
+                    courseLabel.setStyle("-fx-font-size: 12px;");
+
+                    Label roomLabel = new Label("📍 " + exam.getClassroom().getName());
+                    roomLabel.getStyleClass().add("exam-card-detail");
+                    roomLabel.setStyle("-fx-font-size: 10px;");
+
+                    card.getChildren().addAll(courseLabel, roomLabel);
+
+                    dayPane.getChildren().add(card);
+                    javafx.scene.layout.AnchorPane.setTopAnchor(card, top);
+                    javafx.scene.layout.AnchorPane.setLeftAnchor(card, 2.0);
+                    javafx.scene.layout.AnchorPane.setRightAnchor(card, 2.0);
+                    card.setMinHeight(height - 4);
+                    card.setPrefHeight(height - 4);
+                    card.setMaxHeight(height - 4);
+                }
+            }
+
+            scrollPane.setContent(grid);
         }
 
-        scrollPane.setContent(content);
         javafx.scene.layout.VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
 
         // Footer
@@ -1053,242 +1118,105 @@ public class MainController {
     private void refreshTimetable() {
         try {
             if (currentTimetable == null || currentTimetable.getExams().isEmpty()) {
-                timetableGrid.getChildren().clear();
-                timetableGrid.getColumnConstraints().clear();
-                timetableGrid.getRowConstraints().clear();
-                Label placeholder = new Label("No exams scheduled. Click 'Generate Timetable' to begin.");
-                placeholder.getStyleClass().add("section-subtitle");
-                timetableGrid.add(placeholder, 0, 0);
+                examTableView.setItems(FXCollections.observableArrayList());
+                examTableView.setPlaceholder(new Label("No exams scheduled. Click 'Generate Timetable' to begin."));
                 return;
             }
 
-            renderTimetableGrid(timetableGrid, currentTimetable.getExams(), currentTimetable.getExams(), true);
+            // Setup columns
+            setupTableColumns();
+
+            // Sort exams by date then time
+            List<Exam> sortedExams = new ArrayList<>(currentTimetable.getExams());
+            sortedExams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
+                    .thenComparing(e -> e.getSlot().getStartTime()));
+
+            // Set data
+            ObservableList<Exam> examData = FXCollections.observableArrayList(sortedExams);
+            examTableView.setItems(examData);
+
         } catch (Exception e) {
             e.printStackTrace();
             showError("Rendering Error", "Failed to refresh timetable: " + e.getMessage());
         }
     }
 
-    private void renderTimetableGrid(GridPane grid, List<Exam> allExamsForRange, List<Exam> examsToRender,
-            boolean enableDragAndDrop) {
-        grid.getChildren().clear();
-        grid.getColumnConstraints().clear();
-        grid.getRowConstraints().clear();
+    private void setupTableColumns() {
+        // Sütunların tablonun tüm genişliğini kaplaması için
+        examTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // Ensure a consistent gap model for absolute positioning inside the day
-        // AnchorPane
-        // (CSS may set -fx-vgap / -fx-hgap; we also set defaults for newly-created
-        // grids)
-        if (grid.getVgap() <= 0) {
-            grid.setVgap(10);
-        }
-        if (grid.getHgap() <= 0) {
-            grid.setHgap(10);
-        }
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
 
-        // --- 1. Setup Grid Dimensions (Fixed) ---
-        double SLOT_HEIGHT = 50.0; // 50px per 30 mins (row height)
-        double PX_PER_HALF_HOUR = SLOT_HEIGHT + grid.getVgap(); // includes visual gap between slots
-        int START_HOUR = 9;
-        int END_HOUR = 18;
-        int TOTAL_SLOTS = (END_HOUR - START_HOUR) * 2 + 1; // 9:00 to 18:00 inclusive
+        // Find the start date for day numbering
+        LocalDate startDate = currentTimetable.getExams().stream()
+                .map(e -> e.getSlot().getDate())
+                .min(LocalDate::compareTo)
+                .orElse(LocalDate.now());
 
-        // Setup Rows
-        javafx.scene.layout.RowConstraints headerRow = new javafx.scene.layout.RowConstraints();
-        headerRow.setMinHeight(40);
-        headerRow.setPrefHeight(40);
-        grid.getRowConstraints().add(headerRow); // Row 0 (Headers)
+        // Exam ID column
+        colExamId.setCellValueFactory(cellData -> {
+            int index = examTableView.getItems().indexOf(cellData.getValue()) + 1;
+            return new SimpleStringProperty(String.format("EX%03d", index));
+        });
 
-        for (int i = 0; i < TOTAL_SLOTS; i++) {
-            javafx.scene.layout.RowConstraints row = new javafx.scene.layout.RowConstraints();
-            row.setMinHeight(SLOT_HEIGHT);
-            row.setPrefHeight(SLOT_HEIGHT);
-            row.setMaxHeight(SLOT_HEIGHT);
-            row.setVgrow(javafx.scene.layout.Priority.NEVER);
-            grid.getRowConstraints().add(row);
-        }
+        // Course Code column
+        colCourseCode
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getCourse().getCode()));
 
-        // Setup Columns (Time Label Col + Day Cols)
-        javafx.scene.layout.ColumnConstraints timeCol = new javafx.scene.layout.ColumnConstraints();
-        timeCol.setMinWidth(60);
-        timeCol.setPrefWidth(60);
-        grid.getColumnConstraints().add(timeCol); // Col 0
+        // Day column
+        colDay.setCellValueFactory(cellData -> {
+            LocalDate examDate = cellData.getValue().getSlot().getDate();
+            int dayNum = (int) java.time.temporal.ChronoUnit.DAYS.between(startDate, examDate) + 1;
+            return new SimpleIntegerProperty(dayNum).asObject();
+        });
 
-        // Determine Start Date (Min Date from full timetable range)
-        LocalDate startDate = LocalDate.now().plusDays(1);
-        if (allExamsForRange != null && !allExamsForRange.isEmpty()) {
-            startDate = allExamsForRange.stream()
-                    .map(e -> e.getSlot().getDate())
-                    .min(LocalDate::compareTo)
-                    .orElse(LocalDate.now());
-        }
+        // Time Slot column
+        colTimeSlot.setCellValueFactory(cellData -> {
+            Exam exam = cellData.getValue();
+            String timeSlot = exam.getSlot().getStartTime().format(timeFmt) + "-" +
+                    exam.getSlot().getEndTime().format(timeFmt);
+            return new SimpleStringProperty(timeSlot);
+        });
 
-        // Create list of 7 days starting from startDate
-        List<LocalDate> dateList = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
-            dateList.add(startDate.plusDays(i));
-        }
+        // Classroom column
+        colClassroom.setCellValueFactory(
+                cellData -> new SimpleStringProperty(cellData.getValue().getClassroom().getName()));
 
-        // Add constraints for each day column
-        for (int i = 0; i < dateList.size(); i++) {
-            javafx.scene.layout.ColumnConstraints dayCol = new javafx.scene.layout.ColumnConstraints();
-            dayCol.setMinWidth(150);
-            dayCol.setPrefWidth(200);
-            dayCol.setHgrow(javafx.scene.layout.Priority.ALWAYS);
-            grid.getColumnConstraints().add(dayCol);
-        }
+        // Students column
+        colStudents.setCellValueFactory(cellData -> {
+            String courseCode = cellData.getValue().getCourse().getCode();
+            long studentCount = enrollments.stream()
+                    .filter(e -> e.getCourse().getCode().equals(courseCode))
+                    .count();
+            return new SimpleIntegerProperty((int) studentCount).asObject();
+        });
 
-        // --- 2. Render Headers and Time Labels ---
-        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEE");
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
-        // Time Labels
-        int row = 1;
-        for (int hour = START_HOUR; hour <= END_HOUR; hour++) {
-            for (int min = 0; min < 60; min += 30) {
-                if (hour == END_HOUR && min > 0)
-                    break;
-
-                String timeStr = LocalTime.of(hour, min).format(timeFormatter);
-                Label timeLabel = new Label(timeStr);
-                timeLabel.getStyleClass().add("time-label");
-                javafx.scene.layout.GridPane.setValignment(timeLabel, javafx.geometry.VPos.TOP);
-                javafx.scene.layout.GridPane.setHalignment(timeLabel, javafx.geometry.HPos.RIGHT);
-                grid.add(timeLabel, 0, row);
-                row++;
-            }
-        }
-
-        // Day Headers
-        for (int i = 0; i < dateList.size(); i++) {
-            LocalDate date = dateList.get(i);
-            VBox header = new VBox();
-            header.getStyleClass().add("grid-header");
-            header.setAlignment(javafx.geometry.Pos.CENTER);
-
-            Label dayLabel = new Label(date.format(dayFormatter));
-            dayLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: -fx-color-text;");
-
-            Label dateLabel = new Label(date.format(dateFormatter));
-            dateLabel.setStyle("-fx-text-fill: -fx-color-text-secondary; -fx-font-size: 11px;");
-
-            header.getChildren().addAll(dayLabel, dateLabel);
-            grid.add(header, i + 1, 0);
-        }
-
-        // --- 3. Place Exams in AnchorPanes per Day ---
-        String[] colors = { "purple", "orange", "pink", "blue", "green", "red" };
-        List<Exam> safeExams = examsToRender == null ? java.util.Collections.emptyList() : examsToRender;
-
-        for (int i = 0; i < dateList.size(); i++) {
-            LocalDate day = dateList.get(i);
-            int colIndex = i + 1;
-
-            javafx.scene.layout.AnchorPane dayPane = new javafx.scene.layout.AnchorPane();
-            grid.add(dayPane, colIndex, 1, 1, TOTAL_SLOTS);
-
-            // Subtle horizontal guides to make slot boundaries clearer
-            addTimeGuides(dayPane, TOTAL_SLOTS, PX_PER_HALF_HOUR);
-
-            List<Exam> dayExams = safeExams.stream()
-                    .filter(e -> e.getSlot().getDate().equals(day))
-                    .sorted(Comparator.comparing(e -> e.getSlot().getStartTime()))
-                    .collect(Collectors.toList());
-
-            arrangeDayExams(dayPane, dayExams, PX_PER_HALF_HOUR, START_HOUR, colors, enableDragAndDrop);
-
-            if (enableDragAndDrop) {
-                final LocalDate targetDate = day;
-                dayPane.setOnDragOver(event -> {
-                    if (event.getGestureSource() != dayPane && event.getDragboard().hasString()) {
-                        event.acceptTransferModes(javafx.scene.input.TransferMode.MOVE);
-                    }
-                    event.consume();
-                });
-
-                dayPane.setOnDragDropped(event -> {
-                    javafx.scene.input.Dragboard db = event.getDragboard();
-                    boolean success = false;
-                    if (db.hasString()) {
-                        String data = db.getString();
-                        String[] parts = data.split("\\|");
-                        if (parts.length == 3) {
-                            String courseCode = parts[0];
-                            Exam draggedExam = currentTimetable.getExams().stream()
-                                    .filter(e -> e.getCourse().getCode().equals(courseCode))
-                                    .findFirst()
-                                    .orElse(null);
-
-                            if (draggedExam != null) {
-                                double dropY = event.getY();
-                                int slotsFromTop = (int) (dropY / PX_PER_HALF_HOUR);
-                                LocalTime newStartTime = LocalTime.of(START_HOUR, 0)
-                                        .plusMinutes(slotsFromTop * 30);
-                                LocalTime newEndTime = newStartTime
-                                        .plusMinutes(draggedExam.getCourse().getExamDurationMinutes());
-
-                                if (newEndTime.isAfter(LocalTime.of(18, 30))) {
-                                    showError("Invalid Move", "Exam extends beyond 18:30.");
-                                    success = false;
-                                } else {
-                                    Exam candidate = new Exam(draggedExam.getCourse(), draggedExam.getClassroom(),
-                                            new com.examplanner.domain.ExamSlot(targetDate, newStartTime, newEndTime));
-
-                                    String error = constraintChecker.checkManualMove(candidate,
-                                            currentTimetable.getExams(), enrollments);
-
-                                    if (error != null) {
-                                        showError("Constraint Violation", error + "\n\nMove rejected.");
-                                        success = false;
-                                    } else {
-                                        javafx.scene.control.Alert confirm = new javafx.scene.control.Alert(
-                                                javafx.scene.control.Alert.AlertType.CONFIRMATION);
-                                        confirm.setTitle("Confirm Move");
-                                        confirm.setHeaderText("Re-schedule Exam");
-                                        confirm.setContentText(
-                                                "Move " + courseCode + " to " + targetDate + " at " + newStartTime
-                                                        + "?");
-
-                                        if (confirm.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
-                                            draggedExam.getSlot().setDate(targetDate);
-                                            draggedExam.getSlot().setStartTime(newStartTime);
-                                            draggedExam.getSlot().setEndTime(newEndTime);
-
-                                            repository.saveTimetable(currentTimetable);
-                                            refreshTimetable();
-                                            success = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    event.setDropCompleted(success);
-                    event.consume();
+        // Actions column with Edit button
+        colActions.setCellFactory(param -> new TableCell<Exam, Void>() {
+            private final Button editBtn = new Button("Edit");
+            {
+                editBtn.setStyle(
+                        "-fx-background-color: #F59E0B; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 4;");
+                editBtn.setOnAction(event -> {
+                    Exam exam = getTableView().getItems().get(getIndex());
+                    showExamDetails(exam);
                 });
             }
-        }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(editBtn);
+                }
+            }
+        });
     }
 
-    private void addTimeGuides(javafx.scene.layout.AnchorPane pane, int totalSlots, double pxPerHalfHour) {
-        // Draw behind cards and don't intercept mouse events (drag/drop, clicks)
-        for (int i = 0; i <= totalSlots; i++) {
-            double y = i * pxPerHalfHour;
-            javafx.scene.shape.Line line = new javafx.scene.shape.Line();
-            line.setStartX(0);
-            line.setStartY(y);
-            line.endXProperty().bind(pane.widthProperty());
-            line.setEndY(y);
-            line.setMouseTransparent(true);
-
-            boolean isHourLine = (i % 2 == 0);
-            line.setStroke(javafx.scene.paint.Color.web("#E5E7EB", isHourLine ? 0.9 : 0.55));
-            line.setStrokeWidth(isHourLine ? 1.0 : 0.75);
-
-            pane.getChildren().add(line);
-        }
-    }
+    // renderTimetableGrid, addTimeGuides, and arrangeDayExams methods removed (now
+    // using TableView)
 
     private void refreshDashboard() {
         if (currentTimetable == null) {
@@ -1331,214 +1259,6 @@ public class MainController {
         roomUsage.forEach((room, count) -> {
             chartRoomUsage.getData().add(new javafx.scene.chart.PieChart.Data(room, count));
         });
-    }
-
-    // Helper: Arrange exams in a day column to avoid visual overlap
-    private void arrangeDayExams(javafx.scene.layout.AnchorPane pane, List<Exam> exams, double pxPerHalfHour,
-            int startHour, String[] colors, boolean enableDragAndDrop) {
-        if (exams.isEmpty())
-            return;
-
-        // Simple Greedy Coloring / Packing algorithm
-        // 1. Calculate vertical position (top, height) for each exam
-        // 2. Detect overlapping groups (clusters)
-        // 3. For each cluster, distribute horizontally
-
-        class RenderBlock {
-            Exam exam;
-            double top;
-            double height;
-            double startMin;
-            double endMin;
-            int colIndex = 0;
-            int totalCols = 1;
-            boolean isSummary = false;
-            int summaryCount = 0;
-
-            RenderBlock(Exam e) {
-                this.exam = e;
-                LocalTime start = e.getSlot().getStartTime();
-                int minutesFromStart = (start.getHour() - startHour) * 60 + start.getMinute();
-                this.top = (minutesFromStart / 30.0) * pxPerHalfHour;
-                this.height = (e.getCourse().getExamDurationMinutes() / 30.0) * pxPerHalfHour;
-                this.startMin = minutesFromStart;
-                this.endMin = minutesFromStart + e.getCourse().getExamDurationMinutes();
-            }
-
-            RenderBlock(double startMin, double endMin, int count) {
-                this.isSummary = true;
-                this.summaryCount = count;
-                this.startMin = startMin;
-                this.endMin = endMin;
-                this.top = (startMin / 30.0) * pxPerHalfHour;
-                this.height = ((endMin - startMin) / 30.0) * pxPerHalfHour;
-                this.colIndex = 0;
-                this.totalCols = 1;
-            }
-        }
-
-        List<RenderBlock> blocks = exams.stream().map(RenderBlock::new).collect(Collectors.toList());
-
-        // Group into clusters of overlapping events
-        // Two events overlap if (Start1 < End2) and (Start2 < End1)
-        List<List<RenderBlock>> clusters = new ArrayList<>();
-        if (!blocks.isEmpty()) {
-            List<RenderBlock> currentCluster = new ArrayList<>();
-            currentCluster.add(blocks.get(0));
-            clusters.add(currentCluster);
-
-            double clusterEnd = blocks.get(0).endMin;
-
-            for (int i = 1; i < blocks.size(); i++) {
-                RenderBlock b = blocks.get(i);
-                if (b.startMin < clusterEnd) {
-                    // Overlaps with the current cluster context
-                    currentCluster.add(b);
-                    clusterEnd = Math.max(clusterEnd, b.endMin);
-                } else {
-                    // New cluster
-                    currentCluster = new ArrayList<>();
-                    currentCluster.add(b);
-                    clusters.add(currentCluster);
-                    clusterEnd = b.endMin;
-                }
-            }
-        }
-
-        List<RenderBlock> finalBlocksToRender = new ArrayList<>();
-        int MAX_COLS_THRESHOLD = 5;
-
-        // Process each cluster to assign columns
-        for (List<RenderBlock> cluster : clusters) {
-            // Simple packing: "First Fit".
-            List<List<RenderBlock>> columns = new ArrayList<>();
-
-            for (RenderBlock block : cluster) {
-                boolean placed = false;
-                for (int c = 0; c < columns.size(); c++) {
-                    List<RenderBlock> colEvents = columns.get(c);
-                    RenderBlock last = colEvents.get(colEvents.size() - 1);
-                    if (block.startMin >= last.endMin) {
-                        colEvents.add(block);
-                        block.colIndex = c;
-                        placed = true;
-                        break;
-                    }
-                }
-
-                if (!placed) {
-                    List<RenderBlock> newCol = new ArrayList<>();
-                    newCol.add(block);
-                    columns.add(newCol);
-                    block.colIndex = columns.size() - 1;
-                }
-            }
-
-            int maxCols = columns.size();
-
-            if (maxCols > MAX_COLS_THRESHOLD) {
-                // Switch to Summary Mode for this cluster
-                double minStart = cluster.stream().mapToDouble(b -> b.startMin).min().orElse(0);
-                double maxEnd = cluster.stream().mapToDouble(b -> b.endMin).max().orElse(0);
-
-                RenderBlock summary = new RenderBlock(minStart, maxEnd, cluster.size());
-                finalBlocksToRender.add(summary);
-            } else {
-                for (RenderBlock block : cluster) {
-                    block.totalCols = maxCols;
-                }
-                finalBlocksToRender.addAll(cluster);
-            }
-        }
-
-        // Render to Pane
-        int colorIdx = 0;
-        for (RenderBlock block : finalBlocksToRender) {
-            VBox card = new VBox();
-
-            if (block.isSummary) {
-                card.getStyleClass().add("exam-card-summary");
-                card.setStyle(
-                        "-fx-background-color: #D1D5DB; -fx-border-color: #6B7280; -fx-padding: 4; -fx-alignment: center;");
-                Label title = new Label("High Density");
-                title.setStyle("-fx-font-weight: bold; -fx-font-size: 10px;");
-                Label detail = new Label(block.summaryCount + " exams");
-                detail.setStyle("-fx-font-size: 10px;");
-
-                // Add tooltip for summary
-                javafx.scene.control.Tooltip tp = new javafx.scene.control.Tooltip(
-                        block.summaryCount + " exams overlapped here.\nFilter to view details.");
-                javafx.scene.control.Tooltip.install(card, tp);
-
-                card.getChildren().addAll(title, detail);
-
-                card.setOnMouseClicked(e -> {
-                    if (e.getClickCount() == 2) {
-                        showInformation("High Density Area", block.summaryCount
-                                + " exams are scheduled in this slot.\n\nSince showing " + block.summaryCount
-                                + " columns would be unreadable, they are grouped.\n\nPlease use the 'Filter' button (Student/Course) to see specific exams day-by-day.");
-                    }
-                });
-            } else {
-                String colorClass = "exam-card-" + colors[colorIdx % colors.length];
-                colorIdx++;
-                card.getStyleClass().addAll("exam-card", colorClass);
-
-                String courseText = block.exam.getCourse().getCode();
-                Label title = new Label(courseText);
-                title.getStyleClass().add("exam-card-title");
-                if (block.totalCols > 2)
-                    title.setStyle("-fx-font-size: 9px;");
-
-                Label detail = new Label("📍 " + block.exam.getClassroom().getName());
-                detail.getStyleClass().add("exam-card-detail");
-                if (block.totalCols > 2)
-                    detail.setStyle("-fx-font-size: 8px;");
-
-                card.getChildren().addAll(title, detail);
-
-                card.setOnMouseClicked(e -> showExamDetails(block.exam));
-
-                if (enableDragAndDrop) {
-                    // DRAG SOURCE
-                    card.setOnDragDetected(event -> {
-                        javafx.scene.input.Dragboard db = card.startDragAndDrop(javafx.scene.input.TransferMode.MOVE);
-                        javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
-                        content.putString(block.exam.getCourse().getCode() + "|" + block.exam.getSlot().getDate() + "|"
-                                + block.exam.getSlot().getStartTime());
-                        db.setContent(content);
-                        event.consume();
-                    });
-                }
-            }
-
-            pane.getChildren().add(card);
-            javafx.scene.layout.AnchorPane.setTopAnchor(card, block.top);
-
-            card.setMinHeight(block.height - 2);
-            card.setPrefHeight(block.height - 2);
-            card.setMaxHeight(block.height - 2);
-
-            javafx.beans.value.ChangeListener<Number> widthListener = (obs, oldVal, newVal) -> {
-                double totalWidth = pane.getWidth();
-                if (totalWidth <= 0)
-                    return;
-
-                // For summary, full width
-                double colWidth = block.isSummary ? totalWidth : totalWidth / block.totalCols;
-                double newX = block.isSummary ? 2 : (colWidth * block.colIndex) + 2;
-                double newW = colWidth - 4;
-
-                card.setLayoutX(newX);
-                card.setPrefWidth(newW);
-                card.setMinWidth(newW);
-                card.setMaxWidth(newW);
-            };
-
-            pane.widthProperty().addListener(widthListener);
-            // Initial call
-            widthListener.changed(pane.widthProperty(), null, pane.getWidth());
-        }
     }
 
     private void showExamDetails(Exam exam) {
