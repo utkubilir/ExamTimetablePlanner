@@ -22,6 +22,7 @@
 <?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.shape.SVGPath?>
 
 <BorderPane prefHeight="800.0" prefWidth="1200.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.examplanner.ui.MainController">
    
@@ -37,7 +38,7 @@
                <Button fx:id="btnDataImport" maxWidth="Infinity" mnemonicParsing="false" onAction="#showDataImport" styleClass="nav-button, active" text="Data Import" />
                 <Button fx:id="btnDashboard" maxWidth="Infinity" mnemonicParsing="false" onAction="#showDashboard" styleClass="nav-button" text="Dashboard" />
                <Button fx:id="btnTimetable" maxWidth="Infinity" mnemonicParsing="false" onAction="#showTimetable" styleClass="nav-button" text="Timetable" />
-               <Button fx:id="btnFilter" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleFilter" styleClass="nav-button" text="Student Search" />
+               <Button fx:id="btnStudentFilter" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSidebarStudentSearch" styleClass="nav-button" text="Student Search" />
                 <Button fx:id="btnUserManual" maxWidth="Infinity" mnemonicParsing="false" onAction="#showUserManual" styleClass="nav-button" text="📖 User Manual" />
                 <Separator />
                 <Button fx:id="btnStudentPortal" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleStudentPortal" styleClass="nav-button" text="Student Portal (Login)" />
@@ -128,11 +129,24 @@
                      <Label fx:id="lblTimetableSubtitle" styleClass="section-subtitle" text="December 2025 - Final Exams" />
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
-                  
+
+                  <ComboBox fx:id="cmbSearchType" visible="false" managed="false" />
+
                   <!-- Advanced Search Bar -->
-                  <ComboBox fx:id="cmbSearchType" prefWidth="120" styleClass="secondary-button" />
-                  <TextField fx:id="txtCourseSearch" promptText="Search..." prefWidth="150" styleClass="search-field" />
-                  <Button fx:id="btnClearSearch" text="×" styleClass="secondary-button" style="-fx-min-width: 30;" onAction="#handleClearSearch" />
+                  <HBox alignment="CENTER_LEFT" spacing="0" styleClass="modern-search-bar" prefWidth="350.0">
+                     <children>
+                        <Label text="🔍" style="-fx-text-fill: #9CA3AF; -fx-padding: 0 0 0 12;" />
+
+                        <TextField fx:id="txtCourseSearch" promptText="Sınav veya ders ara..."
+                                   HBox.hgrow="ALWAYS" styleClass="modern-search-field" />
+
+                        <Button fx:id="btnSearchFilter" onAction="#handleFilter" styleClass="modern-filter-btn" mnemonicParsing="false">
+                           <graphic>
+                              <SVGPath content="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" fill="#4b5563" />
+                           </graphic>
+                        </Button>
+                     </children>
+                  </HBox>
                   
                   <Button fx:id="btnHistory" mnemonicParsing="false" onAction="#showEditHistory" styleClass="secondary-button" text="📜 History" />
                   <Button fx:id="btnValidateAll" mnemonicParsing="false" onAction="#handleValidateAll" styleClass="secondary-button" text="✓ Validate All" />

@@ -1292,3 +1292,20 @@
     -fx-background-color: #1F2937;
     -fx-border-color: #374151;
 }
+
+.modern-search-bar {
+    -fx-background-color: white;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 20; /* Tam oval görünüm */
+    -fx-background-radius: 20;
+    -fx-padding: 2;
+}
+.modern-search-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+}
+.modern-filter-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}

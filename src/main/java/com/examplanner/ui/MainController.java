@@ -30,8 +30,6 @@ import javafx.scene.control.TableCell;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Priority;
@@ -70,7 +68,7 @@ public class MainController {
     @FXML
     private Button btnDashboard;
     @FXML
-    private Button btnFilter;
+    private Button btnStudentSearch;
     @FXML
     private Button btnStudentPortal;
     @FXML
@@ -100,6 +98,8 @@ public class MainController {
     @FXML
     private javafx.scene.chart.PieChart chartRoomUsage;
 
+    @FXML
+    private Button btnSearchFilter; // FXML'de verdiğimiz yeni ID
     @FXML
     private Label lblCoursesStatus;
     @FXML
@@ -530,7 +530,7 @@ public class MainController {
                                 timeRange.contains(lowerSearch);
                     })
                     .collect(Collectors.toList());
-        } else if (searchType.equals("Classroom")) {
+        } else if (searchType.equals(bundle.getString("dataImport.classrooms"))) {
             // Filter by classroom
             filteredExams = currentTimetable.getExams().stream()
                     .filter(e -> e.getClassroom().getName().toLowerCase().contains(lowerSearch))
@@ -1132,8 +1132,8 @@ public class MainController {
             btnDashboard.setText(bundle.getString("sidebar.dashboard"));
         if (btnTimetable != null)
             btnTimetable.setText(bundle.getString("sidebar.timetable"));
-        if (btnFilter != null)
-            btnFilter.setText(bundle.getString("sidebar.studentSearch"));
+        if (btnStudentSearch != null)
+            btnStudentSearch.setText(bundle.getString("sidebar.studentSearch"));
         if (btnUserManual != null)
             btnUserManual.setText(bundle.getString("sidebar.userManual"));
         if (btnStudentPortal != null)
@@ -1548,13 +1548,41 @@ public class MainController {
 
     @FXML
     private void handleFilter() {
-        if (currentTimetable == null) {
-            showError(bundle.getString("error.noTimetable"), bundle.getString("error.generateTimetableFirst"));
-            return;
-        }
+        javafx.scene.control.ContextMenu searchMenu = new javafx.scene.control.ContextMenu();
 
-        // Directly show student filter (Course filter is now in the table search bar)
-        filterByStudent();
+        // 1. DERS FİLTRESİ
+        javafx.scene.control.MenuItem courseItem = new javafx.scene.control.MenuItem(bundle.getString("dataImport.courses"));
+        courseItem.setOnAction(e -> {
+            cmbSearchType.setValue(bundle.getString("dataImport.courses"));
+            // Filtreyi anında çalıştırıyoruz
+            applyAdvancedFilter(txtCourseSearch.getText());
+        });
+
+        // 2. TARİH FİLTRESİ
+        javafx.scene.control.MenuItem dateItem = new javafx.scene.control.MenuItem(bundle.getString("examDetails.date"));
+        dateItem.setOnAction(e -> {
+            cmbSearchType.setValue(bundle.getString("examDetails.date"));
+            applyAdvancedFilter(txtCourseSearch.getText());
+        });
+
+        // 3. SAAT FİLTRESİ
+        javafx.scene.control.MenuItem timeItem = new javafx.scene.control.MenuItem(bundle.getString("examDetails.time"));
+        timeItem.setOnAction(e -> {
+            cmbSearchType.setValue(bundle.getString("examDetails.time"));
+            applyAdvancedFilter(txtCourseSearch.getText());
+        });
+
+        // 4. SINIF FİLTRESİ
+        javafx.scene.control.MenuItem roomItem = new javafx.scene.control.MenuItem(bundle.getString("dataImport.classrooms"));
+        roomItem.setOnAction(e -> {
+            cmbSearchType.setValue(bundle.getString("dataImport.classrooms"));
+            applyAdvancedFilter(txtCourseSearch.getText());
+        });
+
+        searchMenu.getItems().addAll(courseItem, dateItem, timeItem, roomItem);
+
+        // Menüyü huni butonunun (btnSearchFilter) altında göster
+        searchMenu.show(btnSearchFilter, javafx.geometry.Side.BOTTOM, 0, 5);
     }
 
     private void filterByStudent() {
@@ -3618,5 +3646,25 @@ public class MainController {
         alert.setContentText(content);
         applyDarkModeToAlert(alert);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void handleShowFilterMenu() {
+        javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
+
+        javafx.scene.control.CheckMenuItem conflictItem = new javafx.scene.control.CheckMenuItem("Çakışmaları Göster");
+        conflictItem.setOnAction(e -> handleConflicts()); // Senin mevcut handleConflicts metodunu çağırır
+
+        javafx.scene.control.MenuItem validateItem = new javafx.scene.control.MenuItem("Hepsini Doğrula");
+        validateItem.setOnAction(e -> handleValidateAll()); // Senin mevcut handleValidateAll metodunu çağırır
+
+        contextMenu.getItems().addAll(conflictItem, validateItem);
+        contextMenu.show(btnStudentSearch, javafx.geometry.Side.BOTTOM, 0, 0);
+    }
+
+    @FXML
+    private void handleSidebarStudentSearch() {
+        // Sidebar'daki "Student Search" butonuna basınca çalışacak
+        filterByStudent();
     }
 }
