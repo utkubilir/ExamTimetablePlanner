@@ -29,6 +29,9 @@ public class SchedulerService {
 
     public ExamTimetable generateTimetable(List<Course> courses, List<Classroom> classrooms,
             List<Enrollment> enrollments, LocalDate startDate) {
+        if (startDate == null) {
+            throw new IllegalArgumentException("Start date cannot be null");
+        }
         // Default: 7 days from start date
         return generateTimetable(courses, classrooms, enrollments, startDate, startDate.plusDays(6));
     }
