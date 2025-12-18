@@ -1832,7 +1832,14 @@ public class MainController {
     // using TableView)
 
     private void refreshDashboard() {
-        if (currentTimetable == null) {
+        if (currentTimetable == null || currentTimetable.getExams().isEmpty()) {
+            // Clear charts when no data
+            if (chartExamsPerDay != null) {
+                chartExamsPerDay.getData().clear();
+            }
+            if (chartRoomUsage != null) {
+                chartRoomUsage.getData().clear();
+            }
             return;
         }
 
