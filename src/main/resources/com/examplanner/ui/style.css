@@ -685,12 +685,18 @@
     -fx-border-color: #374151;
 }
 
+.dark-mode .settings-option {
+    -fx-background-color: #374151;
+    -fx-text-fill: #D1D5DB;
+}
+
 .dark-mode .settings-option:hover {
     -fx-background-color: #3B2D5C;
 }
 
 .dark-mode .settings-option.selected {
     -fx-background-color: #3B2D5C;
+    -fx-text-fill: #A78BFA;
 }
 
 .dark-mode .progress-bar {
