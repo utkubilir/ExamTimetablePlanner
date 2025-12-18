@@ -4,6 +4,7 @@ import com.examplanner.domain.Classroom;
 import com.examplanner.domain.Course;
 import com.examplanner.domain.Enrollment;
 import com.examplanner.domain.Exam;
+import com.examplanner.domain.ExamSlot;
 import com.examplanner.domain.Student;
 import com.examplanner.domain.ExamTimetable;
 import com.examplanner.services.DataImportService;
@@ -46,8 +47,6 @@ import java.io.PrintWriter;
 import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 public class MainController {
 
@@ -68,6 +67,8 @@ public class MainController {
     private Button btnGenerateTimetable;
     @FXML
     private Button btnDeleteData;
+    @FXML
+    private Button btnValidateAll;
 
     @FXML
     private VBox viewDataImport;
@@ -81,8 +82,6 @@ public class MainController {
     private VBox viewUserManual;
     @FXML
     private Button btnUserManual;
-    @FXML
-    private Button btnSettings;
     @FXML
     private javafx.scene.chart.BarChart<String, Number> chartExamsPerDay;
     @FXML
@@ -135,11 +134,6 @@ public class MainController {
     private SchedulerService schedulerService = new SchedulerService();
     private com.examplanner.persistence.DataRepository repository = new com.examplanner.persistence.DataRepository();
     private com.examplanner.services.ConstraintChecker constraintChecker = new com.examplanner.services.ConstraintChecker();
-
-    // Settings state
-    private boolean isDarkMode = false;
-    private Locale currentLocale = Locale.ENGLISH;
-    private ResourceBundle bundle;
 
     @FXML
     public void initialize() {
@@ -489,9 +483,6 @@ public class MainController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // Apply dark mode
-        applyDarkModeToDialog(dialog);
-
         // Convert result
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == generateButtonType) {
@@ -567,7 +558,6 @@ public class MainController {
         alert.setHeaderText("Warning: This action cannot be undone!");
         alert.setContentText(
                 "Are you sure you want to permanently delete ALL courses, students, classrooms, exams, and enrollments?");
-        applyDarkModeToDialog(alert);
 
         if (alert.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
             repository.clearAllData();
@@ -633,209 +623,6 @@ public class MainController {
     }
 
     @FXML
-    private void handleSettings() {
-        // Create settings popup stage
-        Stage settingsStage = new Stage();
-        settingsStage.initModality(Modality.APPLICATION_MODAL);
-        settingsStage.initStyle(StageStyle.UNDECORATED);
-        settingsStage.setTitle("Settings");
-
-        VBox settingsContent = new VBox(10);
-        settingsContent.getStyleClass().add("settings-popup");
-        settingsContent.setPrefWidth(280);
-
-        // Title
-        Label titleLabel = new Label("⚙ " + (currentLocale.getLanguage().equals("tr") ? "Ayarlar" : "Settings"));
-        titleLabel.getStyleClass().add("settings-title");
-
-        // Theme Section
-        Label themeLabel = new Label(currentLocale.getLanguage().equals("tr") ? "TEMA" : "THEME");
-        themeLabel.getStyleClass().add("settings-section-title");
-
-        Button btnLightMode = new Button(currentLocale.getLanguage().equals("tr") ? "☀ Aydınlık Mod" : "☀ Light Mode");
-        btnLightMode.getStyleClass().add("settings-option");
-        btnLightMode.setMaxWidth(Double.MAX_VALUE);
-        if (!isDarkMode) {
-            btnLightMode.getStyleClass().add("selected");
-        }
-
-        Button btnDarkMode = new Button(currentLocale.getLanguage().equals("tr") ? "🌙 Karanlık Mod" : "🌙 Dark Mode");
-        btnDarkMode.getStyleClass().add("settings-option");
-        btnDarkMode.setMaxWidth(Double.MAX_VALUE);
-        if (isDarkMode) {
-            btnDarkMode.getStyleClass().add("selected");
-        }
-
-        btnLightMode.setOnAction(e -> {
-            if (isDarkMode) {
-                isDarkMode = false;
-                applyTheme();
-                // Also update settings popup theme
-                settingsContent.getStyleClass().remove("dark-mode");
-                btnLightMode.getStyleClass().add("selected");
-                btnDarkMode.getStyleClass().remove("selected");
-            }
-        });
-
-        btnDarkMode.setOnAction(e -> {
-            if (!isDarkMode) {
-                isDarkMode = true;
-                applyTheme();
-                // Also update settings popup theme
-                if (!settingsContent.getStyleClass().contains("dark-mode")) {
-                    settingsContent.getStyleClass().add("dark-mode");
-                }
-                btnDarkMode.getStyleClass().add("selected");
-                btnLightMode.getStyleClass().remove("selected");
-            }
-        });
-
-        // Language Section
-        Label langLabel = new Label(currentLocale.getLanguage().equals("tr") ? "DİL" : "LANGUAGE");
-        langLabel.getStyleClass().add("settings-section-title");
-
-        Button btnEnglish = new Button("🇬🇧 English");
-        btnEnglish.getStyleClass().add("settings-option");
-        btnEnglish.setMaxWidth(Double.MAX_VALUE);
-        if (currentLocale.getLanguage().equals("en")) {
-            btnEnglish.getStyleClass().add("selected");
-        }
-
-        Button btnTurkish = new Button("🇹🇷 Türkçe");
-        btnTurkish.getStyleClass().add("settings-option");
-        btnTurkish.setMaxWidth(Double.MAX_VALUE);
-        if (currentLocale.getLanguage().equals("tr")) {
-            btnTurkish.getStyleClass().add("selected");
-        }
-
-        btnEnglish.setOnAction(e -> {
-            if (!currentLocale.getLanguage().equals("en")) {
-                currentLocale = Locale.ENGLISH;
-                applyLanguage();
-                btnEnglish.getStyleClass().add("selected");
-                btnTurkish.getStyleClass().remove("selected");
-                // Update popup labels
-                titleLabel.setText("⚙ Settings");
-                themeLabel.setText("THEME");
-                btnLightMode.setText("☀ Light Mode");
-                btnDarkMode.setText("🌙 Dark Mode");
-                langLabel.setText("LANGUAGE");
-            }
-        });
-
-        btnTurkish.setOnAction(e -> {
-            if (!currentLocale.getLanguage().equals("tr")) {
-                currentLocale = new Locale("tr", "TR");
-                applyLanguage();
-                btnTurkish.getStyleClass().add("selected");
-                btnEnglish.getStyleClass().remove("selected");
-                // Update popup labels
-                titleLabel.setText("⚙ Ayarlar");
-                themeLabel.setText("TEMA");
-                btnLightMode.setText("☀ Aydınlık Mod");
-                btnDarkMode.setText("🌙 Karanlık Mod");
-                langLabel.setText("DİL");
-            }
-        });
-
-        // Close button
-        Button btnClose = new Button(currentLocale.getLanguage().equals("tr") ? "Kapat" : "Close");
-        btnClose.getStyleClass().addAll("secondary-button");
-        btnClose.setMaxWidth(Double.MAX_VALUE);
-        btnClose.setOnAction(e -> settingsStage.close());
-
-        settingsContent.getChildren().addAll(
-                titleLabel,
-                themeLabel,
-                btnLightMode,
-                btnDarkMode,
-                langLabel,
-                btnEnglish,
-                btnTurkish,
-                new javafx.scene.layout.Region() {
-                    {
-                        setMinHeight(10);
-                    }
-                },
-                btnClose);
-
-        Scene settingsScene = new Scene(settingsContent);
-        settingsScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-
-        // Apply current theme to popup
-        if (isDarkMode) {
-            settingsScene.getRoot().getStyleClass().add("dark-mode");
-        }
-
-        settingsStage.setScene(settingsScene);
-
-        // Position relative to main window
-        if (sidebar != null && sidebar.getScene() != null && sidebar.getScene().getWindow() != null) {
-            Stage mainStage = (Stage) sidebar.getScene().getWindow();
-            settingsStage.setX(mainStage.getX() + 50);
-            settingsStage.setY(mainStage.getY() + mainStage.getHeight() - 400);
-        }
-
-        settingsStage.showAndWait();
-    }
-
-    private void applyTheme() {
-        if (viewDataImport.getScene() != null) {
-            if (isDarkMode) {
-                if (!viewDataImport.getScene().getRoot().getStyleClass().contains("dark-mode")) {
-                    viewDataImport.getScene().getRoot().getStyleClass().add("dark-mode");
-                }
-            } else {
-                viewDataImport.getScene().getRoot().getStyleClass().remove("dark-mode");
-            }
-        }
-    }
-
-    /**
-     * Applies dark mode styling to any Dialog or Alert.
-     */
-    private void applyDarkModeToDialog(javafx.scene.control.Dialog<?> dialog) {
-        javafx.scene.control.DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        if (isDarkMode) {
-            dialogPane.getStyleClass().add("dark-mode");
-        }
-    }
-
-    /**
-     * Applies dark mode styling to a Scene.
-     */
-    private void applyDarkModeToScene(javafx.scene.Scene scene) {
-        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-        if (isDarkMode) {
-            scene.getRoot().getStyleClass().add("dark-mode");
-        }
-    }
-
-    private void applyLanguage() {
-        try {
-            bundle = ResourceBundle.getBundle("i18n.messages", currentLocale);
-
-            // Update navigation buttons
-            if (btnDataImport != null)
-                btnDataImport.setText(bundle.getString("nav.dataImport"));
-            if (btnDashboard != null)
-                btnDashboard.setText(bundle.getString("nav.dashboard"));
-            if (btnTimetable != null)
-                btnTimetable.setText(bundle.getString("nav.timetable"));
-            if (btnFilter != null)
-                btnFilter.setText(bundle.getString("nav.studentSearch"));
-            if (btnUserManual != null)
-                btnUserManual.setText(bundle.getString("nav.userManual"));
-            if (btnSettings != null)
-                btnSettings.setText(bundle.getString("nav.settings"));
-
-        } catch (Exception e) {
-            System.err.println("Error loading language bundle: " + e.getMessage());
-        }
-    }
-
-    @FXML
     private void handleFilter() {
         if (currentTimetable == null) {
             showError("No Timetable", "Please generate a timetable first.");
@@ -858,8 +645,7 @@ public class MainController {
                 "Filter by Student",
                 studentList,
                 (student, query) -> student.getName().toLowerCase().contains(query)
-                        || student.getId().toLowerCase().contains(query),
-                isDarkMode);
+                        || student.getId().toLowerCase().contains(query));
 
         dialog.showAndWait().ifPresent(student -> {
             showStudentTimetable(student);
@@ -872,7 +658,23 @@ public class MainController {
             return;
         }
 
+        // DEBUG: Check enrollments for this student
+        System.out.println("=== DEBUG: Checking student " + student.getId() + " ===");
+        System.out.println("Total enrollments in system: " + enrollments.size());
+        long studentEnrollmentCount = enrollments.stream()
+                .filter(e -> e.getStudent().getId().equals(student.getId()))
+                .count();
+        System.out.println("Enrollments for this student: " + studentEnrollmentCount);
+        enrollments.stream()
+                .filter(e -> e.getStudent().getId().equals(student.getId()))
+                .forEach(e -> System.out.println("  - Enrolled in: " + e.getCourse().getCode()));
+        
         List<Exam> exams = currentTimetable.getExamsForStudent(student);
+        System.out.println("Exams found for student: " + exams.size());
+        for (Exam exam : exams) {
+            System.out.println("  - Exam: " + exam.getCourse().getCode() + " on " + exam.getSlot().getDate());
+        }
+        
         showFilteredExams("Timetable for " + student.getName(), exams);
     }
 
@@ -885,8 +687,7 @@ public class MainController {
                 "Filter by Course",
                 courseList,
                 (course, query) -> course.getName().toLowerCase().contains(query)
-                        || course.getCode().toLowerCase().contains(query),
-                isDarkMode);
+                        || course.getCode().toLowerCase().contains(query));
 
         dialog.showAndWait().ifPresent(course -> {
             List<Exam> exams = currentTimetable.getExamsForCourse(course);
@@ -1101,6 +902,50 @@ public class MainController {
     }
 
     @FXML
+    private void handleValidateAll() {
+        if (currentTimetable == null || currentTimetable.getExams().isEmpty()) {
+            showError("No Timetable", "Please generate a timetable first.");
+            return;
+        }
+
+        List<String> issues = new ArrayList<>();
+        int validCount = 0;
+        
+        for (Exam exam : currentTimetable.getExams()) {
+            List<Exam> others = currentTimetable.getExams().stream()
+                    .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                    .collect(Collectors.toList());
+            
+            String error = constraintChecker.checkManualMove(exam, others, enrollments);
+            
+            if (error != null) {
+                issues.add("❌ " + exam.getCourse().getCode() + ": " + error);
+            } else {
+                validCount++;
+            }
+        }
+
+        if (issues.isEmpty()) {
+            showInformation("✓ All Valid", 
+                    "All " + validCount + " exams pass constraint validation!\n\n" +
+                    "• No classroom conflicts\n" +
+                    "• No student time conflicts\n" +
+                    "• All capacity requirements met\n" +
+                    "• Minimum gaps satisfied");
+        } else {
+            List<String> reportLines = new ArrayList<>();
+            reportLines.add("📊 Validation Summary:");
+            reportLines.add("   ✓ Valid: " + validCount + " exams");
+            reportLines.add("   ❌ Issues: " + issues.size() + " exams");
+            reportLines.add("");
+            reportLines.add("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            reportLines.addAll(issues);
+            
+            showScrollableDialog("Validation Results", reportLines);
+        }
+    }
+
+    @FXML
     private void handleStudentPortal() {
         if (students.isEmpty()) {
             showError("No Data", "Please load students first.");
@@ -1138,7 +983,6 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        applyDarkModeToDialog(alert);
         alert.showAndWait();
     }
 
@@ -1147,7 +991,6 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
-        applyDarkModeToDialog(alert);
         alert.showAndWait();
     }
 
@@ -1157,21 +1000,18 @@ public class MainController {
 
         VBox root = new VBox(10);
         root.setPadding(new javafx.geometry.Insets(20));
-        root.getStyleClass().add("modal-content");
 
         Label lblTitle = new Label(title);
-        lblTitle.getStyleClass().add("section-title");
+        lblTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         ListView<String> list = new ListView<>();
         list.getItems().addAll(lines);
 
         Button close = new Button("Close");
-        close.getStyleClass().add("secondary-button");
         close.setOnAction(e -> dialog.close());
 
         root.getChildren().addAll(lblTitle, list, close);
         Scene scene = new Scene(root, 500, 600);
-        applyDarkModeToScene(scene);
 
         dialog.setScene(scene);
         dialog.showAndWait();
@@ -1213,11 +1053,12 @@ public class MainController {
             emptyContent.getChildren().add(empty);
             scrollPane.setContent(emptyContent);
         } else {
+            // Build Grid Calendar
             javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
             grid.setHgap(5);
             grid.setVgap(0); // No vertical gap - lines will align with rows
             grid.setPadding(new javafx.geometry.Insets(15));
-            grid.getStyleClass().add("timetable-grid");
+            grid.setStyle("-fx-background-color: white;");
 
             // Constants
             double SLOT_HEIGHT = 50.0;
@@ -1249,24 +1090,38 @@ public class MainController {
             timeCol.setPrefWidth(60);
             grid.getColumnConstraints().add(timeCol);
 
-            // Find start date from all exams in timetable and create 7-day week
-            LocalDate startDate = currentTimetable != null && !currentTimetable.getExams().isEmpty()
-                    ? currentTimetable.getExams().stream()
-                            .map(e -> e.getSlot().getDate())
-                            .min(LocalDate::compareTo)
-                            .orElse(LocalDate.now())
-                    : LocalDate.now();
+            // Find date range from FILTERED exams (not all exams) to show only relevant days
+            LocalDate startDate;
+            LocalDate endDate;
+            
+            if (!exams.isEmpty()) {
+                startDate = exams.stream()
+                        .map(e -> e.getSlot().getDate())
+                        .min(LocalDate::compareTo)
+                        .orElse(LocalDate.now());
+                endDate = exams.stream()
+                        .map(e -> e.getSlot().getDate())
+                        .max(LocalDate::compareTo)
+                        .orElse(LocalDate.now());
+            } else {
+                startDate = LocalDate.now();
+                endDate = LocalDate.now();
+            }
+            
+            // Calculate number of days to show (minimum 7, but expand to include all exam dates)
+            long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+            int numDays = (int) Math.max(7, daysBetween);
 
             List<LocalDate> weekDates = new ArrayList<>();
-            for (int i = 0; i < 7; i++) {
+            for (int i = 0; i < numDays; i++) {
                 weekDates.add(startDate.plusDays(i));
             }
 
-            // Add column constraints for each day (7 days)
+            // Add column constraints for each day - wider columns to show full course codes
             for (int i = 0; i < weekDates.size(); i++) {
                 javafx.scene.layout.ColumnConstraints dayCol = new javafx.scene.layout.ColumnConstraints();
-                dayCol.setMinWidth(100);
-                dayCol.setPrefWidth(110);
+                dayCol.setMinWidth(130);
+                dayCol.setPrefWidth(150);
                 dayCol.setHgrow(javafx.scene.layout.Priority.ALWAYS);
                 grid.getColumnConstraints().add(dayCol);
             }
@@ -1357,11 +1212,15 @@ public class MainController {
 
                     Label courseLabel = new Label(exam.getCourse().getCode());
                     courseLabel.getStyleClass().add("exam-card-title");
-                    courseLabel.setStyle("-fx-font-size: 12px;");
+                    courseLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold;");
+                    courseLabel.setWrapText(true);
+                    courseLabel.setMaxWidth(Double.MAX_VALUE);
 
                     Label roomLabel = new Label("📍 " + exam.getClassroom().getName());
                     roomLabel.getStyleClass().add("exam-card-detail");
                     roomLabel.setStyle("-fx-font-size: 10px;");
+                    roomLabel.setWrapText(true);
+                    roomLabel.setMaxWidth(Double.MAX_VALUE);
 
                     card.getChildren().addAll(courseLabel, roomLabel);
 
@@ -1382,7 +1241,8 @@ public class MainController {
 
         // Footer
         HBox footer = new HBox();
-        footer.getStyleClass().add("modal-footer");
+        footer.setStyle(
+                "-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
 
         Button closeBtn = new Button("Close");
         closeBtn.getStyleClass().add("secondary-button");
@@ -1393,7 +1253,7 @@ public class MainController {
 
         Scene scene = new Scene(root);
         scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
-        applyDarkModeToScene(scene);
+        scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
 
         dialog.setScene(scene);
         dialog.showAndWait();
@@ -1445,6 +1305,65 @@ public class MainController {
                 .map(e -> e.getSlot().getDate())
                 .min(LocalDate::compareTo)
                 .orElse(LocalDate.now());
+
+        // Add row factory for context menu and double-click edit
+        examTableView.setRowFactory(tv -> {
+            javafx.scene.control.TableRow<Exam> row = new javafx.scene.control.TableRow<>();
+            
+            // Context Menu
+            javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
+            
+            javafx.scene.control.MenuItem editItem = new javafx.scene.control.MenuItem("✏️ Edit Exam");
+            editItem.setOnAction(e -> {
+                Exam exam = row.getItem();
+                if (exam != null) showExamDetails(exam);
+            });
+            
+            javafx.scene.control.MenuItem quickDateItem = new javafx.scene.control.MenuItem("📅 Quick Change Date");
+            quickDateItem.setOnAction(e -> {
+                Exam exam = row.getItem();
+                if (exam != null) showQuickDateChange(exam);
+            });
+            
+            javafx.scene.control.MenuItem quickRoomItem = new javafx.scene.control.MenuItem("🏫 Quick Change Classroom");
+            quickRoomItem.setOnAction(e -> {
+                Exam exam = row.getItem();
+                if (exam != null) showQuickClassroomChange(exam);
+            });
+            
+            javafx.scene.control.MenuItem quickTimeItem = new javafx.scene.control.MenuItem("🕒 Quick Change Time");
+            quickTimeItem.setOnAction(e -> {
+                Exam exam = row.getItem();
+                if (exam != null) showQuickTimeChange(exam);
+            });
+            
+            javafx.scene.control.SeparatorMenuItem separator = new javafx.scene.control.SeparatorMenuItem();
+            
+            javafx.scene.control.MenuItem validateItem = new javafx.scene.control.MenuItem("✓ Validate This Exam");
+            validateItem.setOnAction(e -> {
+                Exam exam = row.getItem();
+                if (exam != null) validateSingleExam(exam);
+            });
+            
+            contextMenu.getItems().addAll(editItem, separator, quickDateItem, quickTimeItem, quickRoomItem, 
+                    new javafx.scene.control.SeparatorMenuItem(), validateItem);
+            
+            // Only show context menu for non-empty rows
+            row.contextMenuProperty().bind(
+                javafx.beans.binding.Bindings.when(row.emptyProperty())
+                    .then((javafx.scene.control.ContextMenu) null)
+                    .otherwise(contextMenu)
+            );
+            
+            // Double-click to edit
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    showExamDetails(row.getItem());
+                }
+            });
+            
+            return row;
+        });
 
         // Exam ID column
         colExamId.setCellValueFactory(cellData -> {
@@ -1517,6 +1436,274 @@ public class MainController {
         });
     }
 
+    // Quick Edit Methods for FR5
+    private void showQuickDateChange(Exam exam) {
+        Dialog<LocalDate> dialog = new Dialog<>();
+        dialog.setTitle("Quick Date Change");
+        dialog.setHeaderText("Change date for: " + exam.getCourse().getCode());
+        
+        ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(applyBtn, ButtonType.CANCEL);
+        
+        VBox content = new VBox(15);
+        content.setPadding(new javafx.geometry.Insets(20));
+        
+        Label currentLabel = new Label("Current: " + exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy (EEEE)")));
+        currentLabel.setStyle("-fx-text-fill: #6B7280;");
+        
+        javafx.scene.control.DatePicker datePicker = new javafx.scene.control.DatePicker(exam.getSlot().getDate());
+        datePicker.setMaxWidth(Double.MAX_VALUE);
+        
+        // Validation feedback
+        Label validationLabel = new Label();
+        validationLabel.setWrapText(true);
+        validationLabel.setStyle("-fx-font-size: 12px;");
+        
+        datePicker.valueProperty().addListener((obs, old, newDate) -> {
+            if (newDate != null) {
+                ExamSlot newSlot = new ExamSlot(newDate, exam.getSlot().getStartTime(), exam.getSlot().getEndTime());
+                Exam tempExam = new Exam(exam.getCourse(), exam.getClassroom(), newSlot);
+                List<Exam> others = currentTimetable.getExams().stream()
+                        .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                        .collect(Collectors.toList());
+                String error = constraintChecker.checkManualMove(tempExam, others, enrollments);
+                
+                if (error == null) {
+                    validationLabel.setText("✓ Valid change");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+                } else {
+                    validationLabel.setText("⚠ " + error);
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                }
+            }
+        });
+        
+        // Trigger initial validation
+        datePicker.fireEvent(new javafx.event.ActionEvent());
+        
+        content.getChildren().addAll(currentLabel, datePicker, validationLabel);
+        dialog.getDialogPane().setContent(content);
+        
+        dialog.setResultConverter(btn -> {
+            if (btn == applyBtn) return datePicker.getValue();
+            return null;
+        });
+        
+        dialog.showAndWait().ifPresent(newDate -> {
+            ExamSlot newSlot = new ExamSlot(newDate, exam.getSlot().getStartTime(), exam.getSlot().getEndTime());
+            exam.setSlot(newSlot);
+            repository.saveTimetable(currentTimetable);
+            refreshTimetable();
+            showInformation("Success", "Date updated successfully!");
+        });
+    }
+
+    private void showQuickClassroomChange(Exam exam) {
+        Dialog<Classroom> dialog = new Dialog<>();
+        dialog.setTitle("Quick Classroom Change");
+        dialog.setHeaderText("Change classroom for: " + exam.getCourse().getCode());
+        
+        ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(applyBtn, ButtonType.CANCEL);
+        
+        VBox content = new VBox(15);
+        content.setPadding(new javafx.geometry.Insets(20));
+        
+        int studentCount = (int) enrollments.stream()
+                .filter(e -> e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                .count();
+        
+        Label currentLabel = new Label("Current: " + exam.getClassroom().getName() + 
+                " (Capacity: " + exam.getClassroom().getCapacity() + ")");
+        currentLabel.setStyle("-fx-text-fill: #6B7280;");
+        
+        Label needLabel = new Label("Required capacity: " + studentCount + " students");
+        needLabel.setStyle("-fx-text-fill: #374151; -fx-font-weight: bold;");
+        
+        javafx.scene.control.ComboBox<Classroom> classroomCombo = new javafx.scene.control.ComboBox<>();
+        classroomCombo.setMaxWidth(Double.MAX_VALUE);
+        classroomCombo.getItems().addAll(classrooms.stream()
+                .sorted(Comparator.comparing(Classroom::getName))
+                .collect(Collectors.toList()));
+        classroomCombo.setValue(exam.getClassroom());
+        classroomCombo.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Classroom item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    String status = item.getCapacity() >= studentCount ? "✓" : "❌";
+                    setText(status + " " + item.getName() + " (Capacity: " + item.getCapacity() + ")");
+                    setStyle(item.getCapacity() >= studentCount ? "-fx-text-fill: #059669;" : "-fx-text-fill: #DC2626;");
+                }
+            }
+        });
+        classroomCombo.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Classroom item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getName() + " (Capacity: " + item.getCapacity() + ")");
+                }
+            }
+        });
+        
+        // Validation feedback
+        Label validationLabel = new Label();
+        validationLabel.setWrapText(true);
+        validationLabel.setStyle("-fx-font-size: 12px;");
+        
+        classroomCombo.valueProperty().addListener((obs, old, newRoom) -> {
+            if (newRoom != null) {
+                Exam tempExam = new Exam(exam.getCourse(), newRoom, exam.getSlot());
+                List<Exam> others = currentTimetable.getExams().stream()
+                        .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                        .collect(Collectors.toList());
+                String error = constraintChecker.checkManualMove(tempExam, others, enrollments);
+                
+                if (error == null) {
+                    validationLabel.setText("✓ Valid change");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+                } else {
+                    validationLabel.setText("⚠ " + error);
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                }
+            }
+        });
+        
+        content.getChildren().addAll(currentLabel, needLabel, classroomCombo, validationLabel);
+        dialog.getDialogPane().setContent(content);
+        
+        dialog.setResultConverter(btn -> {
+            if (btn == applyBtn) return classroomCombo.getValue();
+            return null;
+        });
+        
+        dialog.showAndWait().ifPresent(newRoom -> {
+            exam.setClassroom(newRoom);
+            repository.saveTimetable(currentTimetable);
+            refreshTimetable();
+            showInformation("Success", "Classroom updated successfully!");
+        });
+    }
+
+    private void showQuickTimeChange(Exam exam) {
+        Dialog<LocalTime> dialog = new Dialog<>();
+        dialog.setTitle("Quick Time Change");
+        dialog.setHeaderText("Change time for: " + exam.getCourse().getCode());
+        
+        ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(applyBtn, ButtonType.CANCEL);
+        
+        VBox content = new VBox(15);
+        content.setPadding(new javafx.geometry.Insets(20));
+        
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+        
+        Label currentLabel = new Label("Current: " + exam.getSlot().getStartTime().format(timeFmt) + 
+                " - " + exam.getSlot().getEndTime().format(timeFmt));
+        currentLabel.setStyle("-fx-text-fill: #6B7280;");
+        
+        Label durationLabel = new Label("Duration: " + exam.getCourse().getExamDurationMinutes() + " minutes");
+        durationLabel.setStyle("-fx-text-fill: #374151;");
+        
+        HBox timeBox = new HBox(10);
+        timeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        javafx.scene.control.ComboBox<String> timeCombo = new javafx.scene.control.ComboBox<>();
+        for (int hour = 9; hour <= 17; hour++) {
+            for (int min = 0; min < 60; min += 30) {
+                timeCombo.getItems().add(String.format("%02d:%02d", hour, min));
+            }
+        }
+        timeCombo.setValue(exam.getSlot().getStartTime().format(timeFmt));
+        
+        Label endLabel = new Label("→ " + exam.getSlot().getEndTime().format(timeFmt));
+        endLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
+        
+        timeCombo.valueProperty().addListener((obs, old, newVal) -> {
+            if (newVal != null) {
+                LocalTime newStart = LocalTime.parse(newVal, timeFmt);
+                LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
+                endLabel.setText("→ " + newEnd.format(timeFmt));
+            }
+        });
+        
+        timeBox.getChildren().addAll(new Label("Start:"), timeCombo, endLabel);
+        
+        // Validation feedback
+        Label validationLabel = new Label();
+        validationLabel.setWrapText(true);
+        validationLabel.setStyle("-fx-font-size: 12px;");
+        
+        timeCombo.valueProperty().addListener((obs, old, newVal) -> {
+            if (newVal != null) {
+                LocalTime newStart = LocalTime.parse(newVal, timeFmt);
+                LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
+                ExamSlot newSlot = new ExamSlot(exam.getSlot().getDate(), newStart, newEnd);
+                Exam tempExam = new Exam(exam.getCourse(), exam.getClassroom(), newSlot);
+                List<Exam> others = currentTimetable.getExams().stream()
+                        .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                        .collect(Collectors.toList());
+                String error = constraintChecker.checkManualMove(tempExam, others, enrollments);
+                
+                if (error == null) {
+                    validationLabel.setText("✓ Valid change");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+                } else {
+                    validationLabel.setText("⚠ " + error);
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                }
+            }
+        });
+        
+        // Trigger initial validation
+        timeCombo.fireEvent(new javafx.event.ActionEvent());
+        
+        content.getChildren().addAll(currentLabel, durationLabel, timeBox, validationLabel);
+        dialog.getDialogPane().setContent(content);
+        
+        dialog.setResultConverter(btn -> {
+            if (btn == applyBtn) {
+                String val = timeCombo.getValue();
+                return val != null ? LocalTime.parse(val, timeFmt) : null;
+            }
+            return null;
+        });
+        
+        dialog.showAndWait().ifPresent(newStart -> {
+            LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
+            ExamSlot newSlot = new ExamSlot(exam.getSlot().getDate(), newStart, newEnd);
+            exam.setSlot(newSlot);
+            repository.saveTimetable(currentTimetable);
+            refreshTimetable();
+            showInformation("Success", "Time updated successfully!");
+        });
+    }
+
+    private void validateSingleExam(Exam exam) {
+        List<Exam> others = currentTimetable.getExams().stream()
+                .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                .collect(Collectors.toList());
+        
+        String error = constraintChecker.checkManualMove(exam, others, enrollments);
+        
+        if (error == null) {
+            showInformation("Validation Passed", "✓ This exam has no constraint violations.\n\n" +
+                    "Course: " + exam.getCourse().getCode() + "\n" +
+                    "Date: " + exam.getSlot().getDate() + "\n" +
+                    "Time: " + exam.getSlot().getStartTime() + " - " + exam.getSlot().getEndTime() + "\n" +
+                    "Room: " + exam.getClassroom().getName());
+        } else {
+            showWarning("Validation Failed", "⚠ Constraint violation detected:\n\n" + error + "\n\n" +
+                    "Click Edit to modify this exam.");
+        }
+    }
+
     // renderTimetableGrid, addTimeGuides, and arrangeDayExams methods removed (now
     // using TableView)
 
@@ -1543,12 +1730,17 @@ public class MainController {
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
 
+        // Create a map for date lookup
+        Map<String, LocalDate> dateMap = new HashMap<>();
+
         // Sort by date
         examsByDate.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> {
+                    String dateStr = entry.getKey().format(fmt);
+                    dateMap.put(dateStr, entry.getKey());
                     series.getData()
-                            .add(new javafx.scene.chart.XYChart.Data<>(entry.getKey().format(fmt), entry.getValue()));
+                            .add(new javafx.scene.chart.XYChart.Data<>(dateStr, entry.getValue()));
                 });
 
         chartExamsPerDay.getData().add(series);
@@ -1559,8 +1751,171 @@ public class MainController {
                 .collect(Collectors.groupingBy(e -> e.getClassroom().getName(), Collectors.counting()));
 
         roomUsage.forEach((room, count) -> {
-            chartRoomUsage.getData().add(new javafx.scene.chart.PieChart.Data(room, count));
+            javafx.scene.chart.PieChart.Data pieData = new javafx.scene.chart.PieChart.Data(room, count);
+            chartRoomUsage.getData().add(pieData);
         });
+
+        // Add click handlers after the scene is rendered using Platform.runLater
+        javafx.application.Platform.runLater(() -> {
+            // Bar chart click handlers
+            for (javafx.scene.chart.XYChart.Data<String, Number> data : series.getData()) {
+                if (data.getNode() != null) {
+                    data.getNode().setStyle("-fx-cursor: hand;");
+                    data.getNode().setOnMouseClicked(event -> {
+                        LocalDate clickedDate = dateMap.get(data.getXValue());
+                        if (clickedDate != null) {
+                            showExamsForDate(clickedDate);
+                        }
+                    });
+                    data.getNode()
+                            .setOnMouseEntered(e -> data.getNode().setStyle("-fx-cursor: hand; -fx-opacity: 0.7;"));
+                    data.getNode()
+                            .setOnMouseExited(e -> data.getNode().setStyle("-fx-cursor: hand; -fx-opacity: 1.0;"));
+                }
+            }
+
+            // Pie chart click handlers
+            for (javafx.scene.chart.PieChart.Data pieData : chartRoomUsage.getData()) {
+                if (pieData.getNode() != null) {
+                    pieData.getNode().setStyle("-fx-cursor: hand;");
+                    pieData.getNode().setOnMouseClicked(event -> {
+                        showExamsForClassroom(pieData.getName());
+                    });
+                    pieData.getNode().setOnMouseEntered(e -> {
+                        pieData.getNode().setStyle("-fx-cursor: hand; -fx-opacity: 0.8;");
+                    });
+                    pieData.getNode().setOnMouseExited(e -> {
+                        pieData.getNode().setStyle("-fx-cursor: hand; -fx-opacity: 1.0;");
+                    });
+                }
+            }
+        });
+    }
+
+    private void showExamsForDate(LocalDate date) {
+        List<Exam> exams = currentTimetable.getExams().stream()
+                .filter(e -> e.getSlot().getDate().equals(date))
+                .sorted(Comparator.comparing(e -> e.getSlot().getStartTime()))
+                .collect(Collectors.toList());
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd MMMM yyyy, EEEE");
+        showExamListDialog("📅 " + date.format(dateFmt), exams.size() + " exam(s) scheduled", exams);
+    }
+
+    private void showExamsForClassroom(String classroomName) {
+        List<Exam> exams = currentTimetable.getExams().stream()
+                .filter(e -> e.getClassroom().getName().equals(classroomName))
+                .sorted(Comparator.comparing((Exam e) -> e.getSlot().getDate())
+                        .thenComparing(e -> e.getSlot().getStartTime()))
+                .collect(Collectors.toList());
+
+        showExamListDialog("🏫 " + classroomName, exams.size() + " exam(s) in this classroom", exams);
+    }
+
+    private void showExamListDialog(String titleText, String subtitleText, List<Exam> exams) {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initStyle(StageStyle.TRANSPARENT);
+
+        VBox root = new VBox();
+        root.getStyleClass().add("modal-window");
+        root.setPrefSize(550, 450);
+
+        // Header
+        VBox header = new VBox(5);
+        header.getStyleClass().add("modal-header");
+
+        Label title = new Label(titleText);
+        title.getStyleClass().add("section-title");
+        title.setStyle("-fx-font-size: 18px;");
+
+        Label subtitle = new Label(subtitleText);
+        subtitle.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 13px;");
+
+        header.getChildren().addAll(title, subtitle);
+
+        // Content - Exam List
+        VBox content = new VBox(10);
+        content.setStyle("-fx-padding: 15; -fx-background-color: white;");
+        javafx.scene.layout.VBox.setVgrow(content, javafx.scene.layout.Priority.ALWAYS);
+
+        javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        javafx.scene.layout.VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
+
+        VBox examList = new VBox(8);
+        examList.setStyle("-fx-padding: 5;");
+
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        for (Exam exam : exams) {
+            HBox examCard = new HBox(15);
+            examCard.setStyle("-fx-background-color: #F9FAFB; -fx-padding: 12; -fx-background-radius: 8; " +
+                    "-fx-border-color: #E5E7EB; -fx-border-radius: 8;");
+            examCard.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+            // Time/Date info
+            VBox timeInfo = new VBox(2);
+            timeInfo.setMinWidth(80);
+            Label timeLabel = new Label(exam.getSlot().getStartTime().format(timeFmt) + " - " +
+                    exam.getSlot().getEndTime().format(timeFmt));
+            timeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #8B5CF6; -fx-font-size: 12px;");
+            Label dateLabel = new Label(exam.getSlot().getDate().format(dateFmt));
+            dateLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+            timeInfo.getChildren().addAll(timeLabel, dateLabel);
+
+            // Separator
+            javafx.scene.shape.Line separator = new javafx.scene.shape.Line(0, 0, 0, 30);
+            separator.setStroke(javafx.scene.paint.Color.web("#E5E7EB"));
+
+            // Course info
+            VBox courseInfo = new VBox(2);
+            Label codeLabel = new Label(exam.getCourse().getCode());
+            codeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1F2937; -fx-font-size: 13px;");
+            Label nameLabel = new Label(exam.getCourse().getName());
+            nameLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
+            nameLabel.setWrapText(true);
+            courseInfo.getChildren().addAll(codeLabel, nameLabel);
+            HBox.setHgrow(courseInfo, javafx.scene.layout.Priority.ALWAYS);
+
+            // Room info
+            Label roomLabel = new Label("📍 " + exam.getClassroom().getName());
+            roomLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+
+            examCard.getChildren().addAll(timeInfo, separator, courseInfo, roomLabel);
+            examList.getChildren().add(examCard);
+        }
+
+        if (exams.isEmpty()) {
+            Label emptyLabel = new Label("No exams found.");
+            emptyLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 14px;");
+            examList.getChildren().add(emptyLabel);
+            examList.setAlignment(javafx.geometry.Pos.CENTER);
+        }
+
+        scrollPane.setContent(examList);
+        content.getChildren().add(scrollPane);
+
+        // Footer
+        HBox footer = new HBox();
+        footer.setStyle("-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; " +
+                "-fx-background-radius: 0 0 12 12;");
+
+        Button closeBtn = new Button("Close");
+        closeBtn.getStyleClass().add("secondary-button");
+        closeBtn.setOnAction(e -> dialog.close());
+        footer.getChildren().add(closeBtn);
+
+        root.getChildren().addAll(header, content, footer);
+
+        Scene scene = new Scene(root);
+        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+
+        dialog.setScene(scene);
+        dialog.showAndWait();
     }
 
     private void showExamDetails(Exam exam) {
@@ -1571,7 +1926,6 @@ public class MainController {
                 .collect(Collectors.toList());
 
         // Create Custom Dialog Stage
-        // Create Custom Dialog Stage
         Stage dialog = new Stage();
         dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
         dialog.initStyle(javafx.stage.StageStyle.TRANSPARENT);
@@ -1579,71 +1933,321 @@ public class MainController {
         // Root Container
         VBox root = new VBox();
         root.getStyleClass().add("modal-window");
-        root.setPrefSize(400, 500);
+        root.setPrefSize(550, 650);
 
         // Header
         VBox header = new VBox(5);
         header.getStyleClass().add("modal-header");
 
-        Label title = new Label(exam.getCourse().getName());
+        Label title = new Label("✏️ Edit Exam: " + exam.getCourse().getName());
         title.getStyleClass().add("section-title");
-        title.setStyle("-fx-font-size: 16px;");
+        title.setStyle("-fx-font-size: 18px;");
 
-        Label subtitle = new Label(exam.getCourse().getCode() + " • " + exam.getClassroom().getName());
+        Label subtitle = new Label(exam.getCourse().getCode() + " • " + students.size() + " Students enrolled");
         subtitle.getStyleClass().addAll("label", "text-secondary");
 
-        HBox metaBox = new HBox(10);
-        Label timeLabel = new Label("🕒 " + exam.getSlot().getStartTime() + " - " + exam.getSlot().getEndTime());
-        timeLabel.getStyleClass().addAll("label", "text-secondary");
-        Label countLabel = new Label("👥 " + students.size() + " Students");
-        countLabel.getStyleClass().addAll("label", "text-secondary");
-        metaBox.getChildren().addAll(timeLabel, countLabel);
+        header.getChildren().addAll(title, subtitle);
 
-        header.getChildren().addAll(title, subtitle, metaBox);
-
-        // Content (List)
-        VBox content = new VBox();
+        // Content - Edit Form
+        VBox content = new VBox(15);
         content.getStyleClass().add("modal-content");
+        content.setStyle("-fx-padding: 20;");
         javafx.scene.layout.VBox.setVgrow(content, javafx.scene.layout.Priority.ALWAYS);
 
+        // Validation feedback area
+        HBox validationBox = new HBox(10);
+        validationBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        validationBox.setStyle("-fx-padding: 12; -fx-background-radius: 8;");
+        validationBox.setVisible(false);
+        validationBox.setManaged(false);
+        
+        Label validationIcon = new Label("✓");
+        validationIcon.setStyle("-fx-font-size: 16px;");
+        Label validationLabel = new Label("");
+        validationLabel.setWrapText(true);
+        validationLabel.setStyle("-fx-font-size: 13px;");
+        validationBox.getChildren().addAll(validationIcon, validationLabel);
+
+        // Date Picker
+        VBox dateSection = new VBox(5);
+        Label dateLabel = new Label("📅 Exam Date");
+        dateLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
+        javafx.scene.control.DatePicker datePicker = new javafx.scene.control.DatePicker(exam.getSlot().getDate());
+        datePicker.setMaxWidth(Double.MAX_VALUE);
+        datePicker.setStyle("-fx-font-size: 14px;");
+        dateSection.getChildren().addAll(dateLabel, datePicker);
+
+        // Time Selection
+        VBox timeSection = new VBox(5);
+        Label timeLabel = new Label("🕒 Time Slot");
+        timeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
+        
+        HBox timeBox = new HBox(10);
+        timeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        javafx.scene.control.ComboBox<String> startTimeCombo = new javafx.scene.control.ComboBox<>();
+        startTimeCombo.setStyle("-fx-font-size: 14px;");
+        startTimeCombo.setPrefWidth(120);
+        
+        // Populate time slots (09:00 - 18:00)
+        for (int hour = 9; hour <= 17; hour++) {
+            for (int min = 0; min < 60; min += 30) {
+                startTimeCombo.getItems().add(String.format("%02d:%02d", hour, min));
+            }
+        }
+        startTimeCombo.setValue(exam.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+        
+        Label toLabel = new Label("to");
+        toLabel.setStyle("-fx-text-fill: #6B7280;");
+        
+        Label endTimeLabel = new Label(exam.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+        endTimeLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #374151; -fx-font-weight: bold;");
+        
+        Label durationLabel = new Label("(" + exam.getCourse().getExamDurationMinutes() + " min)");
+        durationLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 12px;");
+        
+        timeBox.getChildren().addAll(startTimeCombo, toLabel, endTimeLabel, durationLabel);
+        timeSection.getChildren().addAll(timeLabel, timeBox);
+        
+        // Update end time when start time changes
+        startTimeCombo.setOnAction(e -> {
+            String startStr = startTimeCombo.getValue();
+            if (startStr != null) {
+                LocalTime newStart = LocalTime.parse(startStr, DateTimeFormatter.ofPattern("HH:mm"));
+                LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
+                endTimeLabel.setText(newEnd.format(DateTimeFormatter.ofPattern("HH:mm")));
+            }
+        });
+
+        // Classroom Selection
+        VBox classroomSection = new VBox(5);
+        Label classroomLabel = new Label("🏫 Classroom");
+        classroomLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
+        
+        javafx.scene.control.ComboBox<Classroom> classroomCombo = new javafx.scene.control.ComboBox<>();
+        classroomCombo.setMaxWidth(Double.MAX_VALUE);
+        classroomCombo.setStyle("-fx-font-size: 14px;");
+        classroomCombo.getItems().addAll(classrooms.stream()
+                .sorted(Comparator.comparing(Classroom::getName))
+                .collect(Collectors.toList()));
+        classroomCombo.setValue(exam.getClassroom());
+        classroomCombo.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Classroom item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getName() + " (Capacity: " + item.getCapacity() + ")");
+                }
+            }
+        });
+        classroomCombo.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Classroom item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getName() + " (Capacity: " + item.getCapacity() + ")");
+                }
+            }
+        });
+        
+        // Capacity indicator
+        HBox capacityBox = new HBox(8);
+        capacityBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label capacityIndicator = new Label();
+        updateCapacityIndicator(capacityIndicator, classroomCombo.getValue(), students.size());
+        
+        capacityBox.getChildren().add(capacityIndicator);
+        classroomSection.getChildren().addAll(classroomLabel, classroomCombo, capacityBox);
+        
+        classroomCombo.setOnAction(e -> updateCapacityIndicator(capacityIndicator, classroomCombo.getValue(), students.size()));
+
+        // Live Validation Function
+        Runnable validateChanges = () -> {
+            LocalDate newDate = datePicker.getValue();
+            String startStr = startTimeCombo.getValue();
+            Classroom newClassroom = classroomCombo.getValue();
+            
+            if (newDate == null || startStr == null || newClassroom == null) {
+                return;
+            }
+            
+            LocalTime newStart = LocalTime.parse(startStr, DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
+            ExamSlot newSlot = new ExamSlot(newDate, newStart, newEnd);
+            
+            // Create a temporary exam for validation
+            Exam tempExam = new Exam(exam.getCourse(), newClassroom, newSlot);
+            
+            // Create list without original exam for checking
+            List<Exam> otherExams = currentTimetable.getExams().stream()
+                    .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
+                    .collect(Collectors.toList());
+            
+            String error = constraintChecker.checkManualMove(tempExam, otherExams, enrollments);
+            
+            validationBox.setVisible(true);
+            validationBox.setManaged(true);
+            
+            if (error == null) {
+                validationBox.setStyle("-fx-padding: 12; -fx-background-radius: 8; -fx-background-color: #ECFDF5; -fx-border-color: #10B981; -fx-border-radius: 8;");
+                validationIcon.setText("✓");
+                validationIcon.setStyle("-fx-font-size: 16px; -fx-text-fill: #059669;");
+                validationLabel.setText("All constraints satisfied. This change is valid.");
+                validationLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #065F46;");
+            } else {
+                validationBox.setStyle("-fx-padding: 12; -fx-background-radius: 8; -fx-background-color: #FEF2F2; -fx-border-color: #EF4444; -fx-border-radius: 8;");
+                validationIcon.setText("⚠");
+                validationIcon.setStyle("-fx-font-size: 16px; -fx-text-fill: #DC2626;");
+                validationLabel.setText("Conflict: " + error);
+                validationLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #991B1B;");
+            }
+        };
+        
+        // Add change listeners for live validation
+        datePicker.valueProperty().addListener((obs, old, newVal) -> validateChanges.run());
+        startTimeCombo.valueProperty().addListener((obs, old, newVal) -> validateChanges.run());
+        classroomCombo.valueProperty().addListener((obs, old, newVal) -> validateChanges.run());
+
+        // Current Info Section
+        VBox currentInfoSection = new VBox(8);
+        currentInfoSection.setStyle("-fx-background-color: #F3F4F6; -fx-padding: 12; -fx-background-radius: 8;");
+        Label currentInfoTitle = new Label("📋 Current Assignment");
+        currentInfoTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13px;");
+        Label currentInfoText = new Label(String.format("Date: %s | Time: %s - %s | Room: %s",
+                exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                exam.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                exam.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                exam.getClassroom().getName()));
+        currentInfoText.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
+        currentInfoSection.getChildren().addAll(currentInfoTitle, currentInfoText);
+
+        // Enrolled Students Section (Collapsible)
+        javafx.scene.control.TitledPane studentsPane = new javafx.scene.control.TitledPane();
+        studentsPane.setText("👥 Enrolled Students (" + students.size() + ")");
+        studentsPane.setExpanded(false);
+        studentsPane.setStyle("-fx-font-size: 13px;");
+        
         javafx.scene.control.ListView<Student> listView = new javafx.scene.control.ListView<>();
         listView.getStyleClass().add("student-list-view");
         listView.getItems().addAll(students);
+        listView.setPrefHeight(150);
         listView.setCellFactory(param -> new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(Student item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
-                    setGraphic(null);
                 } else {
                     setText(item.getName() + " (" + item.getId() + ")");
-                    getStyleClass().add("student-list-cell");
                 }
             }
         });
+        studentsPane.setContent(listView);
 
-        javafx.scene.layout.VBox.setVgrow(listView, javafx.scene.layout.Priority.ALWAYS);
-        content.getChildren().add(listView);
+        content.getChildren().addAll(validationBox, currentInfoSection, dateSection, timeSection, classroomSection, studentsPane);
 
-        // Footer (Close Button)
-        HBox footer = new HBox();
-        footer.getStyleClass().add("modal-footer");
+        // Footer with Save and Cancel
+        HBox footer = new HBox(10);
+        footer.setStyle("-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
 
-        Button closeBtn = new Button("Close");
-        closeBtn.getStyleClass().add("secondary-button");
-        closeBtn.setOnAction(e -> dialog.close());
-        footer.getChildren().add(closeBtn);
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.getStyleClass().add("secondary-button");
+        cancelBtn.setOnAction(e -> dialog.close());
+        
+        Button saveBtn = new Button("💾 Save Changes");
+        saveBtn.getStyleClass().add("primary-button");
+        saveBtn.setOnAction(e -> {
+            LocalDate newDate = datePicker.getValue();
+            String startStr = startTimeCombo.getValue();
+            Classroom newClassroom = classroomCombo.getValue();
+            
+            if (newDate == null || startStr == null || newClassroom == null) {
+                showError("Invalid Input", "Please fill all fields.");
+                return;
+            }
+            
+            LocalTime newStart = LocalTime.parse(startStr, DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
+            ExamSlot newSlot = new ExamSlot(newDate, newStart, newEnd);
+            
+            // Create temp exam for final validation
+            Exam tempExam = new Exam(exam.getCourse(), newClassroom, newSlot);
+            List<Exam> otherExams = currentTimetable.getExams().stream()
+                    .filter(ex -> !ex.getCourse().getCode().equals(exam.getCourse().getCode()))
+                    .collect(Collectors.toList());
+            
+            String error = constraintChecker.checkManualMove(tempExam, otherExams, enrollments);
+            
+            if (error != null) {
+                // Show confirmation dialog for conflict override
+                Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmAlert.setTitle("Constraint Violation");
+                confirmAlert.setHeaderText("⚠️ This change violates scheduling constraints");
+                confirmAlert.setContentText("Conflict: " + error + "\n\nDo you want to save anyway? This may cause scheduling problems.");
+                
+                ButtonType saveAnywayBtn = new ButtonType("Save Anyway", ButtonBar.ButtonData.OK_DONE);
+                ButtonType cancelBtnType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+                confirmAlert.getButtonTypes().setAll(saveAnywayBtn, cancelBtnType);
+                
+                if (confirmAlert.showAndWait().orElse(cancelBtnType) != saveAnywayBtn) {
+                    return;
+                }
+            }
+            
+            // Apply changes
+            exam.setSlot(newSlot);
+            exam.setClassroom(newClassroom);
+            
+            // Save to repository
+            repository.saveTimetable(currentTimetable);
+            
+            // Refresh UI
+            refreshTimetable();
+            dialog.close();
+            
+            showInformation("Success", "Exam schedule updated successfully!");
+        });
+
+        footer.getChildren().addAll(cancelBtn, saveBtn);
 
         root.getChildren().addAll(header, content, footer);
 
         // Scene
         javafx.scene.Scene scene = new javafx.scene.Scene(root);
         scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
-        applyDarkModeToScene(scene);
+        scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
 
         dialog.setScene(scene);
+        
+        // Initial validation
+        validateChanges.run();
+        
         dialog.showAndWait();
+    }
+
+    private void updateCapacityIndicator(Label indicator, Classroom classroom, int studentCount) {
+        if (classroom == null) {
+            indicator.setText("");
+            return;
+        }
+        
+        int capacity = classroom.getCapacity();
+        double usage = (double) studentCount / capacity * 100;
+        
+        if (studentCount > capacity) {
+            indicator.setText("❌ Capacity exceeded! " + studentCount + "/" + capacity + " students");
+            indicator.setStyle("-fx-text-fill: #DC2626; -fx-font-size: 12px; -fx-font-weight: bold;");
+        } else if (usage > 90) {
+            indicator.setText("⚠️ Near capacity: " + studentCount + "/" + capacity + " (" + String.format("%.0f", usage) + "%)");
+            indicator.setStyle("-fx-text-fill: #D97706; -fx-font-size: 12px;");
+        } else {
+            indicator.setText("✓ " + studentCount + "/" + capacity + " students (" + String.format("%.0f", usage) + "% used)");
+            indicator.setStyle("-fx-text-fill: #059669; -fx-font-size: 12px;");
+        }
     }
 
     private File chooseFile(String title) {
@@ -1658,7 +2262,6 @@ public class MainController {
         alert.setTitle("Error");
         alert.setHeaderText(header);
         alert.setContentText(content);
-        applyDarkModeToDialog(alert);
         alert.showAndWait();
     }
 }

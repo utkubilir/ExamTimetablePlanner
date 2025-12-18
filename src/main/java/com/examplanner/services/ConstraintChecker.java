@@ -186,6 +186,11 @@ public class ConstraintChecker {
         List<Exam> dayExams = state.getExamsForStudentDate(student.getId(), slot.getDate());
 
         for (Exam existing : dayExams) {
+            // First check for overlap - if slots overlap, it's an immediate conflict
+            if (existing.getSlot().overlaps(slot)) {
+                return false;
+            }
+            
             long gap1 = Duration.between(existing.getSlot().getEndTime(), slot.getStartTime()).toMinutes();
             long gap2 = Duration.between(slot.getEndTime(), existing.getSlot().getStartTime()).toMinutes();
 

@@ -230,8 +230,11 @@ public class SchedulerService {
             if (dayForbidden)
                 continue;
 
-            // Classrooms are already shuffled, iterate directly
-            for (Classroom classroom : classrooms) {
+            // RANDOMIZATION: Shuffle classrooms for EACH course to ensure variety
+            List<Classroom> shuffledClassrooms = new ArrayList<>(classrooms);
+            Collections.shuffle(shuffledClassrooms, random);
+
+            for (Classroom classroom : shuffledClassrooms) {
                 // Check Capacity Constraint (O(1))
                 int size = state.getStudentsForCourse(course.getCode()).size();
                 if (size > classroom.getCapacity()) {

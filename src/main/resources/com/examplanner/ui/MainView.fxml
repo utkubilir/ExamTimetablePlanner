@@ -44,7 +44,6 @@
             
             <Region VBox.vgrow="ALWAYS" />
             
-            <Button fx:id="btnSettings" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSettings" styleClass="nav-button" text="⚙ Settings" />
             <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#handleExit" styleClass="nav-button" text="Exit" />
          </children>
       </VBox>
@@ -128,10 +127,17 @@
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
                   <TextField fx:id="txtCourseSearch" promptText="Search by Course Code..." prefWidth="200" />
+                  <Button fx:id="btnValidateAll" mnemonicParsing="false" onAction="#handleValidateAll" styleClass="secondary-button" text="✓ Validate All" />
                   <Button fx:id="btnConflicts" mnemonicParsing="false" onAction="#handleConflicts" styleClass="secondary-button" text="Conflicts" />
                   <Button fx:id="btnExport" mnemonicParsing="false" onAction="#handleExport" styleClass="secondary-button" text="Export CSV" />
                   <Button fx:id="btnExportPdf" mnemonicParsing="false" onAction="#handleExportPdf" styleClass="secondary-button" text="Export PDF" />
                   <Button fx:id="btnGenerateTimetable" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable" />
+               </HBox>
+               
+               <!-- Edit Help Text -->
+               <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-background-color: #F0FDF4; -fx-padding: 10 15; -fx-background-radius: 8; -fx-border-color: #86EFAC; -fx-border-radius: 8;">
+                  <Label text="💡" style="-fx-font-size: 16px;" />
+                  <Label text="Tip: Double-click a row to edit, or right-click for quick actions. All changes are validated in real-time." style="-fx-text-fill: #166534; -fx-font-size: 12px;" />
                </HBox>
 
                <TableView fx:id="examTableView" styleClass="exam-table" VBox.vgrow="ALWAYS">
@@ -281,6 +287,66 @@
                                           <HBox styleClass="manual-tip" spacing="10">
                                               <Label text="💡" style="-fx-font-size: 18px;" />
                                               <Label wrapText="true" styleClass="manual-tip-text" text="İpucu: Büyük veri setleri için işlem birkaç dakika sürebilir. Lütfen sabırla bekleyin." />
+                                          </HBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <!-- 3.5. Manual Schedule Editing (FR5) -->
+                              <TitledPane styleClass="manual-section">
+                                  <text>✏️ 3.5. Manuel Düzenleme (Manual Editing)</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="Oluşturulan sınav programını manuel olarak düzenleyebilirsiniz. Tüm değişiklikler anlık olarak doğrulanır." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🖱️ Düzenleme Yöntemleri:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Çift Tıklama: Herhangi bir satıra çift tıklayarak detaylı düzenleme ekranını açın&#10;• Sağ Tık Menüsü: Hızlı değişiklikler için sağ tıklayın&#10;• Edit Butonu: Satır sonundaki 'Edit' butonuna tıklayın" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="⚡ Hızlı Düzenleme Seçenekleri:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Quick Change Date: Sadece tarihi değiştirin&#10;• Quick Change Time: Sadece saati değiştirin&#10;• Quick Change Classroom: Sadece sınıfı değiştirin" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📝 Tam Düzenleme:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="Edit butonuna tıkladığınızda açılan pencerede:&#10;• Tarih seçici ile yeni tarih belirleyin&#10;• Açılır menüden yeni saat seçin&#10;• Uygun kapasiteli sınıf seçin&#10;• Kayıtlı öğrenci listesini görüntüleyin" />
+                                          </VBox>
+                                          
+                                          <HBox styleClass="manual-tip" spacing="10">
+                                              <Label text="💡" style="-fx-font-size: 18px;" />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="İpucu: Her değişiklik anlık olarak doğrulanır. Yeşil onay işareti geçerli bir değişikliği, kırmızı uyarı ise bir çakışmayı gösterir." />
+                                          </HBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <!-- 3.6. Validation (FR13) -->
+                              <TitledPane styleClass="manual-section">
+                                  <text>✓ 3.6. Doğrulama ve Kısıtlama Kontrolü</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="Manuel değişiklikler yapıldığında sistem otomatik olarak tüm kısıtlamaları kontrol eder." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🔍 Kontrol Edilen Kısıtlamalar:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Sınıf kapasitesi: Öğrenci sayısı sınıf kapasitesini aşmamalı&#10;• Sınıf çakışması: Aynı sınıf aynı anda başka sınav için kullanılmamalı&#10;• Öğrenci çakışması: Bir öğrenci aynı anda iki sınavda olamaz&#10;• Zaman aralığı: Sınavlar 09:00-18:30 arasında olmalı&#10;• Minimum ara: Öğrenciler için sınavlar arası en az 3 saat" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📊 Toplu Doğrulama:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="'Validate All' butonuna tıklayarak tüm programın doğrulamasını yapabilirsiniz. Bu, tüm sınavları kontrol eder ve sorunlu olanları listeler." />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🎨 Görsel Geri Bildirim:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• ✓ Yeşil: Değişiklik geçerli, kısıtlama ihlali yok&#10;• ⚠ Kırmızı: Çakışma tespit edildi, detaylar gösterilir&#10;• Kapasite göstergesi: Sınıf doluluk oranını gösterir" />
+                                          </VBox>
+                                          
+                                          <HBox styleClass="manual-warning" spacing="10">
+                                              <Label text="⚠️" style="-fx-font-size: 18px;" />
+                                              <Label wrapText="true" styleClass="manual-warning-text" text="Önemli: Kısıtlama ihlali olan değişiklikleri kaydetmeye çalışırsanız uyarı alırsınız. Yine de kaydetmek isteyip istemediğiniz sorulacaktır." />
                                           </HBox>
                                       </VBox>
                                   </content>

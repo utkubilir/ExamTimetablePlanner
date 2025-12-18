@@ -495,8 +495,20 @@ public class DataImportService {
                         String[] studentIds = content.split(",");
                         for (String rawId : studentIds) {
                             String sId = rawId.trim();
-                            if (sId.startsWith("'") && sId.endsWith("'")) {
+                            
+                            // Remove surrounding quotes (single or double)
+                            if (sId.startsWith("'") && sId.endsWith("'") && sId.length() > 2) {
                                 sId = sId.substring(1, sId.length() - 1);
+                            } else if (sId.startsWith("\"") && sId.endsWith("\"") && sId.length() > 2) {
+                                sId = sId.substring(1, sId.length() - 1);
+                            }
+                            
+                            // Remove any remaining brackets that might have been included
+                            sId = sId.replace("[", "").replace("]", "").trim();
+                            
+                            // Skip empty IDs
+                            if (sId.isEmpty()) {
+                                continue;
                             }
 
                             Student student = studentMap.get(sId);
