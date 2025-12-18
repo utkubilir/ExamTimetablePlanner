@@ -49,6 +49,8 @@ import java.io.PrintWriter;
 import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ResourceBundle;
+import java.util.Locale;
 
 public class MainController {
 
@@ -62,6 +64,8 @@ public class MainController {
     private Button btnFilter;
     @FXML
     private Button btnStudentPortal;
+    @FXML
+    private Button btnSettings;
 
     @FXML
     private Button btnGenerateDataImport;
@@ -98,6 +102,22 @@ public class MainController {
     @FXML
     private Label lblStudentsStatus;
 
+    // FXML fields for I18N
+    @FXML
+    private Button btnExit;
+    @FXML
+    private Label lblDataImportTitle;
+    @FXML
+    private Label lblDataImportSubtitle;
+    @FXML
+    private Label lblCoursesTitle;
+    @FXML
+    private Label lblStudentsTitle;
+    @FXML
+    private Label lblClassroomsTitle;
+    @FXML
+    private Label lblAttendanceTitle;
+
     @FXML
     private TableView<Exam> examTableView;
     @FXML
@@ -117,10 +137,10 @@ public class MainController {
 
     @FXML
     private javafx.scene.control.TextField txtCourseSearch;
-    
+
     @FXML
     private javafx.scene.control.ComboBox<String> cmbSearchType;
-    
+
     @FXML
     private Button btnClearSearch;
 
@@ -137,10 +157,10 @@ public class MainController {
     private List<Enrollment> enrollments = new ArrayList<>();
 
     private ExamTimetable currentTimetable;
-    
+
     // Edit history tracking
     private List<EditHistoryEntry> editHistory = new ArrayList<>();
-    
+
     // Inner class for edit history entry
     private static class EditHistoryEntry {
         private final String timestamp;
@@ -149,22 +169,41 @@ public class MainController {
         private final String changeDescription;
         private final String oldValue;
         private final String newValue;
-        
-        public EditHistoryEntry(String courseCode, String courseName, String changeDescription, String oldValue, String newValue) {
-            this.timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+
+        public EditHistoryEntry(String courseCode, String courseName, String changeDescription, String oldValue,
+                String newValue) {
+            this.timestamp = java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
             this.courseCode = courseCode;
             this.courseName = courseName;
             this.changeDescription = changeDescription;
             this.oldValue = oldValue;
             this.newValue = newValue;
         }
-        
-        public String getTimestamp() { return timestamp; }
-        public String getCourseCode() { return courseCode; }
-        public String getCourseName() { return courseName; }
-        public String getChangeDescription() { return changeDescription; }
-        public String getOldValue() { return oldValue; }
-        public String getNewValue() { return newValue; }
+
+        public String getTimestamp() {
+            return timestamp;
+        }
+
+        public String getCourseCode() {
+            return courseCode;
+        }
+
+        public String getCourseName() {
+            return courseName;
+        }
+
+        public String getChangeDescription() {
+            return changeDescription;
+        }
+
+        public String getOldValue() {
+            return oldValue;
+        }
+
+        public String getNewValue() {
+            return newValue;
+        }
     }
 
     private DataImportService dataImportService = new DataImportService();
@@ -174,6 +213,8 @@ public class MainController {
 
     @FXML
     public void initialize() {
+        // Load default language (English)
+        loadLanguage("en");
         constraintChecker.setMinGapMinutes(180); // Default to requirements
         showDataImport();
 
@@ -224,13 +265,12 @@ public class MainController {
         if (cmbSearchType != null) {
             // Populate search type options
             cmbSearchType.getItems().addAll(
-                "Course",
-                "Date",
-                "Time",
-                "Classroom"
-            );
+                    "Course",
+                    "Date",
+                    "Time",
+                    "Classroom");
             cmbSearchType.setValue("Course");
-            
+
             // Update placeholder text based on selection
             cmbSearchType.setOnAction(e -> {
                 String selected = cmbSearchType.getValue();
@@ -249,14 +289,14 @@ public class MainController {
                 applyAdvancedFilter(txtCourseSearch.getText());
             });
         }
-        
+
         if (txtCourseSearch != null) {
             txtCourseSearch.textProperty().addListener((observable, oldValue, newValue) -> {
                 applyAdvancedFilter(newValue);
             });
         }
     }
-    
+
     @FXML
     private void handleClearSearch() {
         if (txtCourseSearch != null) {
@@ -264,7 +304,7 @@ public class MainController {
         }
         applyAdvancedFilter("");
     }
-    
+
     private void applyAdvancedFilter(String searchText) {
         if (currentTimetable == null || currentTimetable.getExams().isEmpty()) {
             return;
@@ -281,16 +321,17 @@ public class MainController {
 
         String searchType = cmbSearchType != null ? cmbSearchType.getValue() : "Course";
         String lowerSearch = searchText.toLowerCase().trim();
-        
+
         List<Exam> filteredExams;
-        
+
         if (searchType.equals("Course")) {
             // Filter by course code
             filteredExams = currentTimetable.getExams().stream()
                     .filter(e -> e.getCourse().getCode().toLowerCase().contains(lowerSearch))
                     .collect(Collectors.toList());
         } else if (searchType.equals("Date")) {
-            // Filter by date (supports multiple formats: dd/MM/yyyy, dd.MM.yyyy, dd/MM, dd.MM)
+            // Filter by date (supports multiple formats: dd/MM/yyyy, dd.MM.yyyy, dd/MM,
+            // dd.MM)
             filteredExams = currentTimetable.getExams().stream()
                     .filter(e -> {
                         LocalDate date = e.getSlot().getDate();
@@ -299,7 +340,7 @@ public class MainController {
                         String dateStr3 = date.format(DateTimeFormatter.ofPattern("dd/MM"));
                         String dateStr4 = date.format(DateTimeFormatter.ofPattern("dd.MM"));
                         return dateStr1.contains(lowerSearch) || dateStr2.contains(lowerSearch) ||
-                               dateStr3.contains(lowerSearch) || dateStr4.contains(lowerSearch);
+                                dateStr3.contains(lowerSearch) || dateStr4.contains(lowerSearch);
                     })
                     .collect(Collectors.toList());
         } else if (searchType.equals("Time")) {
@@ -309,8 +350,8 @@ public class MainController {
                         String startTime = e.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm"));
                         String endTime = e.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"));
                         String timeRange = startTime + "-" + endTime;
-                        return startTime.contains(lowerSearch) || endTime.contains(lowerSearch) || 
-                               timeRange.contains(lowerSearch);
+                        return startTime.contains(lowerSearch) || endTime.contains(lowerSearch) ||
+                                timeRange.contains(lowerSearch);
                     })
                     .collect(Collectors.toList());
         } else if (searchType.equals("Classroom")) {
@@ -322,7 +363,7 @@ public class MainController {
             // Default: show all
             filteredExams = new ArrayList<>(currentTimetable.getExams());
         }
-        
+
         // Sort and display
         filteredExams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
                 .thenComparing(e -> e.getSlot().getStartTime()));
@@ -584,6 +625,7 @@ public class MainController {
         Dialog<javafx.util.Pair<LocalDate, LocalDate>> dialog = new Dialog<>();
         dialog.setTitle("Select Exam Period");
         dialog.setHeaderText("Choose exam period start and end dates");
+        applyDarkModeToDialogPane(dialog);
 
         // Set button types
         ButtonType generateButtonType = new ButtonType("Generate", ButtonBar.ButtonData.OK_DONE);
@@ -682,6 +724,7 @@ public class MainController {
         alert.setHeaderText("Warning: This action cannot be undone!");
         alert.setContentText(
                 "Are you sure you want to permanently delete ALL courses, students, classrooms, exams, and enrollments?");
+        applyDarkModeToAlert(alert);
 
         if (alert.showAndWait().get() == javafx.scene.control.ButtonType.OK) {
             repository.clearAllData();
@@ -746,6 +789,365 @@ public class MainController {
         Platform.exit();
     }
 
+    // Track dark mode state
+    private boolean isDarkMode = false;
+    // Track language: "en" for English, "tr" for Turkish
+    private String currentLanguage = "en";
+    private ResourceBundle bundle;
+
+    private void loadLanguage(String lang) {
+        currentLanguage = lang;
+        Locale locale = new Locale(lang);
+        bundle = ResourceBundle.getBundle("com.examplanner.ui.messages", locale);
+        updateUIText();
+    }
+
+    private void updateUIText() {
+        if (bundle == null)
+            return;
+
+        // Sidebar
+        if (btnDataImport != null)
+            btnDataImport.setText(bundle.getString("sidebar.dataImport"));
+        if (btnDashboard != null)
+            btnDashboard.setText(bundle.getString("sidebar.dashboard"));
+        if (btnTimetable != null)
+            btnTimetable.setText(bundle.getString("sidebar.timetable"));
+        if (btnFilter != null)
+            btnFilter.setText(bundle.getString("sidebar.studentSearch"));
+        if (btnUserManual != null)
+            btnUserManual.setText(bundle.getString("sidebar.userManual"));
+        if (btnStudentPortal != null)
+            btnStudentPortal.setText(bundle.getString("sidebar.studentPortal"));
+        if (btnSettings != null)
+            btnSettings.setText(bundle.getString("sidebar.settings"));
+        if (btnExit != null)
+            btnExit.setText(bundle.getString("sidebar.exit"));
+
+        // Data Import View
+        if (lblDataImportTitle != null)
+            lblDataImportTitle.setText(bundle.getString("dataImport.title"));
+        if (lblDataImportSubtitle != null)
+            lblDataImportSubtitle.setText(bundle.getString("dataImport.subtitle"));
+        if (lblCoursesTitle != null)
+            lblCoursesTitle.setText(bundle.getString("dataImport.courses"));
+        if (lblStudentsTitle != null)
+            lblStudentsTitle.setText(bundle.getString("dataImport.students"));
+        if (lblClassroomsTitle != null)
+            lblClassroomsTitle.setText(bundle.getString("dataImport.classrooms"));
+        if (lblAttendanceTitle != null)
+            lblAttendanceTitle.setText(bundle.getString("dataImport.attendance"));
+
+        // Update loaded/not loaded status texts using current file status
+        updateImportStatusLabels();
+
+        if (btnGenerateDataImport != null)
+            btnGenerateDataImport.setText(bundle.getString("dataImport.generateTimetable"));
+        if (btnDeleteData != null)
+            btnDeleteData.setText(bundle.getString("dataImport.deleteData"));
+
+        // Timetable View
+        if (btnGenerateTimetable != null)
+            btnGenerateTimetable.setText(bundle.getString("dataImport.generateTimetable"));
+    }
+
+    // Helper to update status labels with translated "Loaded"/"Not Loaded" text
+    private void updateImportStatusLabels() {
+        if (bundle == null)
+            return;
+        String loaded = bundle.getString("dataImport.loaded");
+        String notLoaded = bundle.getString("dataImport.notLoaded");
+
+        if (lblCoursesStatus != null)
+            lblCoursesStatus.setText("courses.csv • " + (repository.loadCourses().isEmpty() ? notLoaded : loaded));
+        if (lblStudentsStatus != null)
+            lblStudentsStatus.setText("students.csv • " + (repository.loadStudents().isEmpty() ? notLoaded : loaded));
+        if (lblClassroomsStatus != null)
+            lblClassroomsStatus.setText("rooms.csv • " + (repository.loadClassrooms().isEmpty() ? notLoaded : loaded));
+        if (lblAttendanceStatus != null)
+            lblAttendanceStatus.setText("attendance.csv • "
+                    + (repository.loadEnrollments(students, courses).isEmpty() ? notLoaded : loaded));
+    }
+
+    @FXML
+    private void handleSettings() {
+        if (bundle == null)
+            loadLanguage("en"); // Ensure bundle is loaded
+
+        Stage settingsStage = new Stage();
+        settingsStage.initModality(Modality.APPLICATION_MODAL);
+        settingsStage.initStyle(StageStyle.TRANSPARENT);
+        settingsStage.setTitle(bundle.getString("settings.title"));
+
+        VBox settingsContent = new VBox(15);
+        settingsContent.getStyleClass().add("settings-popup");
+        settingsContent.setStyle("-fx-min-width: 280px; -fx-max-width: 280px;");
+
+        // Title
+        Label titleLabel = new Label(bundle.getString("settings.title"));
+        titleLabel.getStyleClass().add("settings-title");
+
+        // Theme Section
+        Label themeLabel = new Label(bundle.getString("settings.theme"));
+        themeLabel.getStyleClass().add("settings-section-title");
+
+        // Light Mode Button
+        HBox lightModeBtn = new HBox(12);
+        lightModeBtn.getStyleClass().add("settings-option");
+        lightModeBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label lightIcon = new Label("☀️");
+        lightIcon.getStyleClass().add("settings-option-icon");
+        Label lightText = new Label(bundle.getString("settings.lightMode"));
+        lightText.getStyleClass().add("settings-option-text");
+        lightModeBtn.getChildren().addAll(lightIcon, lightText);
+
+        // Dark Mode Button
+        HBox darkModeBtn = new HBox(12);
+        darkModeBtn.getStyleClass().add("settings-option");
+        darkModeBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label darkIcon = new Label("🌙");
+        darkIcon.getStyleClass().add("settings-option-icon");
+        Label darkText = new Label(bundle.getString("settings.darkMode"));
+        darkText.getStyleClass().add("settings-option-text");
+        darkModeBtn.getChildren().addAll(darkIcon, darkText);
+
+        if (isDarkMode) {
+            darkModeBtn.getStyleClass().add("selected");
+        } else {
+            lightModeBtn.getStyleClass().add("selected");
+        }
+
+        // Theme click handlers
+        lightModeBtn.setOnMouseClicked(e -> {
+            if (isDarkMode) {
+                isDarkMode = false;
+                applyTheme();
+                lightModeBtn.getStyleClass().add("selected");
+                darkModeBtn.getStyleClass().remove("selected");
+                if (settingsContent.getStyleClass().contains("dark-mode")) {
+                    settingsContent.getStyleClass().remove("dark-mode");
+                }
+            }
+        });
+
+        darkModeBtn.setOnMouseClicked(e -> {
+            if (!isDarkMode) {
+                isDarkMode = true;
+                applyTheme();
+                darkModeBtn.getStyleClass().add("selected");
+                lightModeBtn.getStyleClass().remove("selected");
+                if (!settingsContent.getStyleClass().contains("dark-mode")) {
+                    settingsContent.getStyleClass().add("dark-mode");
+                }
+            }
+        });
+
+        // Language Section
+        Label languageLabel = new Label(bundle.getString("settings.language"));
+        languageLabel.getStyleClass().add("settings-section-title");
+
+        // English Button
+        HBox englishBtn = new HBox(12);
+        englishBtn.getStyleClass().add("settings-option");
+        englishBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label englishIcon = new Label("🇬🇧");
+        englishIcon.getStyleClass().add("settings-option-icon");
+        Label englishText = new Label("English");
+        englishText.getStyleClass().add("settings-option-text");
+        englishBtn.getChildren().addAll(englishIcon, englishText);
+
+        // Turkish Button
+        HBox turkishBtn = new HBox(12);
+        turkishBtn.getStyleClass().add("settings-option");
+        turkishBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label turkishIcon = new Label("🇹🇷");
+        turkishIcon.getStyleClass().add("settings-option-icon");
+        Label turkishText = new Label("Türkçe");
+        turkishText.getStyleClass().add("settings-option-text");
+        turkishBtn.getChildren().addAll(turkishIcon, turkishText);
+
+        // Set initial language selection
+        if (currentLanguage.equals("tr")) {
+            turkishBtn.getStyleClass().add("selected");
+        } else {
+            englishBtn.getStyleClass().add("selected");
+        }
+
+        // Close button (declared early so it can be referenced in handlers)
+        Button closeBtn = new Button(bundle.getString("settings.close"));
+        closeBtn.getStyleClass().add("secondary-button");
+        closeBtn.setMaxWidth(Double.MAX_VALUE);
+        closeBtn.setOnAction(e -> settingsStage.close());
+
+        // English click handler
+        englishBtn.setOnMouseClicked(e -> {
+            if (!currentLanguage.equals("en")) {
+                loadLanguage("en");
+                englishBtn.getStyleClass().add("selected");
+                turkishBtn.getStyleClass().remove("selected");
+
+                settingsStage.setTitle(bundle.getString("settings.title"));
+                titleLabel.setText(bundle.getString("settings.title"));
+                themeLabel.setText(bundle.getString("settings.theme"));
+                lightText.setText(bundle.getString("settings.lightMode"));
+                darkText.setText(bundle.getString("settings.darkMode"));
+                languageLabel.setText(bundle.getString("settings.language"));
+                closeBtn.setText(bundle.getString("settings.close"));
+            }
+        });
+
+        // Turkish click handler
+        turkishBtn.setOnMouseClicked(e -> {
+            if (!currentLanguage.equals("tr")) {
+                loadLanguage("tr");
+                turkishBtn.getStyleClass().add("selected");
+                englishBtn.getStyleClass().remove("selected");
+
+                settingsStage.setTitle(bundle.getString("settings.title"));
+                titleLabel.setText(bundle.getString("settings.title"));
+                themeLabel.setText(bundle.getString("settings.theme"));
+                lightText.setText(bundle.getString("settings.lightMode"));
+                darkText.setText(bundle.getString("settings.darkMode"));
+                languageLabel.setText(bundle.getString("settings.language"));
+                closeBtn.setText(bundle.getString("settings.close"));
+            }
+        });
+
+        // Add all elements
+        VBox themeOptions = new VBox(8);
+        themeOptions.getChildren().addAll(lightModeBtn, darkModeBtn);
+
+        VBox languageOptions = new VBox(8);
+        languageOptions.getChildren().addAll(englishBtn, turkishBtn);
+
+        settingsContent.getChildren().addAll(titleLabel, themeLabel, themeOptions, languageLabel, languageOptions,
+                closeBtn);
+
+        // Apply dark mode to settings popup if active
+        if (isDarkMode) {
+            settingsContent.getStyleClass().add("dark-mode");
+        }
+
+        Scene settingsScene = new Scene(settingsContent);
+        settingsScene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        settingsScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+
+        settingsStage.setScene(settingsScene);
+        settingsStage.showAndWait();
+    }
+
+    private void applyTheme() {
+        Scene scene = viewDataImport.getScene();
+        if (scene != null && scene.getRoot() != null) {
+            if (isDarkMode) {
+                if (!scene.getRoot().getStyleClass().contains("dark-mode")) {
+                    scene.getRoot().getStyleClass().add("dark-mode");
+                }
+            } else {
+                scene.getRoot().getStyleClass().remove("dark-mode");
+            }
+        }
+    }
+
+    /**
+     * Apply dark mode styling to a dialog's root container and scene
+     */
+    private void applyDarkModeToDialog(javafx.scene.Parent root, Scene scene) {
+        if (isDarkMode) {
+            if (!root.getStyleClass().contains("dark-mode")) {
+                root.getStyleClass().add("dark-mode");
+            }
+        }
+        if (scene != null) {
+            scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        }
+    }
+
+    /**
+     * Apply dark mode styling to Alert dialogs
+     */
+    private void applyDarkModeToAlert(Alert alert) {
+        if (isDarkMode) {
+            alert.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            alert.getDialogPane().getStyleClass().add("dark-mode");
+        }
+    }
+
+    /**
+     * Apply dark mode styling to Dialog objects
+     */
+    private void applyDarkModeToDialogPane(Dialog<?> dialog) {
+        if (isDarkMode) {
+            dialog.getDialogPane().getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            dialog.getDialogPane().getStyleClass().add("dark-mode");
+        }
+    }
+
+    // ===== Dark Mode Color Helpers =====
+    private String dmBg() {
+        return isDarkMode ? "#1F2937" : "white";
+    }
+
+    private String dmBgSecondary() {
+        return isDarkMode ? "#111827" : "#F9FAFB";
+    }
+
+    private String dmBgTertiary() {
+        return isDarkMode ? "#374151" : "#F3F4F6";
+    }
+
+    private String dmBgCard() {
+        return isDarkMode ? "#374151" : "#F9FAFB";
+    }
+
+    private String dmBorder() {
+        return isDarkMode ? "#4B5563" : "#E5E7EB";
+    }
+
+    private String dmText() {
+        return isDarkMode ? "#F9FAFB" : "#1F2937";
+    }
+
+    private String dmTextSecondary() {
+        return isDarkMode ? "#9CA3AF" : "#6B7280";
+    }
+
+    private String dmTextTertiary() {
+        return isDarkMode ? "#D1D5DB" : "#374151";
+    }
+
+    private String dmSuccess() {
+        return isDarkMode ? "#34D399" : "#059669";
+    }
+
+    private String dmError() {
+        return isDarkMode ? "#F87171" : "#DC2626";
+    }
+
+    private String dmSuccessBg() {
+        return isDarkMode ? "#064E3B" : "#ECFDF5";
+    }
+
+    private String dmErrorBg() {
+        return isDarkMode ? "#7F1D1D" : "#FEF2F2";
+    }
+
+    private String dmSuccessBorder() {
+        return isDarkMode ? "#34D399" : "#10B981";
+    }
+
+    private String dmErrorBorder() {
+        return isDarkMode ? "#F87171" : "#EF4444";
+    }
+
+    private String dmSuccessText() {
+        return isDarkMode ? "#A7F3D0" : "#065F46";
+    }
+
+    private String dmErrorText() {
+        return isDarkMode ? "#FCA5A5" : "#991B1B";
+    }
+
     @FXML
     private void handleFilter() {
         if (currentTimetable == null) {
@@ -792,13 +1194,13 @@ public class MainController {
         enrollments.stream()
                 .filter(e -> e.getStudent().getId().equals(student.getId()))
                 .forEach(e -> System.out.println("  - Enrolled in: " + e.getCourse().getCode()));
-        
+
         List<Exam> exams = currentTimetable.getExamsForStudent(student);
         System.out.println("Exams found for student: " + exams.size());
         for (Exam exam : exams) {
             System.out.println("  - Exam: " + exam.getCourse().getCode() + " on " + exam.getSlot().getDate());
         }
-        
+
         showFilteredExams("Timetable for " + student.getName(), exams);
     }
 
@@ -1034,14 +1436,14 @@ public class MainController {
 
         List<String> issues = new ArrayList<>();
         int validCount = 0;
-        
+
         for (Exam exam : currentTimetable.getExams()) {
             List<Exam> others = currentTimetable.getExams().stream()
                     .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
                     .collect(Collectors.toList());
-            
+
             String error = constraintChecker.checkManualMove(exam, others, enrollments);
-            
+
             if (error != null) {
                 issues.add("❌ " + exam.getCourse().getCode() + ": " + error);
             } else {
@@ -1050,12 +1452,12 @@ public class MainController {
         }
 
         if (issues.isEmpty()) {
-            showInformation("✓ All Valid", 
+            showInformation("✓ All Valid",
                     "All " + validCount + " exams pass constraint validation!\n\n" +
-                    "• No classroom conflicts\n" +
-                    "• No student time conflicts\n" +
-                    "• All capacity requirements met\n" +
-                    "• Minimum gaps satisfied");
+                            "• No classroom conflicts\n" +
+                            "• No student time conflicts\n" +
+                            "• All capacity requirements met\n" +
+                            "• Minimum gaps satisfied");
         } else {
             List<String> reportLines = new ArrayList<>();
             reportLines.add("📊 Validation Summary:");
@@ -1064,7 +1466,7 @@ public class MainController {
             reportLines.add("");
             reportLines.add("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             reportLines.addAll(issues);
-            
+
             showScrollableDialog("Validation Results", reportLines);
         }
     }
@@ -1107,6 +1509,7 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        applyDarkModeToAlert(alert);
         alert.showAndWait();
     }
 
@@ -1115,6 +1518,7 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        applyDarkModeToAlert(alert);
         alert.showAndWait();
     }
 
@@ -1136,6 +1540,8 @@ public class MainController {
 
         root.getChildren().addAll(lblTitle, list, close);
         Scene scene = new Scene(root, 500, 600);
+        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        applyDarkModeToDialog(root, scene);
 
         dialog.setScene(scene);
         dialog.showAndWait();
@@ -1173,7 +1579,7 @@ public class MainController {
             emptyContent.setAlignment(javafx.geometry.Pos.CENTER);
             emptyContent.setPadding(new javafx.geometry.Insets(50));
             Label empty = new Label("No exams found for this selection.");
-            empty.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 14px;");
+            empty.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 14px;");
             emptyContent.getChildren().add(empty);
             scrollPane.setContent(emptyContent);
         } else {
@@ -1182,7 +1588,7 @@ public class MainController {
             grid.setHgap(5);
             grid.setVgap(0); // No vertical gap - lines will align with rows
             grid.setPadding(new javafx.geometry.Insets(15));
-            grid.setStyle("-fx-background-color: white;");
+            grid.setStyle("-fx-background-color: " + dmBg() + ";");
 
             // Constants
             double SLOT_HEIGHT = 50.0;
@@ -1214,10 +1620,11 @@ public class MainController {
             timeCol.setPrefWidth(60);
             grid.getColumnConstraints().add(timeCol);
 
-            // Find date range from FILTERED exams (not all exams) to show only relevant days
+            // Find date range from FILTERED exams (not all exams) to show only relevant
+            // days
             LocalDate startDate;
             LocalDate endDate;
-            
+
             if (!exams.isEmpty()) {
                 startDate = exams.stream()
                         .map(e -> e.getSlot().getDate())
@@ -1231,8 +1638,9 @@ public class MainController {
                 startDate = LocalDate.now();
                 endDate = LocalDate.now();
             }
-            
-            // Calculate number of days to show (minimum 7, but expand to include all exam dates)
+
+            // Calculate number of days to show (minimum 7, but expand to include all exam
+            // dates)
             long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
             int numDays = (int) Math.max(7, daysBetween);
 
@@ -1260,7 +1668,7 @@ public class MainController {
 
                     String timeStr = java.time.LocalTime.of(hour, min).format(timeFormatter);
                     Label timeLabel = new Label(timeStr);
-                    timeLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+                    timeLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
                     javafx.scene.layout.GridPane.setValignment(timeLabel, javafx.geometry.VPos.TOP);
                     javafx.scene.layout.GridPane.setHalignment(timeLabel, javafx.geometry.HPos.RIGHT);
                     grid.add(timeLabel, 0, row);
@@ -1276,12 +1684,13 @@ public class MainController {
                 LocalDate date = weekDates.get(i);
                 VBox dayHeader = new VBox();
                 dayHeader.setAlignment(javafx.geometry.Pos.CENTER);
-                dayHeader.setStyle("-fx-background-color: #F3F4F6; -fx-padding: 8; -fx-background-radius: 6;");
+                dayHeader.setStyle(
+                        "-fx-background-color: " + dmBgTertiary() + "; -fx-padding: 8; -fx-background-radius: 6;");
 
                 Label dayLabel = new Label(date.format(dayFormatter));
-                dayLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
+                dayLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmTextTertiary() + ";");
                 Label dateLabel = new Label(date.format(dateFormatter));
-                dateLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+                dateLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
 
                 dayHeader.getChildren().addAll(dayLabel, dateLabel);
                 grid.add(dayHeader, i + 1, 0);
@@ -1366,7 +1775,8 @@ public class MainController {
         // Footer
         HBox footer = new HBox();
         footer.setStyle(
-                "-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
+                "-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: " + dmBgTertiary()
+                        + "; -fx-background-radius: 0 0 12 12;");
 
         Button closeBtn = new Button("Close");
         closeBtn.getStyleClass().add("secondary-button");
@@ -1378,6 +1788,7 @@ public class MainController {
         Scene scene = new Scene(root);
         scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+        applyDarkModeToDialog(root, scene);
 
         dialog.setScene(scene);
         dialog.showAndWait();
@@ -1433,59 +1844,64 @@ public class MainController {
         // Add row factory for context menu and double-click edit
         examTableView.setRowFactory(tv -> {
             javafx.scene.control.TableRow<Exam> row = new javafx.scene.control.TableRow<>();
-            
+
             // Context Menu
             javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
-            
+
             javafx.scene.control.MenuItem editItem = new javafx.scene.control.MenuItem("Edit Exam");
             editItem.setOnAction(e -> {
                 Exam exam = row.getItem();
-                if (exam != null) showExamDetails(exam);
+                if (exam != null)
+                    showExamDetails(exam);
             });
-            
+
             javafx.scene.control.MenuItem quickDateItem = new javafx.scene.control.MenuItem("📅 Quick Change Date");
             quickDateItem.setOnAction(e -> {
                 Exam exam = row.getItem();
-                if (exam != null) showQuickDateChange(exam);
+                if (exam != null)
+                    showQuickDateChange(exam);
             });
-            
-            javafx.scene.control.MenuItem quickRoomItem = new javafx.scene.control.MenuItem("🏫 Quick Change Classroom");
+
+            javafx.scene.control.MenuItem quickRoomItem = new javafx.scene.control.MenuItem(
+                    "🏫 Quick Change Classroom");
             quickRoomItem.setOnAction(e -> {
                 Exam exam = row.getItem();
-                if (exam != null) showQuickClassroomChange(exam);
+                if (exam != null)
+                    showQuickClassroomChange(exam);
             });
-            
+
             javafx.scene.control.MenuItem quickTimeItem = new javafx.scene.control.MenuItem("🕒 Quick Change Time");
             quickTimeItem.setOnAction(e -> {
                 Exam exam = row.getItem();
-                if (exam != null) showQuickTimeChange(exam);
+                if (exam != null)
+                    showQuickTimeChange(exam);
             });
-            
+
             javafx.scene.control.SeparatorMenuItem separator = new javafx.scene.control.SeparatorMenuItem();
-            
+
             javafx.scene.control.MenuItem validateItem = new javafx.scene.control.MenuItem("✓ Validate This Exam");
             validateItem.setOnAction(e -> {
                 Exam exam = row.getItem();
-                if (exam != null) validateSingleExam(exam);
+                if (exam != null)
+                    validateSingleExam(exam);
             });
-            
-            contextMenu.getItems().addAll(editItem, separator, quickDateItem, quickTimeItem, quickRoomItem, 
+
+            contextMenu.getItems().addAll(editItem, separator, quickDateItem, quickTimeItem, quickRoomItem,
                     new javafx.scene.control.SeparatorMenuItem(), validateItem);
-            
+
             // Only show context menu for non-empty rows
             row.contextMenuProperty().bind(
-                javafx.beans.binding.Bindings.when(row.emptyProperty())
-                    .then((javafx.scene.control.ContextMenu) null)
-                    .otherwise(contextMenu)
-            );
-            
+                    javafx.beans.binding.Bindings.when(row.emptyProperty())
+                            .then((javafx.scene.control.ContextMenu) null)
+                            .otherwise(contextMenu));
+
             // Double-click to edit
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
                     showExamDetails(row.getItem());
                 }
             });
-            
+
             return row;
         });
 
@@ -1565,24 +1981,26 @@ public class MainController {
         Dialog<LocalDate> dialog = new Dialog<>();
         dialog.setTitle("Quick Date Change");
         dialog.setHeaderText("Change date for: " + exam.getCourse().getCode());
-        
+        applyDarkModeToDialogPane(dialog);
+
         ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(applyBtn, ButtonType.CANCEL);
-        
+
         VBox content = new VBox(15);
         content.setPadding(new javafx.geometry.Insets(20));
-        
-        Label currentLabel = new Label("Current: " + exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy (EEEE)")));
-        currentLabel.setStyle("-fx-text-fill: #6B7280;");
-        
+
+        Label currentLabel = new Label(
+                "Current: " + exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy (EEEE)")));
+        currentLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + ";");
+
         javafx.scene.control.DatePicker datePicker = new javafx.scene.control.DatePicker(exam.getSlot().getDate());
         datePicker.setMaxWidth(Double.MAX_VALUE);
-        
+
         // Validation feedback
         Label validationLabel = new Label();
         validationLabel.setWrapText(true);
         validationLabel.setStyle("-fx-font-size: 12px;");
-        
+
         datePicker.valueProperty().addListener((obs, old, newDate) -> {
             if (newDate != null) {
                 ExamSlot newSlot = new ExamSlot(newDate, exam.getSlot().getStartTime(), exam.getSlot().getEndTime());
@@ -1591,28 +2009,29 @@ public class MainController {
                         .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
                         .collect(Collectors.toList());
                 String error = constraintChecker.checkManualMove(tempExam, others, enrollments);
-                
+
                 if (error == null) {
                     validationLabel.setText("✓ Valid change");
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmSuccess() + ";");
                 } else {
                     validationLabel.setText("⚠ " + error);
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmError() + ";");
                 }
             }
         });
-        
+
         // Trigger initial validation
         datePicker.fireEvent(new javafx.event.ActionEvent());
-        
+
         content.getChildren().addAll(currentLabel, datePicker, validationLabel);
         dialog.getDialogPane().setContent(content);
-        
+
         dialog.setResultConverter(btn -> {
-            if (btn == applyBtn) return datePicker.getValue();
+            if (btn == applyBtn)
+                return datePicker.getValue();
             return null;
         });
-        
+
         dialog.showAndWait().ifPresent(newDate -> {
             ExamSlot newSlot = new ExamSlot(newDate, exam.getSlot().getStartTime(), exam.getSlot().getEndTime());
             exam.setSlot(newSlot);
@@ -1626,24 +2045,25 @@ public class MainController {
         Dialog<Classroom> dialog = new Dialog<>();
         dialog.setTitle("Quick Classroom Change");
         dialog.setHeaderText("Change classroom for: " + exam.getCourse().getCode());
-        
+        applyDarkModeToDialogPane(dialog);
+
         ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(applyBtn, ButtonType.CANCEL);
-        
+
         VBox content = new VBox(15);
         content.setPadding(new javafx.geometry.Insets(20));
-        
+
         int studentCount = (int) enrollments.stream()
                 .filter(e -> e.getCourse().getCode().equals(exam.getCourse().getCode()))
                 .count();
-        
-        Label currentLabel = new Label("Current: " + exam.getClassroom().getName() + 
+
+        Label currentLabel = new Label("Current: " + exam.getClassroom().getName() +
                 " (Capacity: " + exam.getClassroom().getCapacity() + ")");
-        currentLabel.setStyle("-fx-text-fill: #6B7280;");
-        
+        currentLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + ";");
+
         Label needLabel = new Label("Required capacity: " + studentCount + " students");
-        needLabel.setStyle("-fx-text-fill: #374151; -fx-font-weight: bold;");
-        
+        needLabel.setStyle("-fx-text-fill: " + dmTextTertiary() + "; -fx-font-weight: bold;");
+
         javafx.scene.control.ComboBox<Classroom> classroomCombo = new javafx.scene.control.ComboBox<>();
         classroomCombo.setMaxWidth(Double.MAX_VALUE);
         classroomCombo.getItems().addAll(classrooms.stream()
@@ -1660,7 +2080,8 @@ public class MainController {
                 } else {
                     String status = item.getCapacity() >= studentCount ? "✓" : "❌";
                     setText(status + " " + item.getName() + " (Capacity: " + item.getCapacity() + ")");
-                    setStyle(item.getCapacity() >= studentCount ? "-fx-text-fill: #059669;" : "-fx-text-fill: #DC2626;");
+                    setStyle(
+                            item.getCapacity() >= studentCount ? "-fx-text-fill: #059669;" : "-fx-text-fill: #DC2626;");
                 }
             }
         });
@@ -1675,12 +2096,12 @@ public class MainController {
                 }
             }
         });
-        
+
         // Validation feedback
         Label validationLabel = new Label();
         validationLabel.setWrapText(true);
         validationLabel.setStyle("-fx-font-size: 12px;");
-        
+
         classroomCombo.valueProperty().addListener((obs, old, newRoom) -> {
             if (newRoom != null) {
                 Exam tempExam = new Exam(exam.getCourse(), newRoom, exam.getSlot());
@@ -1688,25 +2109,26 @@ public class MainController {
                         .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
                         .collect(Collectors.toList());
                 String error = constraintChecker.checkManualMove(tempExam, others, enrollments);
-                
+
                 if (error == null) {
                     validationLabel.setText("✓ Valid change");
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmSuccess() + ";");
                 } else {
                     validationLabel.setText("⚠ " + error);
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmError() + ";");
                 }
             }
         });
-        
+
         content.getChildren().addAll(currentLabel, needLabel, classroomCombo, validationLabel);
         dialog.getDialogPane().setContent(content);
-        
+
         dialog.setResultConverter(btn -> {
-            if (btn == applyBtn) return classroomCombo.getValue();
+            if (btn == applyBtn)
+                return classroomCombo.getValue();
             return null;
         });
-        
+
         dialog.showAndWait().ifPresent(newRoom -> {
             exam.setClassroom(newRoom);
             repository.saveTimetable(currentTimetable);
@@ -1719,25 +2141,26 @@ public class MainController {
         Dialog<LocalTime> dialog = new Dialog<>();
         dialog.setTitle("Quick Time Change");
         dialog.setHeaderText("Change time for: " + exam.getCourse().getCode());
-        
+        applyDarkModeToDialogPane(dialog);
+
         ButtonType applyBtn = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(applyBtn, ButtonType.CANCEL);
-        
+
         VBox content = new VBox(15);
         content.setPadding(new javafx.geometry.Insets(20));
-        
+
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
-        
-        Label currentLabel = new Label("Current: " + exam.getSlot().getStartTime().format(timeFmt) + 
+
+        Label currentLabel = new Label("Current: " + exam.getSlot().getStartTime().format(timeFmt) +
                 " - " + exam.getSlot().getEndTime().format(timeFmt));
-        currentLabel.setStyle("-fx-text-fill: #6B7280;");
-        
+        currentLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + ";");
+
         Label durationLabel = new Label("Duration: " + exam.getCourse().getExamDurationMinutes() + " minutes");
-        durationLabel.setStyle("-fx-text-fill: #374151;");
-        
+        durationLabel.setStyle("-fx-text-fill: " + dmTextTertiary() + ";");
+
         HBox timeBox = new HBox(10);
         timeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        
+
         javafx.scene.control.ComboBox<String> timeCombo = new javafx.scene.control.ComboBox<>();
         for (int hour = 9; hour <= 17; hour++) {
             for (int min = 0; min < 60; min += 30) {
@@ -1745,10 +2168,10 @@ public class MainController {
             }
         }
         timeCombo.setValue(exam.getSlot().getStartTime().format(timeFmt));
-        
+
         Label endLabel = new Label("→ " + exam.getSlot().getEndTime().format(timeFmt));
-        endLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
-        
+        endLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmTextTertiary() + ";");
+
         timeCombo.valueProperty().addListener((obs, old, newVal) -> {
             if (newVal != null) {
                 LocalTime newStart = LocalTime.parse(newVal, timeFmt);
@@ -1756,14 +2179,14 @@ public class MainController {
                 endLabel.setText("→ " + newEnd.format(timeFmt));
             }
         });
-        
+
         timeBox.getChildren().addAll(new Label("Start:"), timeCombo, endLabel);
-        
+
         // Validation feedback
         Label validationLabel = new Label();
         validationLabel.setWrapText(true);
         validationLabel.setStyle("-fx-font-size: 12px;");
-        
+
         timeCombo.valueProperty().addListener((obs, old, newVal) -> {
             if (newVal != null) {
                 LocalTime newStart = LocalTime.parse(newVal, timeFmt);
@@ -1774,23 +2197,23 @@ public class MainController {
                         .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
                         .collect(Collectors.toList());
                 String error = constraintChecker.checkManualMove(tempExam, others, enrollments);
-                
+
                 if (error == null) {
                     validationLabel.setText("✓ Valid change");
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #059669;");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmSuccess() + ";");
                 } else {
                     validationLabel.setText("⚠ " + error);
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #DC2626;");
+                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmError() + ";");
                 }
             }
         });
-        
+
         // Trigger initial validation
         timeCombo.fireEvent(new javafx.event.ActionEvent());
-        
+
         content.getChildren().addAll(currentLabel, durationLabel, timeBox, validationLabel);
         dialog.getDialogPane().setContent(content);
-        
+
         dialog.setResultConverter(btn -> {
             if (btn == applyBtn) {
                 String val = timeCombo.getValue();
@@ -1798,7 +2221,7 @@ public class MainController {
             }
             return null;
         });
-        
+
         dialog.showAndWait().ifPresent(newStart -> {
             LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
             ExamSlot newSlot = new ExamSlot(exam.getSlot().getDate(), newStart, newEnd);
@@ -1813,9 +2236,9 @@ public class MainController {
         List<Exam> others = currentTimetable.getExams().stream()
                 .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
                 .collect(Collectors.toList());
-        
+
         String error = constraintChecker.checkManualMove(exam, others, enrollments);
-        
+
         if (error == null) {
             showInformation("Validation Passed", "✓ This exam has no constraint violations.\n\n" +
                     "Course: " + exam.getCourse().getCode() + "\n" +
@@ -1954,13 +2377,13 @@ public class MainController {
         title.setStyle("-fx-font-size: 18px;");
 
         Label subtitle = new Label(subtitleText);
-        subtitle.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 13px;");
+        subtitle.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 13px;");
 
         header.getChildren().addAll(title, subtitle);
 
         // Content - Exam List
         VBox content = new VBox(10);
-        content.setStyle("-fx-padding: 15; -fx-background-color: white;");
+        content.setStyle("-fx-padding: 15; -fx-background-color: " + dmBg() + ";");
         javafx.scene.layout.VBox.setVgrow(content, javafx.scene.layout.Priority.ALWAYS);
 
         javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
@@ -1976,8 +2399,8 @@ public class MainController {
 
         for (Exam exam : exams) {
             HBox examCard = new HBox(15);
-            examCard.setStyle("-fx-background-color: #F9FAFB; -fx-padding: 12; -fx-background-radius: 8; " +
-                    "-fx-border-color: #E5E7EB; -fx-border-radius: 8;");
+            examCard.setStyle("-fx-background-color: " + dmBgCard() + "; -fx-padding: 12; -fx-background-radius: 8; " +
+                    "-fx-border-color: " + dmBorder() + "; -fx-border-radius: 8;");
             examCard.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
             // Time/Date info
@@ -1987,7 +2410,7 @@ public class MainController {
                     exam.getSlot().getEndTime().format(timeFmt));
             timeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #8B5CF6; -fx-font-size: 12px;");
             Label dateLabel = new Label(exam.getSlot().getDate().format(dateFmt));
-            dateLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+            dateLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
             timeInfo.getChildren().addAll(timeLabel, dateLabel);
 
             // Separator
@@ -1997,9 +2420,9 @@ public class MainController {
             // Course info
             VBox courseInfo = new VBox(2);
             Label codeLabel = new Label(exam.getCourse().getCode());
-            codeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1F2937; -fx-font-size: 13px;");
+            codeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmText() + "; -fx-font-size: 13px;");
             courseInfo.getChildren().add(codeLabel);
-            
+
             // Only show name if it's different from code
             if (!exam.getCourse().getName().equals(exam.getCourse().getCode())) {
                 Label nameLabel = new Label(exam.getCourse().getName());
@@ -2011,7 +2434,7 @@ public class MainController {
 
             // Room info
             Label roomLabel = new Label("📍 " + exam.getClassroom().getName());
-            roomLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 11px;");
+            roomLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
 
             examCard.getChildren().addAll(timeInfo, separator, courseInfo, roomLabel);
             examList.getChildren().add(examCard);
@@ -2019,7 +2442,7 @@ public class MainController {
 
         if (exams.isEmpty()) {
             Label emptyLabel = new Label("No exams found.");
-            emptyLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 14px;");
+            emptyLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 14px;");
             examList.getChildren().add(emptyLabel);
             examList.setAlignment(javafx.geometry.Pos.CENTER);
         }
@@ -2029,7 +2452,7 @@ public class MainController {
 
         // Footer
         HBox footer = new HBox();
-        footer.setStyle("-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; " +
+        footer.setStyle("-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: " + dmBgTertiary() + "; " +
                 "-fx-background-radius: 0 0 12 12;");
 
         Button closeBtn = new Button("Close");
@@ -2042,6 +2465,7 @@ public class MainController {
         Scene scene = new Scene(root);
         scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+        applyDarkModeToDialog(root, scene);
 
         dialog.setScene(scene);
         dialog.showAndWait();
@@ -2089,7 +2513,7 @@ public class MainController {
         validationBox.setStyle("-fx-padding: 12; -fx-background-radius: 8;");
         validationBox.setVisible(false);
         validationBox.setManaged(false);
-        
+
         Label validationIcon = new Label("✓");
         validationIcon.setStyle("-fx-font-size: 16px;");
         Label validationLabel = new Label("");
@@ -2110,14 +2534,14 @@ public class MainController {
         VBox timeSection = new VBox(5);
         Label timeLabel = new Label("🕒 Time Slot");
         timeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
-        
+
         HBox timeBox = new HBox(10);
         timeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        
+
         javafx.scene.control.ComboBox<String> startTimeCombo = new javafx.scene.control.ComboBox<>();
         startTimeCombo.setStyle("-fx-font-size: 14px;");
         startTimeCombo.setPrefWidth(120);
-        
+
         // Populate time slots (09:00 - 18:00)
         for (int hour = 9; hour <= 17; hour++) {
             for (int min = 0; min < 60; min += 30) {
@@ -2125,19 +2549,19 @@ public class MainController {
             }
         }
         startTimeCombo.setValue(exam.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
-        
+
         Label toLabel = new Label("to");
         toLabel.setStyle("-fx-text-fill: #6B7280;");
-        
+
         Label endTimeLabel = new Label(exam.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")));
         endTimeLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #374151; -fx-font-weight: bold;");
-        
+
         Label durationLabel = new Label("(" + exam.getCourse().getExamDurationMinutes() + " min)");
         durationLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 12px;");
-        
+
         timeBox.getChildren().addAll(startTimeCombo, toLabel, endTimeLabel, durationLabel);
         timeSection.getChildren().addAll(timeLabel, timeBox);
-        
+
         // Update end time when start time changes
         startTimeCombo.setOnAction(e -> {
             String startStr = startTimeCombo.getValue();
@@ -2152,7 +2576,7 @@ public class MainController {
         VBox classroomSection = new VBox(5);
         Label classroomLabel = new Label("🏫 Classroom");
         classroomLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
-        
+
         javafx.scene.control.ComboBox<Classroom> classroomCombo = new javafx.scene.control.ComboBox<>();
         classroomCombo.setMaxWidth(Double.MAX_VALUE);
         classroomCombo.setStyle("-fx-font-size: 14px;");
@@ -2182,60 +2606,65 @@ public class MainController {
                 }
             }
         });
-        
+
         // Capacity indicator
         HBox capacityBox = new HBox(8);
         capacityBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         Label capacityIndicator = new Label();
         updateCapacityIndicator(capacityIndicator, classroomCombo.getValue(), students.size());
-        
+
         capacityBox.getChildren().add(capacityIndicator);
         classroomSection.getChildren().addAll(classroomLabel, classroomCombo, capacityBox);
-        
-        classroomCombo.setOnAction(e -> updateCapacityIndicator(capacityIndicator, classroomCombo.getValue(), students.size()));
+
+        classroomCombo.setOnAction(
+                e -> updateCapacityIndicator(capacityIndicator, classroomCombo.getValue(), students.size()));
 
         // Live Validation Function
         Runnable validateChanges = () -> {
             LocalDate newDate = datePicker.getValue();
             String startStr = startTimeCombo.getValue();
             Classroom newClassroom = classroomCombo.getValue();
-            
+
             if (newDate == null || startStr == null || newClassroom == null) {
                 return;
             }
-            
+
             LocalTime newStart = LocalTime.parse(startStr, DateTimeFormatter.ofPattern("HH:mm"));
             LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
             ExamSlot newSlot = new ExamSlot(newDate, newStart, newEnd);
-            
+
             // Create a temporary exam for validation
             Exam tempExam = new Exam(exam.getCourse(), newClassroom, newSlot);
-            
+
             // Create list without original exam for checking
             List<Exam> otherExams = currentTimetable.getExams().stream()
                     .filter(e -> !e.getCourse().getCode().equals(exam.getCourse().getCode()))
                     .collect(Collectors.toList());
-            
+
             String error = constraintChecker.checkManualMove(tempExam, otherExams, enrollments);
-            
+
             validationBox.setVisible(true);
             validationBox.setManaged(true);
-            
+
             if (error == null) {
-                validationBox.setStyle("-fx-padding: 12; -fx-background-radius: 8; -fx-background-color: #ECFDF5; -fx-border-color: #10B981; -fx-border-radius: 8;");
+                validationBox.setStyle(
+                        "-fx-padding: 12; -fx-background-radius: 8; -fx-background-color: " + dmSuccessBg()
+                                + "; -fx-border-color: " + dmSuccessBorder() + "; -fx-border-radius: 8;");
                 validationIcon.setText("✓");
-                validationIcon.setStyle("-fx-font-size: 16px; -fx-text-fill: #059669;");
+                validationIcon.setStyle("-fx-font-size: 16px; -fx-text-fill: " + dmSuccess() + ";");
                 validationLabel.setText("All constraints satisfied. This change is valid.");
-                validationLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #065F46;");
+                validationLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: " + dmSuccessText() + ";");
             } else {
-                validationBox.setStyle("-fx-padding: 12; -fx-background-radius: 8; -fx-background-color: #FEF2F2; -fx-border-color: #EF4444; -fx-border-radius: 8;");
+                validationBox.setStyle(
+                        "-fx-padding: 12; -fx-background-radius: 8; -fx-background-color: " + dmErrorBg()
+                                + "; -fx-border-color: " + dmErrorBorder() + "; -fx-border-radius: 8;");
                 validationIcon.setText("⚠");
-                validationIcon.setStyle("-fx-font-size: 16px; -fx-text-fill: #DC2626;");
+                validationIcon.setStyle("-fx-font-size: 16px; -fx-text-fill: " + dmError() + ";");
                 validationLabel.setText("Conflict: " + error);
-                validationLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #991B1B;");
+                validationLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: " + dmErrorText() + ";");
             }
         };
-        
+
         // Add change listeners for live validation
         datePicker.valueProperty().addListener((obs, old, newVal) -> validateChanges.run());
         startTimeCombo.valueProperty().addListener((obs, old, newVal) -> validateChanges.run());
@@ -2243,109 +2672,117 @@ public class MainController {
 
         // Current Info Section
         VBox currentInfoSection = new VBox(8);
-        currentInfoSection.setStyle("-fx-background-color: #F3F4F6; -fx-padding: 12; -fx-background-radius: 8;");
+        currentInfoSection
+                .setStyle("-fx-background-color: " + dmBgTertiary() + "; -fx-padding: 12; -fx-background-radius: 8;");
         Label currentInfoTitle = new Label("📋 Current Assignment");
-        currentInfoTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13px;");
-        
+        currentInfoTitle
+                .setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmTextTertiary() + "; -fx-font-size: 13px;");
+
         // Store original values for history tracking
         final String originalDate = exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         final String originalStartTime = exam.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm"));
         final String originalEndTime = exam.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"));
         final String originalClassroom = exam.getClassroom().getName();
-        
+
         Label currentInfoText = new Label(String.format("Date: %s | Time: %s - %s | Room: %s",
                 originalDate, originalStartTime, originalEndTime, originalClassroom));
-        currentInfoText.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
+        currentInfoText.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 12px;");
         currentInfoSection.getChildren().addAll(currentInfoTitle, currentInfoText);
 
         // Enrolled Students Section (Clickable Button to show popup)
         HBox studentsSection = new HBox(6);
         studentsSection.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        studentsSection.setStyle("-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;");
-        
+        studentsSection.setStyle(
+                "-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;");
+
         Label studentsIcon = new Label("👥");
         studentsIcon.setStyle("-fx-font-size: 13px;");
-        
+
         Label studentsLabel = new Label("Enrolled Students (" + students.size() + ")");
         studentsLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4F46E5;");
-        
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-        
+
         Label arrowIcon = new Label("›");
         arrowIcon.setStyle("-fx-font-size: 14px; -fx-text-fill: #4F46E5; -fx-font-weight: bold;");
-        
+
         studentsSection.getChildren().addAll(studentsIcon, studentsLabel, spacer, arrowIcon);
-        
+
         // Hover effect
-        studentsSection.setOnMouseEntered(e -> studentsSection.setStyle("-fx-padding: 8 12; -fx-background-color: #E0E7FF; -fx-background-radius: 6; -fx-cursor: hand;"));
-        studentsSection.setOnMouseExited(e -> studentsSection.setStyle("-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;"));
-        
+        studentsSection.setOnMouseEntered(e -> studentsSection.setStyle(
+                "-fx-padding: 8 12; -fx-background-color: #E0E7FF; -fx-background-radius: 6; -fx-cursor: hand;"));
+        studentsSection.setOnMouseExited(e -> studentsSection.setStyle(
+                "-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;"));
+
         // Click to show students popup
         studentsSection.setOnMouseClicked(e -> showEnrolledStudentsPopup(exam.getCourse().getCode(), students));
 
-        content.getChildren().addAll(validationBox, currentInfoSection, dateSection, timeSection, classroomSection, studentsSection);
+        content.getChildren().addAll(validationBox, currentInfoSection, dateSection, timeSection, classroomSection,
+                studentsSection);
 
         // Footer with Save and Cancel
         HBox footer = new HBox(15);
         footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
         footer.setMinHeight(60);
-        footer.setStyle("-fx-padding: 10 40 10 40; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
+        footer.setStyle("-fx-padding: 10 40 10 40; -fx-background-color: " + dmBgTertiary()
+                + "; -fx-background-radius: 0 0 12 12;");
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.getStyleClass().add("secondary-button");
         cancelBtn.setOnAction(e -> dialog.close());
-        
+
         Button saveBtn = new Button("💾 Save Changes");
         saveBtn.getStyleClass().add("primary-button");
         saveBtn.setOnAction(e -> {
             LocalDate newDate = datePicker.getValue();
             String startStr = startTimeCombo.getValue();
             Classroom newClassroom = classroomCombo.getValue();
-            
+
             if (newDate == null || startStr == null || newClassroom == null) {
                 showError("Invalid Input", "Please fill all fields.");
                 return;
             }
-            
+
             LocalTime newStart = LocalTime.parse(startStr, DateTimeFormatter.ofPattern("HH:mm"));
             LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
             ExamSlot newSlot = new ExamSlot(newDate, newStart, newEnd);
-            
+
             // Create temp exam for final validation
             Exam tempExam = new Exam(exam.getCourse(), newClassroom, newSlot);
             List<Exam> otherExams = currentTimetable.getExams().stream()
                     .filter(ex -> !ex.getCourse().getCode().equals(exam.getCourse().getCode()))
                     .collect(Collectors.toList());
-            
+
             String error = constraintChecker.checkManualMove(tempExam, otherExams, enrollments);
-            
+
             if (error != null) {
                 // Show confirmation dialog for conflict override
                 Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
                 confirmAlert.setTitle("Constraint Violation");
                 confirmAlert.setHeaderText("⚠️ This change violates scheduling constraints");
-                confirmAlert.setContentText("Conflict: " + error + "\n\nDo you want to save anyway? This may cause scheduling problems.");
-                
+                confirmAlert.setContentText(
+                        "Conflict: " + error + "\n\nDo you want to save anyway? This may cause scheduling problems.");
+
                 ButtonType saveAnywayBtn = new ButtonType("Save Anyway", ButtonBar.ButtonData.OK_DONE);
                 ButtonType cancelBtnType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
                 confirmAlert.getButtonTypes().setAll(saveAnywayBtn, cancelBtnType);
-                
+
                 if (confirmAlert.showAndWait().orElse(cancelBtnType) != saveAnywayBtn) {
                     return;
                 }
             }
-            
+
             // Record edit history before applying changes
             String newDateStr = newDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             String newStartStr = newStart.format(DateTimeFormatter.ofPattern("HH:mm"));
             String newEndStr = newEnd.format(DateTimeFormatter.ofPattern("HH:mm"));
             String newClassroomName = newClassroom.getName();
-            
+
             StringBuilder changes = new StringBuilder();
             StringBuilder oldValues = new StringBuilder();
             StringBuilder newValues = new StringBuilder();
-            
+
             if (!originalDate.equals(newDateStr)) {
                 changes.append("Date changed; ");
                 oldValues.append("Date: ").append(originalDate).append("; ");
@@ -2361,28 +2798,27 @@ public class MainController {
                 oldValues.append("Room: ").append(originalClassroom).append("; ");
                 newValues.append("Room: ").append(newClassroomName).append("; ");
             }
-            
+
             if (changes.length() > 0) {
                 editHistory.add(new EditHistoryEntry(
-                    exam.getCourse().getCode(),
-                    exam.getCourse().getName(),
-                    changes.toString().trim(),
-                    oldValues.toString().trim(),
-                    newValues.toString().trim()
-                ));
+                        exam.getCourse().getCode(),
+                        exam.getCourse().getName(),
+                        changes.toString().trim(),
+                        oldValues.toString().trim(),
+                        newValues.toString().trim()));
             }
-            
+
             // Apply changes
             exam.setSlot(newSlot);
             exam.setClassroom(newClassroom);
-            
+
             // Save to repository
             repository.saveTimetable(currentTimetable);
-            
+
             // Refresh UI
             refreshTimetable();
             dialog.close();
-            
+
             showInformation("Success", "Exam schedule updated successfully!");
         });
 
@@ -2394,15 +2830,16 @@ public class MainController {
         javafx.scene.Scene scene = new javafx.scene.Scene(root);
         scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
         scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+        applyDarkModeToDialog(root, scene);
 
         dialog.setScene(scene);
-        
+
         // Initial validation
         validateChanges.run();
-        
+
         dialog.showAndWait();
     }
-    
+
     @FXML
     private void showEditHistory() {
         Stage popup = new Stage();
@@ -2412,7 +2849,7 @@ public class MainController {
         popup.setResizable(true);
 
         VBox root = new VBox(0);
-        root.setStyle("-fx-background-color: white;");
+        root.setStyle("-fx-background-color: " + dmBg() + ";");
         root.setPrefWidth(700);
         root.setPrefHeight(500);
 
@@ -2435,7 +2872,8 @@ public class MainController {
         HBox.setHgrow(headerSpacer, javafx.scene.layout.Priority.ALWAYS);
 
         Button clearHistoryBtn = new Button("🗑 Clear History");
-        clearHistoryBtn.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15; -fx-cursor: hand;");
+        clearHistoryBtn.setStyle(
+                "-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15; -fx-cursor: hand;");
         clearHistoryBtn.setOnAction(e -> {
             editHistory.clear();
             subtitle.setText("0 changes recorded");
@@ -2448,7 +2886,7 @@ public class MainController {
         // Content - History List
         javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: #F9FAFB;");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: " + dmBgSecondary() + ";");
         VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
 
         VBox historyList = new VBox(10);
@@ -2458,54 +2896,54 @@ public class MainController {
             VBox emptyState = new VBox(10);
             emptyState.setAlignment(javafx.geometry.Pos.CENTER);
             emptyState.setStyle("-fx-padding: 50;");
-            
+
             Label emptyIcon = new Label("📝");
             emptyIcon.setStyle("-fx-font-size: 48px;");
-            
+
             Label emptyText = new Label("No edits yet");
-            emptyText.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #6B7280;");
-            
+            emptyText.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + dmTextSecondary() + ";");
+
             Label emptySubtext = new Label("When you edit an exam, it will appear here");
-            emptySubtext.setStyle("-fx-font-size: 13px; -fx-text-fill: #9CA3AF;");
-            
+            emptySubtext.setStyle("-fx-font-size: 13px; -fx-text-fill: " + dmTextSecondary() + ";");
+
             emptyState.getChildren().addAll(emptyIcon, emptyText, emptySubtext);
             historyList.getChildren().add(emptyState);
         } else {
             // Show history in reverse order (newest first)
             for (int i = editHistory.size() - 1; i >= 0; i--) {
                 EditHistoryEntry entry = editHistory.get(i);
-                
+
                 VBox entryBox = new VBox(6);
-                entryBox.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; " +
-                        "-fx-border-color: #E5E7EB; -fx-border-radius: 10;");
-                
+                entryBox.setStyle("-fx-background-color: " + dmBg() + "; -fx-padding: 15; -fx-background-radius: 10; " +
+                        "-fx-border-color: " + dmBorder() + "; -fx-border-radius: 10;");
+
                 // Header row
                 HBox entryHeader = new HBox(10);
                 entryHeader.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-                
+
                 Label courseLabel = new Label(entry.getCourseCode());
                 courseLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #4F46E5; -fx-font-size: 14px;");
-                
+
                 Label nameLabel = new Label(" - " + entry.getCourseName());
-                nameLabel.setStyle("-fx-text-fill: #374151; -fx-font-size: 13px;");
-                
+                nameLabel.setStyle("-fx-text-fill: " + dmTextTertiary() + "; -fx-font-size: 13px;");
+
                 Region entrySpacer = new Region();
                 HBox.setHgrow(entrySpacer, javafx.scene.layout.Priority.ALWAYS);
-                
+
                 Label timeLabel = new Label("🕒 " + entry.getTimestamp());
                 timeLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 11px;");
-                
+
                 entryHeader.getChildren().addAll(courseLabel, nameLabel, entrySpacer, timeLabel);
-                
+
                 // Change description
                 Label changeLabel = new Label("📝 " + entry.getChangeDescription());
-                changeLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
-                
+                changeLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 12px;");
+
                 // Old -> New values
                 HBox valuesBox = new HBox(15);
                 valuesBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
                 valuesBox.setStyle("-fx-padding: 8 0 0 0;");
-                
+
                 VBox oldBox = new VBox(2);
                 Label oldTitle = new Label("Before:");
                 oldTitle.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF; -fx-font-weight: bold;");
@@ -2513,10 +2951,10 @@ public class MainController {
                 oldValue.setStyle("-fx-font-size: 11px; -fx-text-fill: #DC2626; -fx-background-color: #FEF2F2; " +
                         "-fx-padding: 4 8; -fx-background-radius: 4;");
                 oldBox.getChildren().addAll(oldTitle, oldValue);
-                
+
                 Label arrow = new Label("→");
                 arrow.setStyle("-fx-font-size: 16px; -fx-text-fill: #9CA3AF;");
-                
+
                 VBox newBox = new VBox(2);
                 Label newTitle = new Label("After:");
                 newTitle.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF; -fx-font-weight: bold;");
@@ -2524,9 +2962,9 @@ public class MainController {
                 newValue.setStyle("-fx-font-size: 11px; -fx-text-fill: #059669; -fx-background-color: #ECFDF5; " +
                         "-fx-padding: 4 8; -fx-background-radius: 4;");
                 newBox.getChildren().addAll(newTitle, newValue);
-                
+
                 valuesBox.getChildren().addAll(oldBox, arrow, newBox);
-                
+
                 entryBox.getChildren().addAll(entryHeader, changeLabel, valuesBox);
                 historyList.getChildren().add(entryBox);
             }
@@ -2537,18 +2975,19 @@ public class MainController {
         // Footer
         HBox footer = new HBox();
         footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
-        footer.setStyle("-fx-padding: 15 20; -fx-background-color: #F3F4F6;");
+        footer.setStyle("-fx-padding: 15 20; -fx-background-color: " + dmBgTertiary() + ";");
 
         Button closeBtn = new Button("Close");
         closeBtn.getStyleClass().add("secondary-button");
         closeBtn.setOnAction(e -> popup.close());
-        
+
         footer.getChildren().add(closeBtn);
 
         root.getChildren().addAll(header, scrollPane, footer);
 
         javafx.scene.Scene scene = new javafx.scene.Scene(root);
         scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+        applyDarkModeToDialog(root, scene);
 
         popup.setScene(scene);
         popup.showAndWait();
@@ -2559,18 +2998,20 @@ public class MainController {
             indicator.setText("");
             return;
         }
-        
+
         int capacity = classroom.getCapacity();
         double usage = (double) studentCount / capacity * 100;
-        
+
         if (studentCount > capacity) {
             indicator.setText("❌ Capacity exceeded! " + studentCount + "/" + capacity + " students");
             indicator.setStyle("-fx-text-fill: #DC2626; -fx-font-size: 12px; -fx-font-weight: bold;");
         } else if (usage > 90) {
-            indicator.setText("⚠️ Near capacity: " + studentCount + "/" + capacity + " (" + String.format("%.0f", usage) + "%)");
+            indicator.setText(
+                    "⚠️ Near capacity: " + studentCount + "/" + capacity + " (" + String.format("%.0f", usage) + "%)");
             indicator.setStyle("-fx-text-fill: #D97706; -fx-font-size: 12px;");
         } else {
-            indicator.setText("✓ " + studentCount + "/" + capacity + " students (" + String.format("%.0f", usage) + "% used)");
+            indicator.setText(
+                    "✓ " + studentCount + "/" + capacity + " students (" + String.format("%.0f", usage) + "% used)");
             indicator.setStyle("-fx-text-fill: #059669; -fx-font-size: 12px;");
         }
     }
@@ -2590,7 +3031,7 @@ public class MainController {
         popup.setResizable(false);
 
         VBox root = new VBox(0);
-        root.setStyle("-fx-background-color: white;");
+        root.setStyle("-fx-background-color: " + dmBg() + ";");
         root.setPrefWidth(450);
         root.setPrefHeight(500);
 
@@ -2614,15 +3055,16 @@ public class MainController {
         // Search box
         HBox searchBox = new HBox(10);
         searchBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        searchBox.setStyle("-fx-padding: 15 20; -fx-background-color: #F9FAFB;");
+        searchBox.setStyle("-fx-padding: 15 20; -fx-background-color: " + dmBgSecondary() + ";");
 
         Label searchIcon = new Label("🔍");
         searchIcon.setStyle("-fx-font-size: 14px;");
 
         TextField searchField = new TextField();
         searchField.setPromptText("Search students...");
-        searchField.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #E5E7EB; " +
-                "-fx-border-radius: 8; -fx-padding: 8 12; -fx-font-size: 13px;");
+        searchField.setStyle("-fx-background-color: " + dmBg() + "; -fx-background-radius: 8; -fx-border-color: "
+                + dmBorder() + "; " +
+                "-fx-border-radius: 8; -fx-padding: 8 12; -fx-font-size: 13px; -fx-text-fill: " + dmText() + ";");
         searchField.setPrefWidth(350);
         HBox.setHgrow(searchField, javafx.scene.layout.Priority.ALWAYS);
 
@@ -2646,7 +3088,8 @@ public class MainController {
                 } else {
                     HBox cellBox = new HBox(12);
                     cellBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-                    cellBox.setStyle("-fx-padding: 10 15; -fx-background-color: #F9FAFB; -fx-background-radius: 8;");
+                    cellBox.setStyle(
+                            "-fx-padding: 10 15; -fx-background-color: " + dmBgCard() + "; -fx-background-radius: 8;");
 
                     Label avatar = new Label("👤");
                     avatar.setStyle("-fx-font-size: 16px; -fx-background-color: #E0E7FF; " +
@@ -2654,9 +3097,9 @@ public class MainController {
 
                     VBox infoBox = new VBox(2);
                     Label nameLabel = new Label(item.getName());
-                    nameLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1F2937;");
+                    nameLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: " + dmText() + ";");
                     Label idLabel = new Label("ID: " + item.getId());
-                    idLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+                    idLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: " + dmTextSecondary() + ";");
                     infoBox.getChildren().addAll(nameLabel, idLabel);
 
                     cellBox.getChildren().addAll(avatar, infoBox);
@@ -2668,10 +3111,11 @@ public class MainController {
         });
 
         // Search filter
-        javafx.collections.ObservableList<Student> allStudents = javafx.collections.FXCollections.observableArrayList(students);
-        javafx.collections.transformation.FilteredList<Student> filteredStudents = 
-                new javafx.collections.transformation.FilteredList<>(allStudents, p -> true);
-        
+        javafx.collections.ObservableList<Student> allStudents = javafx.collections.FXCollections
+                .observableArrayList(students);
+        javafx.collections.transformation.FilteredList<Student> filteredStudents = new javafx.collections.transformation.FilteredList<>(
+                allStudents, p -> true);
+
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredStudents.setPredicate(student -> {
                 if (newVal == null || newVal.isEmpty()) {
@@ -2679,25 +3123,25 @@ public class MainController {
                 }
                 String lowerCaseFilter = newVal.toLowerCase();
                 return student.getName().toLowerCase().contains(lowerCaseFilter) ||
-                       student.getId().toLowerCase().contains(lowerCaseFilter);
+                        student.getId().toLowerCase().contains(lowerCaseFilter);
             });
         });
-        
-        javafx.collections.transformation.SortedList<Student> sortedStudents = 
-                new javafx.collections.transformation.SortedList<>(filteredStudents);
+
+        javafx.collections.transformation.SortedList<Student> sortedStudents = new javafx.collections.transformation.SortedList<>(
+                filteredStudents);
         listView.setItems(sortedStudents);
 
         // Footer
         HBox footer = new HBox(10);
         footer.setAlignment(javafx.geometry.Pos.CENTER);
-        footer.setStyle("-fx-padding: 15 20; -fx-background-color: #F3F4F6;");
+        footer.setStyle("-fx-padding: 15 20; -fx-background-color: " + dmBgTertiary() + ";");
 
         Label footerInfo = new Label("Total: " + students.size() + " students enrolled in this exam");
-        footerInfo.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280;");
-        
+        footerInfo.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmTextSecondary() + ";");
+
         Region footerSpacer = new Region();
         HBox.setHgrow(footerSpacer, javafx.scene.layout.Priority.ALWAYS);
-        
+
         Button closeBtn = new Button("Close");
         closeBtn.setStyle("-fx-background-color: #8B5CF6; -fx-text-fill: white; -fx-font-size: 13px; " +
                 "-fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand;");
@@ -2706,13 +3150,15 @@ public class MainController {
         closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: #8B5CF6; -fx-text-fill: white; " +
                 "-fx-font-size: 13px; -fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand;"));
         closeBtn.setOnAction(e -> popup.close());
-        
+
         footer.getChildren().addAll(footerInfo, footerSpacer, closeBtn);
 
         root.getChildren().addAll(header, searchBox, listView, footer);
 
         Scene scene = new Scene(root, 450, 480);
-        
+        scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+        applyDarkModeToDialog(root, scene);
+
         // ESC to close
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
@@ -2730,6 +3176,7 @@ public class MainController {
         alert.setTitle("Error");
         alert.setHeaderText(header);
         alert.setContentText(content);
+        applyDarkModeToAlert(alert);
         alert.showAndWait();
     }
 }

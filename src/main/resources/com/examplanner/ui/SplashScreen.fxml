@@ -3,6 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -15,7 +17,11 @@
         </padding>
         
         <!-- App Icon -->
-        <Label text="📅" style="-fx-font-size: 64px;" />
+        <ImageView fitWidth="80" fitHeight="80" preserveRatio="true">
+            <image>
+                <Image url="@icon.png" />
+            </image>
+        </ImageView>
         
         <!-- App Title -->
         <Label text="Exam Planner" styleClass="splash-title" />

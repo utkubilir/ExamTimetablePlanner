@@ -45,7 +45,8 @@
             
             <Region VBox.vgrow="ALWAYS" />
             
-            <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#handleExit" styleClass="nav-button" text="Exit" />
+            <Button fx:id="btnSettings" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSettings" styleClass="nav-button" text="⚙️ Settings" />
+            <Button fx:id="btnExit" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleExit" styleClass="nav-button" text="Exit" />
          </children>
       </VBox>
    </left>
@@ -58,8 +59,8 @@
          <VBox fx:id="viewDataImport" spacing="20.0">
             <children>
                <VBox>
-                  <Label styleClass="section-title" text="Data Import" />
-                  <Label styleClass="section-subtitle" text="Import required data files to begin" />
+                  <Label fx:id="lblDataImportTitle" styleClass="section-title" text="Data Import" />
+                  <Label fx:id="lblDataImportSubtitle" styleClass="section-subtitle" text="Import required data files to begin" />
                </VBox>
 
                <VBox spacing="15">
@@ -67,7 +68,7 @@
                   <HBox styleClass="card" onMouseClicked="#handleLoadCourses" alignment="CENTER_LEFT" spacing="15">
                      <Label text="📄" style="-fx-font-size: 24px;"/>
                      <VBox>
-                        <Label styleClass="card-title" text="Courses" />
+                        <Label fx:id="lblCoursesTitle" styleClass="card-title" text="Courses" />
                         <Label fx:id="lblCoursesStatus" styleClass="card-subtitle" text="courses.csv • Not loaded" />
                      </VBox>
                   </HBox>
@@ -76,7 +77,7 @@
                   <HBox styleClass="card" onMouseClicked="#handleLoadStudents" alignment="CENTER_LEFT" spacing="15">
                      <Label text="🎓" style="-fx-font-size: 24px;"/>
                      <VBox>
-                        <Label styleClass="card-title" text="Students" />
+                        <Label fx:id="lblStudentsTitle" styleClass="card-title" text="Students" />
                         <Label fx:id="lblStudentsStatus" styleClass="card-subtitle" text="students.csv • Not loaded" />
                      </VBox>
                   </HBox>
@@ -85,7 +86,7 @@
                   <HBox styleClass="card" onMouseClicked="#handleLoadClassrooms" alignment="CENTER_LEFT" spacing="15">
                      <Label text="🏢" style="-fx-font-size: 24px;"/>
                      <VBox>
-                        <Label styleClass="card-title" text="Classrooms" />
+                        <Label fx:id="lblClassroomsTitle" styleClass="card-title" text="Classrooms" />
                         <Label fx:id="lblClassroomsStatus" styleClass="card-subtitle" text="rooms.csv • Not loaded" />
                      </VBox>
                   </HBox>
@@ -94,7 +95,7 @@
                   <HBox styleClass="card" onMouseClicked="#handleLoadAttendance" alignment="CENTER_LEFT" spacing="15">
                      <Label text="👥" style="-fx-font-size: 24px;"/>
                      <VBox>
-                        <Label styleClass="card-title" text="Attendance" />
+                        <Label fx:id="lblAttendanceTitle" styleClass="card-title" text="Attendance" />
                         <Label fx:id="lblAttendanceStatus" styleClass="card-subtitle" text="attendance.csv • Not loaded" />
                      </VBox>
                   </HBox>
