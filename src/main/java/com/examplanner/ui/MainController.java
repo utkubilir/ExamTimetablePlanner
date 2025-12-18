@@ -11,6 +11,7 @@ import com.examplanner.services.DataImportService;
 import com.examplanner.services.SchedulerService;
 import javafx.concurrent.Task;
 import java.time.LocalTime;
+import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -213,6 +214,11 @@ public class MainController {
 
     @FXML
     public void initialize() {
+        // Load Theme Preference
+        Preferences prefs = Preferences.userNodeForPackage(getClass());
+        isDarkMode = prefs.getBoolean("theme_preference", false);
+        Platform.runLater(this::applyTheme);
+
         // Load default language (English)
         loadLanguage("en");
         constraintChecker.setMinGapMinutes(180); // Default to requirements
@@ -226,21 +232,27 @@ public class MainController {
         if (!loadedCourses.isEmpty()) {
             this.courses = loadedCourses;
             lblCoursesStatus.setText("Loaded from DB (" + courses.size() + ")");
-            lblCoursesStatus.setStyle("-fx-text-fill: green;");
+            lblCoursesStatus.setText("Loaded from DB (" + courses.size() + ")");
+            lblCoursesStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+            lblCoursesStatus.getStyleClass().add("text-success");
         }
 
         List<Classroom> loadedClassrooms = repository.loadClassrooms();
         if (!loadedClassrooms.isEmpty()) {
             this.classrooms = loadedClassrooms;
             lblClassroomsStatus.setText("Loaded from DB (" + classrooms.size() + ")");
-            lblClassroomsStatus.setStyle("-fx-text-fill: green;");
+            lblClassroomsStatus.setText("Loaded from DB (" + classrooms.size() + ")");
+            lblClassroomsStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+            lblClassroomsStatus.getStyleClass().add("text-success");
         }
 
         List<Student> loadedStudents = repository.loadStudents();
         if (!loadedStudents.isEmpty()) {
             this.students = loadedStudents;
             lblStudentsStatus.setText("Loaded from DB (" + students.size() + ")");
-            lblStudentsStatus.setStyle("-fx-text-fill: green;");
+            lblStudentsStatus.setText("Loaded from DB (" + students.size() + ")");
+            lblStudentsStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+            lblStudentsStatus.getStyleClass().add("text-success");
         }
 
         // Enrollments depend on students and courses
@@ -249,7 +261,8 @@ public class MainController {
             if (!loadedEnrollments.isEmpty()) {
                 this.enrollments = loadedEnrollments;
                 lblAttendanceStatus.setText("Loaded from DB (" + enrollments.size() + ")");
-                lblAttendanceStatus.setStyle("-fx-text-fill: green;");
+                lblAttendanceStatus.getStyleClass().removeAll("text-success", "text-warning", "text-error");
+                lblAttendanceStatus.getStyleClass().add("text-success");
 
                 // Load Timetable if everything else is present
                 ExamTimetable loadedTimetable = repository.loadTimetable(courses, classrooms, enrollments);
@@ -922,6 +935,7 @@ public class MainController {
             if (isDarkMode) {
                 isDarkMode = false;
                 applyTheme();
+                Preferences.userNodeForPackage(getClass()).putBoolean("theme_preference", false);
                 lightModeBtn.getStyleClass().add("selected");
                 darkModeBtn.getStyleClass().remove("selected");
                 if (settingsContent.getStyleClass().contains("dark-mode")) {
@@ -934,6 +948,7 @@ public class MainController {
             if (!isDarkMode) {
                 isDarkMode = true;
                 applyTheme();
+                Preferences.userNodeForPackage(getClass()).putBoolean("theme_preference", true);
                 darkModeBtn.getStyleClass().add("selected");
                 lightModeBtn.getStyleClass().remove("selected");
                 if (!settingsContent.getStyleClass().contains("dark-mode")) {
@@ -1483,6 +1498,7 @@ public class MainController {
         dialog.setTitle("Student Portal Login");
         dialog.setHeaderText("Welcome Student");
         dialog.setContentText("Please enter your Student ID:");
+        applyDarkModeToDialogPane(dialog);
 
         dialog.showAndWait().ifPresent(id -> {
             Student found = students.stream()
@@ -1579,7 +1595,8 @@ public class MainController {
             emptyContent.setAlignment(javafx.geometry.Pos.CENTER);
             emptyContent.setPadding(new javafx.geometry.Insets(50));
             Label empty = new Label("No exams found for this selection.");
-            empty.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 14px;");
+            empty.getStyleClass().addAll("label", "text-secondary");
+            empty.setStyle("-fx-font-size: 14px;");
             emptyContent.getChildren().add(empty);
             scrollPane.setContent(emptyContent);
         } else {
@@ -1588,7 +1605,7 @@ public class MainController {
             grid.setHgap(5);
             grid.setVgap(0); // No vertical gap - lines will align with rows
             grid.setPadding(new javafx.geometry.Insets(15));
-            grid.setStyle("-fx-background-color: " + dmBg() + ";");
+            grid.setStyle("-fx-background-color: transparent;");
 
             // Constants
             double SLOT_HEIGHT = 50.0;
@@ -1668,7 +1685,9 @@ public class MainController {
 
                     String timeStr = java.time.LocalTime.of(hour, min).format(timeFormatter);
                     Label timeLabel = new Label(timeStr);
-                    timeLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
+                    timeLabel.getStyleClass().addAll("time-label");
+                    // Override default padding/translate if needed, but color comes from CSS
+                    timeLabel.setStyle("-fx-font-size: 11px;");
                     javafx.scene.layout.GridPane.setValignment(timeLabel, javafx.geometry.VPos.TOP);
                     javafx.scene.layout.GridPane.setHalignment(timeLabel, javafx.geometry.HPos.RIGHT);
                     grid.add(timeLabel, 0, row);
@@ -1684,13 +1703,13 @@ public class MainController {
                 LocalDate date = weekDates.get(i);
                 VBox dayHeader = new VBox();
                 dayHeader.setAlignment(javafx.geometry.Pos.CENTER);
-                dayHeader.setStyle(
-                        "-fx-background-color: " + dmBgTertiary() + "; -fx-padding: 8; -fx-background-radius: 6;");
+                dayHeader.getStyleClass().add("day-header-box");
 
                 Label dayLabel = new Label(date.format(dayFormatter));
-                dayLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmTextTertiary() + ";");
+                dayLabel.getStyleClass().add("grid-header");
                 Label dateLabel = new Label(date.format(dateFormatter));
-                dateLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
+                dateLabel.getStyleClass().addAll("label", "text-secondary");
+                dateLabel.setStyle("-fx-font-size: 11px;");
 
                 dayHeader.getChildren().addAll(dayLabel, dateLabel);
                 grid.add(dayHeader, i + 1, 0);
@@ -1774,9 +1793,7 @@ public class MainController {
 
         // Footer
         HBox footer = new HBox();
-        footer.setStyle(
-                "-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: " + dmBgTertiary()
-                        + "; -fx-background-radius: 0 0 12 12;");
+        footer.getStyleClass().add("modal-footer");
 
         Button closeBtn = new Button("Close");
         closeBtn.getStyleClass().add("secondary-button");
@@ -1991,7 +2008,7 @@ public class MainController {
 
         Label currentLabel = new Label(
                 "Current: " + exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy (EEEE)")));
-        currentLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + ";");
+        currentLabel.getStyleClass().addAll("label", "text-secondary");
 
         javafx.scene.control.DatePicker datePicker = new javafx.scene.control.DatePicker(exam.getSlot().getDate());
         datePicker.setMaxWidth(Double.MAX_VALUE);
@@ -2059,10 +2076,11 @@ public class MainController {
 
         Label currentLabel = new Label("Current: " + exam.getClassroom().getName() +
                 " (Capacity: " + exam.getClassroom().getCapacity() + ")");
-        currentLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + ";");
+        currentLabel.getStyleClass().addAll("label", "text-secondary");
 
         Label needLabel = new Label("Required capacity: " + studentCount + " students");
-        needLabel.setStyle("-fx-text-fill: " + dmTextTertiary() + "; -fx-font-weight: bold;");
+        needLabel.getStyleClass().addAll("label", "text-secondary");
+        needLabel.setStyle("-fx-font-weight: bold;");
 
         javafx.scene.control.ComboBox<Classroom> classroomCombo = new javafx.scene.control.ComboBox<>();
         classroomCombo.setMaxWidth(Double.MAX_VALUE);
@@ -2080,8 +2098,14 @@ public class MainController {
                 } else {
                     String status = item.getCapacity() >= studentCount ? "✓" : "❌";
                     setText(status + " " + item.getName() + " (Capacity: " + item.getCapacity() + ")");
-                    setStyle(
-                            item.getCapacity() >= studentCount ? "-fx-text-fill: #059669;" : "-fx-text-fill: #DC2626;");
+                    // Clear previous style classes for color
+                    getStyleClass().removeAll("text-success", "text-error");
+
+                    if (item.getCapacity() >= studentCount) {
+                        getStyleClass().add("text-success");
+                    } else {
+                        getStyleClass().add("text-error");
+                    }
                 }
             }
         });
@@ -2112,10 +2136,14 @@ public class MainController {
 
                 if (error == null) {
                     validationLabel.setText("✓ Valid change");
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmSuccess() + ";");
+                    validationLabel.getStyleClass().removeAll("text-error");
+                    validationLabel.getStyleClass().add("text-success");
+                    validationLabel.setStyle("-fx-font-size: 12px;");
                 } else {
                     validationLabel.setText("⚠ " + error);
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmError() + ";");
+                    validationLabel.getStyleClass().removeAll("text-success");
+                    validationLabel.getStyleClass().add("text-error");
+                    validationLabel.setStyle("-fx-font-size: 12px;");
                 }
             }
         });
@@ -2153,10 +2181,10 @@ public class MainController {
 
         Label currentLabel = new Label("Current: " + exam.getSlot().getStartTime().format(timeFmt) +
                 " - " + exam.getSlot().getEndTime().format(timeFmt));
-        currentLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + ";");
+        currentLabel.getStyleClass().addAll("label", "text-secondary");
 
         Label durationLabel = new Label("Duration: " + exam.getCourse().getExamDurationMinutes() + " minutes");
-        durationLabel.setStyle("-fx-text-fill: " + dmTextTertiary() + ";");
+        durationLabel.getStyleClass().addAll("label", "text-secondary");
 
         HBox timeBox = new HBox(10);
         timeBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -2170,7 +2198,8 @@ public class MainController {
         timeCombo.setValue(exam.getSlot().getStartTime().format(timeFmt));
 
         Label endLabel = new Label("→ " + exam.getSlot().getEndTime().format(timeFmt));
-        endLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmTextTertiary() + ";");
+        endLabel.getStyleClass().addAll("label", "text-secondary");
+        endLabel.setStyle("-fx-font-weight: bold;");
 
         timeCombo.valueProperty().addListener((obs, old, newVal) -> {
             if (newVal != null) {
@@ -2200,10 +2229,14 @@ public class MainController {
 
                 if (error == null) {
                     validationLabel.setText("✓ Valid change");
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmSuccess() + ";");
+                    validationLabel.getStyleClass().removeAll("text-error");
+                    validationLabel.getStyleClass().add("text-success");
+                    validationLabel.setStyle("-fx-font-size: 12px;");
                 } else {
                     validationLabel.setText("⚠ " + error);
-                    validationLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + dmError() + ";");
+                    validationLabel.getStyleClass().removeAll("text-success");
+                    validationLabel.getStyleClass().add("text-error");
+                    validationLabel.setStyle("-fx-font-size: 12px;");
                 }
             }
         });
@@ -2384,7 +2417,8 @@ public class MainController {
         title.setStyle("-fx-font-size: 18px;");
 
         Label subtitle = new Label(subtitleText);
-        subtitle.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 13px;");
+        subtitle.getStyleClass().addAll("label", "text-secondary");
+        subtitle.setStyle("-fx-font-size: 13px;");
 
         header.getChildren().addAll(title, subtitle);
 

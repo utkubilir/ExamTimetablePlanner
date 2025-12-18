@@ -1166,3 +1166,129 @@
 .dark-mode .settings-option-text {
     -fx-text-fill: #F9FAFB;
 }
+
+/* ===== UTILITY CLASSES ===== */
+.text-secondary {
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+.text-tertiary {
+    -fx-text-fill: #9CA3AF;
+}
+
+.dark-mode .text-secondary {
+    -fx-text-fill: #9CA3AF;
+}
+
+.dark-mode .text-tertiary {
+    -fx-text-fill: #6B7280;
+}
+
+.bg-primary {
+    -fx-background-color: -fx-color-primary;
+}
+
+/* ===== CHARTS ===== */
+.chart {
+    -fx-padding: 10px;
+    -fx-background-color: transparent;
+}
+
+.chart-content {
+    -fx-padding: 10px;
+}
+
+.chart-title {
+    -fx-text-fill: -fx-color-text;
+    -fx-font-size: 1.2em;
+}
+
+.axis-label {
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+.axis {
+    -fx-tick-label-fill: -fx-color-text-secondary;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+}
+
+.chart-legend-item {
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: -fx-color-border;
+}
+
+/* Dark Mode Charts */
+.dark-mode .chart-title {
+    -fx-text-fill: #F9FAFB;
+}
+
+.dark-mode .axis-label {
+    -fx-text-fill: #9CA3AF;
+}
+
+.dark-mode .axis {
+    -fx-tick-label-fill: #9CA3AF;
+}
+
+.dark-mode .chart-legend-item {
+    -fx-text-fill: #9CA3AF;
+}
+
+.dark-mode .chart-vertical-grid-lines,
+.dark-mode .chart-horizontal-grid-lines {
+    -fx-stroke: #374151;
+}
+
+.dark-mode .bar-chart-bar {
+    -fx-background-color: #A78BFA;
+}
+
+/* ===== NEW UTILITIES ===== */
+.bg-tertiary {
+    -fx-background-color: #f3f4f6;
+}
+
+.dark-mode .bg-tertiary {
+    -fx-background-color: #374151;
+}
+
+/* Modal Footer */
+.modal-footer {
+    -fx-padding: 15;
+    -fx-alignment: center-right;
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 0 0 12 12;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.dark-mode .modal-footer {
+    -fx-background-color: #374151;
+}
+
+/* Day Header in Grid */
+.day-header-box {
+    -fx-background-color: #f3f4f6;
+    -fx-padding: 8;
+    -fx-background-radius: 6;
+    -fx-alignment: center;
+}
+
+.dark-mode .day-header-box {
+    -fx-background-color: #374151;
+}
+.dark-mode .modal-window {
+    -fx-background-color: #1F2937;
+    -fx-border-color: #374151;
+}
