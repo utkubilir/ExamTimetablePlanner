@@ -20,6 +20,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -29,6 +30,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
@@ -115,6 +117,12 @@ public class MainController {
 
     @FXML
     private javafx.scene.control.TextField txtCourseSearch;
+    
+    @FXML
+    private javafx.scene.control.ComboBox<String> cmbSearchType;
+    
+    @FXML
+    private Button btnClearSearch;
 
     @FXML
     private javafx.scene.control.ProgressBar progressBar;
@@ -129,6 +137,35 @@ public class MainController {
     private List<Enrollment> enrollments = new ArrayList<>();
 
     private ExamTimetable currentTimetable;
+    
+    // Edit history tracking
+    private List<EditHistoryEntry> editHistory = new ArrayList<>();
+    
+    // Inner class for edit history entry
+    private static class EditHistoryEntry {
+        private final String timestamp;
+        private final String courseCode;
+        private final String courseName;
+        private final String changeDescription;
+        private final String oldValue;
+        private final String newValue;
+        
+        public EditHistoryEntry(String courseCode, String courseName, String changeDescription, String oldValue, String newValue) {
+            this.timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+            this.courseCode = courseCode;
+            this.courseName = courseName;
+            this.changeDescription = changeDescription;
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+        }
+        
+        public String getTimestamp() { return timestamp; }
+        public String getCourseCode() { return courseCode; }
+        public String getCourseName() { return courseName; }
+        public String getChangeDescription() { return changeDescription; }
+        public String getOldValue() { return oldValue; }
+        public String getNewValue() { return newValue; }
+    }
 
     private DataImportService dataImportService = new DataImportService();
     private SchedulerService schedulerService = new SchedulerService();
@@ -140,12 +177,8 @@ public class MainController {
         constraintChecker.setMinGapMinutes(180); // Default to requirements
         showDataImport();
 
-        // Setup course search listener
-        if (txtCourseSearch != null) {
-            txtCourseSearch.textProperty().addListener((observable, oldValue, newValue) -> {
-                filterTableByCourseCode(newValue);
-            });
-        }
+        // Setup advanced search
+        setupAdvancedSearch();
 
         // Load data from DB
         List<Course> loadedCourses = repository.loadCourses();
@@ -187,7 +220,52 @@ public class MainController {
         }
     }
 
-    private void filterTableByCourseCode(String searchText) {
+    private void setupAdvancedSearch() {
+        if (cmbSearchType != null) {
+            // Populate search type options
+            cmbSearchType.getItems().addAll(
+                "Course",
+                "Date",
+                "Time",
+                "Classroom"
+            );
+            cmbSearchType.setValue("Course");
+            
+            // Update placeholder text based on selection
+            cmbSearchType.setOnAction(e -> {
+                String selected = cmbSearchType.getValue();
+                if (selected != null) {
+                    if (selected.equals("Course")) {
+                        txtCourseSearch.setPromptText("e.g. CourseCode_01");
+                    } else if (selected.equals("Date")) {
+                        txtCourseSearch.setPromptText("e.g. 18/12/2025");
+                    } else if (selected.equals("Time")) {
+                        txtCourseSearch.setPromptText("e.g. 10:00");
+                    } else if (selected.equals("Classroom")) {
+                        txtCourseSearch.setPromptText("e.g. Classroom_01");
+                    }
+                }
+                // Re-apply filter when type changes
+                applyAdvancedFilter(txtCourseSearch.getText());
+            });
+        }
+        
+        if (txtCourseSearch != null) {
+            txtCourseSearch.textProperty().addListener((observable, oldValue, newValue) -> {
+                applyAdvancedFilter(newValue);
+            });
+        }
+    }
+    
+    @FXML
+    private void handleClearSearch() {
+        if (txtCourseSearch != null) {
+            txtCourseSearch.clear();
+        }
+        applyAdvancedFilter("");
+    }
+    
+    private void applyAdvancedFilter(String searchText) {
         if (currentTimetable == null || currentTimetable.getExams().isEmpty()) {
             return;
         }
@@ -198,16 +276,62 @@ public class MainController {
             sortedExams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
                     .thenComparing(e -> e.getSlot().getStartTime()));
             examTableView.setItems(FXCollections.observableArrayList(sortedExams));
-        } else {
-            // Filter by course code
-            String lowerSearch = searchText.toLowerCase().trim();
-            List<Exam> filteredExams = currentTimetable.getExams().stream()
-                    .filter(e -> e.getCourse().getCode().toLowerCase().contains(lowerSearch))
-                    .sorted(Comparator.comparing((Exam e) -> e.getSlot().getDate())
-                            .thenComparing(e -> e.getSlot().getStartTime()))
-                    .collect(Collectors.toList());
-            examTableView.setItems(FXCollections.observableArrayList(filteredExams));
+            return;
         }
+
+        String searchType = cmbSearchType != null ? cmbSearchType.getValue() : "Course";
+        String lowerSearch = searchText.toLowerCase().trim();
+        
+        List<Exam> filteredExams;
+        
+        if (searchType.equals("Course")) {
+            // Filter by course code
+            filteredExams = currentTimetable.getExams().stream()
+                    .filter(e -> e.getCourse().getCode().toLowerCase().contains(lowerSearch))
+                    .collect(Collectors.toList());
+        } else if (searchType.equals("Date")) {
+            // Filter by date (supports multiple formats: dd/MM/yyyy, dd.MM.yyyy, dd/MM, dd.MM)
+            filteredExams = currentTimetable.getExams().stream()
+                    .filter(e -> {
+                        LocalDate date = e.getSlot().getDate();
+                        String dateStr1 = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        String dateStr2 = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+                        String dateStr3 = date.format(DateTimeFormatter.ofPattern("dd/MM"));
+                        String dateStr4 = date.format(DateTimeFormatter.ofPattern("dd.MM"));
+                        return dateStr1.contains(lowerSearch) || dateStr2.contains(lowerSearch) ||
+                               dateStr3.contains(lowerSearch) || dateStr4.contains(lowerSearch);
+                    })
+                    .collect(Collectors.toList());
+        } else if (searchType.equals("Time")) {
+            // Filter by time range (supports: HH:mm or HH:mm-HH:mm)
+            filteredExams = currentTimetable.getExams().stream()
+                    .filter(e -> {
+                        String startTime = e.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+                        String endTime = e.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+                        String timeRange = startTime + "-" + endTime;
+                        return startTime.contains(lowerSearch) || endTime.contains(lowerSearch) || 
+                               timeRange.contains(lowerSearch);
+                    })
+                    .collect(Collectors.toList());
+        } else if (searchType.equals("Classroom")) {
+            // Filter by classroom
+            filteredExams = currentTimetable.getExams().stream()
+                    .filter(e -> e.getClassroom().getName().toLowerCase().contains(lowerSearch))
+                    .collect(Collectors.toList());
+        } else {
+            // Default: show all
+            filteredExams = new ArrayList<>(currentTimetable.getExams());
+        }
+        
+        // Sort and display
+        filteredExams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
+                .thenComparing(e -> e.getSlot().getStartTime()));
+        examTableView.setItems(FXCollections.observableArrayList(filteredExams));
+    }
+
+    private void filterTableByCourseCode(String searchText) {
+        // Deprecated - now using applyAdvancedFilter
+        applyAdvancedFilter(searchText);
     }
 
     @FXML
@@ -816,7 +940,7 @@ public class MainController {
             table.addCell(createCell(exam.getSlot().getDate().format(dateFmt), rowColor));
             table.addCell(createCell(exam.getSlot().getStartTime().format(timeFmt), rowColor));
             table.addCell(createCell(exam.getSlot().getEndTime().format(timeFmt), rowColor));
-            table.addCell(createCell(exam.getCourse().getCode() + " - " + exam.getCourse().getName(), rowColor));
+            table.addCell(createCell(exam.getCourse().toString(), rowColor));
             table.addCell(createCell(exam.getClassroom().getName(), rowColor));
             rowIndex++;
         }
@@ -1313,7 +1437,7 @@ public class MainController {
             // Context Menu
             javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
             
-            javafx.scene.control.MenuItem editItem = new javafx.scene.control.MenuItem("✏️ Edit Exam");
+            javafx.scene.control.MenuItem editItem = new javafx.scene.control.MenuItem("Edit Exam");
             editItem.setOnAction(e -> {
                 Exam exam = row.getItem();
                 if (exam != null) showExamDetails(exam);
@@ -1874,10 +1998,15 @@ public class MainController {
             VBox courseInfo = new VBox(2);
             Label codeLabel = new Label(exam.getCourse().getCode());
             codeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #1F2937; -fx-font-size: 13px;");
-            Label nameLabel = new Label(exam.getCourse().getName());
-            nameLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
-            nameLabel.setWrapText(true);
-            courseInfo.getChildren().addAll(codeLabel, nameLabel);
+            courseInfo.getChildren().add(codeLabel);
+            
+            // Only show name if it's different from code
+            if (!exam.getCourse().getName().equals(exam.getCourse().getCode())) {
+                Label nameLabel = new Label(exam.getCourse().getName());
+                nameLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
+                nameLabel.setWrapText(true);
+                courseInfo.getChildren().add(nameLabel);
+            }
             HBox.setHgrow(courseInfo, javafx.scene.layout.Priority.ALWAYS);
 
             // Room info
@@ -2117,42 +2246,51 @@ public class MainController {
         currentInfoSection.setStyle("-fx-background-color: #F3F4F6; -fx-padding: 12; -fx-background-radius: 8;");
         Label currentInfoTitle = new Label("📋 Current Assignment");
         currentInfoTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151; -fx-font-size: 13px;");
+        
+        // Store original values for history tracking
+        final String originalDate = exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        final String originalStartTime = exam.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+        final String originalEndTime = exam.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+        final String originalClassroom = exam.getClassroom().getName();
+        
         Label currentInfoText = new Label(String.format("Date: %s | Time: %s - %s | Room: %s",
-                exam.getSlot().getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                exam.getSlot().getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")),
-                exam.getSlot().getEndTime().format(DateTimeFormatter.ofPattern("HH:mm")),
-                exam.getClassroom().getName()));
+                originalDate, originalStartTime, originalEndTime, originalClassroom));
         currentInfoText.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
         currentInfoSection.getChildren().addAll(currentInfoTitle, currentInfoText);
 
-        // Enrolled Students Section (Collapsible)
-        javafx.scene.control.TitledPane studentsPane = new javafx.scene.control.TitledPane();
-        studentsPane.setText("👥 Enrolled Students (" + students.size() + ")");
-        studentsPane.setExpanded(false);
-        studentsPane.setStyle("-fx-font-size: 13px;");
+        // Enrolled Students Section (Clickable Button to show popup)
+        HBox studentsSection = new HBox(6);
+        studentsSection.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        studentsSection.setStyle("-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;");
         
-        javafx.scene.control.ListView<Student> listView = new javafx.scene.control.ListView<>();
-        listView.getStyleClass().add("student-list-view");
-        listView.getItems().addAll(students);
-        listView.setPrefHeight(150);
-        listView.setCellFactory(param -> new javafx.scene.control.ListCell<>() {
-            @Override
-            protected void updateItem(Student item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item.getName() + " (" + item.getId() + ")");
-                }
-            }
-        });
-        studentsPane.setContent(listView);
+        Label studentsIcon = new Label("👥");
+        studentsIcon.setStyle("-fx-font-size: 13px;");
+        
+        Label studentsLabel = new Label("Enrolled Students (" + students.size() + ")");
+        studentsLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4F46E5;");
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        
+        Label arrowIcon = new Label("›");
+        arrowIcon.setStyle("-fx-font-size: 14px; -fx-text-fill: #4F46E5; -fx-font-weight: bold;");
+        
+        studentsSection.getChildren().addAll(studentsIcon, studentsLabel, spacer, arrowIcon);
+        
+        // Hover effect
+        studentsSection.setOnMouseEntered(e -> studentsSection.setStyle("-fx-padding: 8 12; -fx-background-color: #E0E7FF; -fx-background-radius: 6; -fx-cursor: hand;"));
+        studentsSection.setOnMouseExited(e -> studentsSection.setStyle("-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;"));
+        
+        // Click to show students popup
+        studentsSection.setOnMouseClicked(e -> showEnrolledStudentsPopup(exam.getCourse().getCode(), students));
 
-        content.getChildren().addAll(validationBox, currentInfoSection, dateSection, timeSection, classroomSection, studentsPane);
+        content.getChildren().addAll(validationBox, currentInfoSection, dateSection, timeSection, classroomSection, studentsSection);
 
         // Footer with Save and Cancel
-        HBox footer = new HBox(10);
-        footer.setStyle("-fx-padding: 15; -fx-alignment: center-right; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
+        HBox footer = new HBox(15);
+        footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        footer.setMinHeight(60);
+        footer.setStyle("-fx-padding: 10 40 10 40; -fx-background-color: #F3F4F6; -fx-background-radius: 0 0 12 12;");
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.getStyleClass().add("secondary-button");
@@ -2198,6 +2336,42 @@ public class MainController {
                 }
             }
             
+            // Record edit history before applying changes
+            String newDateStr = newDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            String newStartStr = newStart.format(DateTimeFormatter.ofPattern("HH:mm"));
+            String newEndStr = newEnd.format(DateTimeFormatter.ofPattern("HH:mm"));
+            String newClassroomName = newClassroom.getName();
+            
+            StringBuilder changes = new StringBuilder();
+            StringBuilder oldValues = new StringBuilder();
+            StringBuilder newValues = new StringBuilder();
+            
+            if (!originalDate.equals(newDateStr)) {
+                changes.append("Date changed; ");
+                oldValues.append("Date: ").append(originalDate).append("; ");
+                newValues.append("Date: ").append(newDateStr).append("; ");
+            }
+            if (!originalStartTime.equals(newStartStr)) {
+                changes.append("Time changed; ");
+                oldValues.append("Time: ").append(originalStartTime).append("-").append(originalEndTime).append("; ");
+                newValues.append("Time: ").append(newStartStr).append("-").append(newEndStr).append("; ");
+            }
+            if (!originalClassroom.equals(newClassroomName)) {
+                changes.append("Classroom changed; ");
+                oldValues.append("Room: ").append(originalClassroom).append("; ");
+                newValues.append("Room: ").append(newClassroomName).append("; ");
+            }
+            
+            if (changes.length() > 0) {
+                editHistory.add(new EditHistoryEntry(
+                    exam.getCourse().getCode(),
+                    exam.getCourse().getName(),
+                    changes.toString().trim(),
+                    oldValues.toString().trim(),
+                    newValues.toString().trim()
+                ));
+            }
+            
             // Apply changes
             exam.setSlot(newSlot);
             exam.setClassroom(newClassroom);
@@ -2228,6 +2402,157 @@ public class MainController {
         
         dialog.showAndWait();
     }
+    
+    @FXML
+    private void showEditHistory() {
+        Stage popup = new Stage();
+        popup.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        popup.initStyle(javafx.stage.StageStyle.DECORATED);
+        popup.setTitle("Edit History");
+        popup.setResizable(true);
+
+        VBox root = new VBox(0);
+        root.setStyle("-fx-background-color: white;");
+        root.setPrefWidth(700);
+        root.setPrefHeight(500);
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        header.setStyle("-fx-padding: 20; -fx-background-color: linear-gradient(to right, #6366F1, #8B5CF6);");
+
+        Label titleIcon = new Label("📜");
+        titleIcon.setStyle("-fx-font-size: 24px;");
+
+        VBox titleBox = new VBox(2);
+        Label title = new Label("Edit History");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
+        Label subtitle = new Label(editHistory.size() + " changes recorded");
+        subtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.9);");
+        titleBox.getChildren().addAll(title, subtitle);
+
+        Region headerSpacer = new Region();
+        HBox.setHgrow(headerSpacer, javafx.scene.layout.Priority.ALWAYS);
+
+        Button clearHistoryBtn = new Button("🗑 Clear History");
+        clearHistoryBtn.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15; -fx-cursor: hand;");
+        clearHistoryBtn.setOnAction(e -> {
+            editHistory.clear();
+            subtitle.setText("0 changes recorded");
+            popup.close();
+            showInformation("History Cleared", "Edit history has been cleared.");
+        });
+
+        header.getChildren().addAll(titleIcon, titleBox, headerSpacer, clearHistoryBtn);
+
+        // Content - History List
+        javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: #F9FAFB;");
+        VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
+
+        VBox historyList = new VBox(10);
+        historyList.setStyle("-fx-padding: 15;");
+
+        if (editHistory.isEmpty()) {
+            VBox emptyState = new VBox(10);
+            emptyState.setAlignment(javafx.geometry.Pos.CENTER);
+            emptyState.setStyle("-fx-padding: 50;");
+            
+            Label emptyIcon = new Label("📝");
+            emptyIcon.setStyle("-fx-font-size: 48px;");
+            
+            Label emptyText = new Label("No edits yet");
+            emptyText.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #6B7280;");
+            
+            Label emptySubtext = new Label("When you edit an exam, it will appear here");
+            emptySubtext.setStyle("-fx-font-size: 13px; -fx-text-fill: #9CA3AF;");
+            
+            emptyState.getChildren().addAll(emptyIcon, emptyText, emptySubtext);
+            historyList.getChildren().add(emptyState);
+        } else {
+            // Show history in reverse order (newest first)
+            for (int i = editHistory.size() - 1; i >= 0; i--) {
+                EditHistoryEntry entry = editHistory.get(i);
+                
+                VBox entryBox = new VBox(6);
+                entryBox.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; " +
+                        "-fx-border-color: #E5E7EB; -fx-border-radius: 10;");
+                
+                // Header row
+                HBox entryHeader = new HBox(10);
+                entryHeader.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                
+                Label courseLabel = new Label(entry.getCourseCode());
+                courseLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #4F46E5; -fx-font-size: 14px;");
+                
+                Label nameLabel = new Label(" - " + entry.getCourseName());
+                nameLabel.setStyle("-fx-text-fill: #374151; -fx-font-size: 13px;");
+                
+                Region entrySpacer = new Region();
+                HBox.setHgrow(entrySpacer, javafx.scene.layout.Priority.ALWAYS);
+                
+                Label timeLabel = new Label("🕒 " + entry.getTimestamp());
+                timeLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 11px;");
+                
+                entryHeader.getChildren().addAll(courseLabel, nameLabel, entrySpacer, timeLabel);
+                
+                // Change description
+                Label changeLabel = new Label("📝 " + entry.getChangeDescription());
+                changeLabel.setStyle("-fx-text-fill: #6B7280; -fx-font-size: 12px;");
+                
+                // Old -> New values
+                HBox valuesBox = new HBox(15);
+                valuesBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                valuesBox.setStyle("-fx-padding: 8 0 0 0;");
+                
+                VBox oldBox = new VBox(2);
+                Label oldTitle = new Label("Before:");
+                oldTitle.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF; -fx-font-weight: bold;");
+                Label oldValue = new Label(entry.getOldValue());
+                oldValue.setStyle("-fx-font-size: 11px; -fx-text-fill: #DC2626; -fx-background-color: #FEF2F2; " +
+                        "-fx-padding: 4 8; -fx-background-radius: 4;");
+                oldBox.getChildren().addAll(oldTitle, oldValue);
+                
+                Label arrow = new Label("→");
+                arrow.setStyle("-fx-font-size: 16px; -fx-text-fill: #9CA3AF;");
+                
+                VBox newBox = new VBox(2);
+                Label newTitle = new Label("After:");
+                newTitle.setStyle("-fx-font-size: 10px; -fx-text-fill: #9CA3AF; -fx-font-weight: bold;");
+                Label newValue = new Label(entry.getNewValue());
+                newValue.setStyle("-fx-font-size: 11px; -fx-text-fill: #059669; -fx-background-color: #ECFDF5; " +
+                        "-fx-padding: 4 8; -fx-background-radius: 4;");
+                newBox.getChildren().addAll(newTitle, newValue);
+                
+                valuesBox.getChildren().addAll(oldBox, arrow, newBox);
+                
+                entryBox.getChildren().addAll(entryHeader, changeLabel, valuesBox);
+                historyList.getChildren().add(entryBox);
+            }
+        }
+
+        scrollPane.setContent(historyList);
+
+        // Footer
+        HBox footer = new HBox();
+        footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        footer.setStyle("-fx-padding: 15 20; -fx-background-color: #F3F4F6;");
+
+        Button closeBtn = new Button("Close");
+        closeBtn.getStyleClass().add("secondary-button");
+        closeBtn.setOnAction(e -> popup.close());
+        
+        footer.getChildren().add(closeBtn);
+
+        root.getChildren().addAll(header, scrollPane, footer);
+
+        javafx.scene.Scene scene = new javafx.scene.Scene(root);
+        scene.getStylesheets().add(getClass().getResource("/com/examplanner/ui/style.css").toExternalForm());
+
+        popup.setScene(scene);
+        popup.showAndWait();
+    }
 
     private void updateCapacityIndicator(Label indicator, Classroom classroom, int studentCount) {
         if (classroom == null) {
@@ -2255,6 +2580,149 @@ public class MainController {
         fileChooser.setTitle(title);
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
         return fileChooser.showOpenDialog(btnDataImport.getScene().getWindow());
+    }
+
+    private void showEnrolledStudentsPopup(String courseCode, List<Student> students) {
+        Stage popup = new Stage();
+        popup.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        popup.initStyle(javafx.stage.StageStyle.DECORATED);
+        popup.setTitle("Enrolled Students - " + courseCode);
+        popup.setResizable(false);
+
+        VBox root = new VBox(0);
+        root.setStyle("-fx-background-color: white;");
+        root.setPrefWidth(450);
+        root.setPrefHeight(500);
+
+        // Header
+        HBox header = new HBox(10);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        header.setStyle("-fx-padding: 20; -fx-background-color: linear-gradient(to right, #8B5CF6, #6366F1);");
+
+        Label titleIcon = new Label("👥");
+        titleIcon.setStyle("-fx-font-size: 24px;");
+
+        VBox titleBox = new VBox(2);
+        Label title = new Label("Enrolled Students");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
+        Label subtitle = new Label(courseCode + " • " + students.size() + " students");
+        subtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.9);");
+        titleBox.getChildren().addAll(title, subtitle);
+
+        header.getChildren().addAll(titleIcon, titleBox);
+
+        // Search box
+        HBox searchBox = new HBox(10);
+        searchBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        searchBox.setStyle("-fx-padding: 15 20; -fx-background-color: #F9FAFB;");
+
+        Label searchIcon = new Label("🔍");
+        searchIcon.setStyle("-fx-font-size: 14px;");
+
+        TextField searchField = new TextField();
+        searchField.setPromptText("Search students...");
+        searchField.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #E5E7EB; " +
+                "-fx-border-radius: 8; -fx-padding: 8 12; -fx-font-size: 13px;");
+        searchField.setPrefWidth(350);
+        HBox.setHgrow(searchField, javafx.scene.layout.Priority.ALWAYS);
+
+        searchBox.getChildren().addAll(searchIcon, searchField);
+
+        // Student list
+        javafx.scene.control.ListView<Student> listView = new javafx.scene.control.ListView<>();
+        listView.getItems().addAll(students);
+        listView.setStyle("-fx-background-color: transparent; -fx-padding: 5 10;");
+        listView.setPrefHeight(300);
+        VBox.setVgrow(listView, javafx.scene.layout.Priority.ALWAYS);
+
+        listView.setCellFactory(param -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(Student item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    setStyle("-fx-background-color: transparent;");
+                } else {
+                    HBox cellBox = new HBox(12);
+                    cellBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                    cellBox.setStyle("-fx-padding: 10 15; -fx-background-color: #F9FAFB; -fx-background-radius: 8;");
+
+                    Label avatar = new Label("👤");
+                    avatar.setStyle("-fx-font-size: 16px; -fx-background-color: #E0E7FF; " +
+                            "-fx-background-radius: 50; -fx-padding: 8; -fx-min-width: 36; -fx-alignment: center;");
+
+                    VBox infoBox = new VBox(2);
+                    Label nameLabel = new Label(item.getName());
+                    nameLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1F2937;");
+                    Label idLabel = new Label("ID: " + item.getId());
+                    idLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+                    infoBox.getChildren().addAll(nameLabel, idLabel);
+
+                    cellBox.getChildren().addAll(avatar, infoBox);
+                    setGraphic(cellBox);
+                    setText(null);
+                    setStyle("-fx-background-color: transparent; -fx-padding: 3 5;");
+                }
+            }
+        });
+
+        // Search filter
+        javafx.collections.ObservableList<Student> allStudents = javafx.collections.FXCollections.observableArrayList(students);
+        javafx.collections.transformation.FilteredList<Student> filteredStudents = 
+                new javafx.collections.transformation.FilteredList<>(allStudents, p -> true);
+        
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            filteredStudents.setPredicate(student -> {
+                if (newVal == null || newVal.isEmpty()) {
+                    return true;
+                }
+                String lowerCaseFilter = newVal.toLowerCase();
+                return student.getName().toLowerCase().contains(lowerCaseFilter) ||
+                       student.getId().toLowerCase().contains(lowerCaseFilter);
+            });
+        });
+        
+        javafx.collections.transformation.SortedList<Student> sortedStudents = 
+                new javafx.collections.transformation.SortedList<>(filteredStudents);
+        listView.setItems(sortedStudents);
+
+        // Footer
+        HBox footer = new HBox(10);
+        footer.setAlignment(javafx.geometry.Pos.CENTER);
+        footer.setStyle("-fx-padding: 15 20; -fx-background-color: #F3F4F6;");
+
+        Label footerInfo = new Label("Total: " + students.size() + " students enrolled in this exam");
+        footerInfo.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280;");
+        
+        Region footerSpacer = new Region();
+        HBox.setHgrow(footerSpacer, javafx.scene.layout.Priority.ALWAYS);
+        
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: #8B5CF6; -fx-text-fill: white; -fx-font-size: 13px; " +
+                "-fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand;");
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #7C3AED; -fx-text-fill: white; " +
+                "-fx-font-size: 13px; -fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: #8B5CF6; -fx-text-fill: white; " +
+                "-fx-font-size: 13px; -fx-padding: 8 20; -fx-background-radius: 6; -fx-cursor: hand;"));
+        closeBtn.setOnAction(e -> popup.close());
+        
+        footer.getChildren().addAll(footerInfo, footerSpacer, closeBtn);
+
+        root.getChildren().addAll(header, searchBox, listView, footer);
+
+        Scene scene = new Scene(root, 450, 480);
+        
+        // ESC to close
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                popup.close();
+            }
+        });
+
+        popup.setScene(scene);
+        popup.centerOnScreen();
+        popup.showAndWait();
     }
 
     private void showError(String header, String content) {

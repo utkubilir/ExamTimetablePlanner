@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+           styleClass="splash-screen" prefWidth="500" prefHeight="350">
+    
+    <VBox alignment="CENTER" spacing="20">
+        <padding>
+            <Insets bottom="40" left="40" right="40" top="40" />
+        </padding>
+        
+        <!-- App Icon -->
+        <Label text="📅" style="-fx-font-size: 64px;" />
+        
+        <!-- App Title -->
+        <Label text="Exam Planner" styleClass="splash-title" />
+        
+        <!-- Subtitle -->
+        <Label text="Sınav Takvimi Yönetim Sistemi" styleClass="splash-subtitle" />
+        
+        <!-- Loading Progress -->
+        <VBox alignment="CENTER" spacing="10">
+            <ProgressBar fx:id="progressBar" styleClass="splash-progress" prefWidth="300" />
+            <Label fx:id="lblStatus" text="Yükleniyor..." styleClass="splash-status" />
+        </VBox>
+        
+        <!-- Version -->
+        <Label text="v1.0.0" styleClass="splash-version" />
+    </VBox>
+    
+</StackPane>
