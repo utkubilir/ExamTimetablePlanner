@@ -800,6 +800,7 @@ public class MainController {
                         students.add(s);
                     }
                 }
+
                 // Save any new students to database
                 if (!newStudents.isEmpty()) {
                     repository.saveStudents(newStudents);

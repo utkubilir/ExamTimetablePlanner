@@ -37,14 +37,6 @@ public class DataImportService {
         }
     }
 
-    private enum CsvKind {
-        COURSES,
-        STUDENTS,
-        CLASSROOMS,
-        ATTENDANCE,
-        UNKNOWN
-    }
-
     private static final char BOM = '\uFEFF';
 
     private static String stripBom(String s) {
@@ -52,6 +44,14 @@ public class DataImportService {
             return s.substring(1);
         }
         return s;
+    }
+
+    private enum CsvKind {
+        COURSES,
+        STUDENTS,
+        CLASSROOMS,
+        ATTENDANCE,
+        UNKNOWN
     }
 
     private CsvKind detectCsvKind(File file) throws IOException {
