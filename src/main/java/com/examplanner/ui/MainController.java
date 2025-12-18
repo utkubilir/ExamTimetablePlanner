@@ -670,6 +670,8 @@ public class MainController {
             if (isDarkMode) {
                 isDarkMode = false;
                 applyTheme();
+                // Also update settings popup theme
+                settingsContent.getStyleClass().remove("dark-mode");
                 btnLightMode.getStyleClass().add("selected");
                 btnDarkMode.getStyleClass().remove("selected");
             }
@@ -679,6 +681,10 @@ public class MainController {
             if (!isDarkMode) {
                 isDarkMode = true;
                 applyTheme();
+                // Also update settings popup theme
+                if (!settingsContent.getStyleClass().contains("dark-mode")) {
+                    settingsContent.getStyleClass().add("dark-mode");
+                }
                 btnDarkMode.getStyleClass().add("selected");
                 btnLightMode.getStyleClass().remove("selected");
             }
