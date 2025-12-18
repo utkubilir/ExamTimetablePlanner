@@ -125,7 +125,7 @@
                    <Button text="← Back" onAction="#showDataImport" styleClass="secondary-button" />
                   <VBox>
                      <Label styleClass="section-title" text="Exam Schedule" />
-                     <Label styleClass="section-subtitle" text="December 2024 - Final Exams" />
+                     <Label styleClass="section-subtitle" text="December 2025 - Final Exams" />
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
                   
@@ -144,7 +144,7 @@
                
                <!-- Edit Help Text -->
                <HBox alignment="CENTER_LEFT" spacing="15" style="-fx-background-color: #F0FDF4; -fx-padding: 10 15; -fx-background-radius: 8; -fx-border-color: #86EFAC; -fx-border-radius: 8;">
-                  <Label text="💡" style="-fx-font-size: 16px;" />
+                  <Label text="💡" style="-fx-font-size: 16px; -fx-text-fill: #F59E0B;" />
                   <Label text="Tip: Double-click a row to edit, or right-click for quick actions. All changes are validated in real-time." style="-fx-text-fill: #166534; -fx-font-size: 12px;" />
                </HBox>
 
@@ -194,9 +194,9 @@
                  </HBox>
              </children>
          </VBox>
+         <!-- user manuel View -->
 
-          <!-- User Manual View -->
-          <VBox fx:id="viewUserManual" spacing="20.0" visible="false">
+<VBox fx:id="viewUserManual" spacing="20.0" visible="false">
               <padding>
                   <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
               </padding>
@@ -205,7 +205,7 @@
                       <Button text="← Back" onAction="#showDataImport" styleClass="secondary-button" />
                       <VBox>
                           <Label styleClass="section-title" text="📖 User Manual" />
-                          <Label styleClass="section-subtitle" text="Exam Planner Kullanım Kılavuzu" />
+                          <Label styleClass="section-subtitle" text="Exam Planner Usage Guide" />
                       </VBox>
                   </HBox>
                   
@@ -213,267 +213,296 @@
                       <content>
                           <VBox spacing="10" styleClass="manual-container">
                               
-                              <!-- 1. Getting Started -->
                               <TitledPane styleClass="manual-section" expanded="true">
-                                  <text>🚀 1. Başlarken (Getting Started)</text>
+                                  <text>🚀 1. Getting Started</text>
                                   <content>
                                       <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Exam Planner, üniversite sınav programlarını otomatik olarak oluşturmak için tasarlanmış güçlü bir araçtır." />
+                                          <Label wrapText="true" styleClass="manual-text" text="Exam Planner is a powerful tool designed to automatically generate university exam schedules." />
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📋 Sistem Gereksinimleri:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Java 21 veya üzeri&#10;• JavaFX 21&#10;• Minimum 4GB RAM&#10;• 100MB boş disk alanı" />
+                                              <Label styleClass="manual-subtitle" text="📋 System Requirements:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Java 21 or higher&#10;• JavaFX 21&#10;• Minimum 4GB RAM&#10;• 100MB free disk space" />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🎯 Temel İş Akışı:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="1. CSV dosyalarını içe aktarın (Dersler, Öğrenciler, Sınıflar, Katılım)&#10;2. 'Generate Timetable' butonuna tıklayın&#10;3. Oluşturulan programı görüntüleyin ve dışa aktarın" />
+                                              <Label styleClass="manual-subtitle" text="🎯 Core Workflow:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="1. Import CSV files (Courses, Students, Classrooms, Attendance)&#10;2. Click the 'Generate Timetable' button&#10;3. View and export the generated schedule" />
                                           </VBox>
                                           
                                           <HBox styleClass="manual-tip" spacing="10">
-                                              <Label text="💡" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-tip-text" text="İpucu: Tüm veri dosyalarını yüklemeden önce örnek CSV formatlarını inceleyin." />
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #e8c710ff;" />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: Review the sample CSV formats before uploading all your data files." />
                                           </HBox>
                                       </VBox>
                                   </content>
                               </TitledPane>
                               
-                              <!-- 2. Data Import -->
                               <TitledPane styleClass="manual-section">
-                                  <text>📄 2. Veri İçe Aktarma (Data Import)</text>
+                                  <text>📄 2. Data Import</text>
                                   <content>
                                       <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Sınav programı oluşturmak için 4 farklı CSV dosyası gereklidir:" />
+                                          <Label wrapText="true" styleClass="manual-text" text="Four different CSV files are required to create an exam schedule. The system supports two different formats:" />
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📚 Courses.csv (Dersler):" />
-                                              <Label wrapText="true" styleClass="manual-code" text="Format: CourseCode;CourseName;Duration&#10;Örnek: CS101;Introduction to Programming;120" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• CourseCode: Benzersiz ders kodu&#10;• CourseName: Ders adı&#10;• Duration: Sınav süresi (dakika)" />
+                                              <Label styleClass="manual-subtitle" text="📚 Courses.csv:" />
+                                              <Label wrapText="true" styleClass="manual-code" text="Format 1 (Simple): CourseCode only&#10;Example: CourseCode_01&#10;&#10;Format 2 (Detailed): CourseCode,CourseName,DurationMinutes&#10;Example: CS101,Introduction to Programming,120" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• CourseCode: Unique course code (required)&#10;• CourseName: Course name (optional, code used if blank)&#10;• DurationMinutes: Exam duration in minutes (optional, default: 120)" />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🎓 Students.csv (Öğrenciler):" />
-                                              <Label wrapText="true" styleClass="manual-code" text="Format: StudentID;FirstName;LastName&#10;Örnek: 2021001;Ali;Yılmaz" />
+                                              <Label styleClass="manual-subtitle" text="🎓 Students.csv:" />
+                                              <Label wrapText="true" styleClass="manual-code" text="Format 1 (Simple): StudentID only&#10;Example: Std_ID_001&#10;&#10;Format 2 (Detailed): StudentID,StudentName&#10;Example: 2021001,John Doe" />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🏢 Classrooms.csv (Sınıflar):" />
-                                              <Label wrapText="true" styleClass="manual-code" text="Format: RoomCode;Capacity&#10;Örnek: A101;50" />
+                                              <Label styleClass="manual-subtitle" text="🏢 Classrooms.csv:" />
+                                              <Label wrapText="true" styleClass="manual-code" text="Format 1: RoomName;Capacity (semicolon separated)&#10;Example: Classroom_01;40&#10;&#10;Format 2: RoomID,RoomName,Capacity (comma separated)&#10;Example: R101,A Block 101,50" />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="👥 Attendance.csv (Kayıtlar):" />
-                                              <Label wrapText="true" styleClass="manual-code" text="Format: CourseCode;StudentID&#10;Örnek: CS101;2021001" />
-                                              <Label wrapText="true" styleClass="manual-text" text="Her öğrenci-ders eşleşmesi için bir satır." />
+                                              <Label styleClass="manual-subtitle" text="👥 Attendance.csv (Registrations):" />
+                                              <Label wrapText="true" styleClass="manual-code" text="Format 1 (Python List):&#10;CourseCode_01&#10;['Std_ID_001', 'Std_ID_002', ...]&#10;&#10;Format 2 (CSV): StudentID,CourseCode&#10;2021001,CS101" />
+                                              <Label wrapText="true" styleClass="manual-text" text="Note: Specifies the registered students for each course." />
+                                          </VBox>
+                                          
+                                          <HBox styleClass="manual-tip" spacing="10">
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #F59E0B;" />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: Files may contain header rows like 'ALL OF THE...'; the system will automatically skip these." />
+                                          </HBox>
+                                          
+                                          <HBox styleClass="manual-warning" spacing="10">
+                                              <Label text="🛑" style="-fx-font-size: 18px; -fx-text-fill: #DC2626;" />
+                                              <Label wrapText="true" styleClass="manual-warning-text" text="Warning: The system will warn you if you select the wrong file type. Ensure each file is uploaded to its correct button." />
+                                          </HBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <TitledPane styleClass="manual-section">
+                                  <text>📅 3. Timetable Generation</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="The system uses an advanced algorithm to create a conflict-free exam schedule." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="⚙️ Algorithm Features:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Finding optimal number of days via Binary Search&#10;• Student conflict checking&#10;• Classroom capacity validation&#10;• Minimum 3-hour gap constraint&#10;• Maximum 2 exams per day constraint" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🔄 Generation Steps:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="1. Click the 'Generate Timetable' button&#10;2. Select the start and end dates for the exam period&#10;3. Monitor the progress bar&#10;4. The program will automatically switch to the Timetable view" />
+                                          </VBox>
+                                          
+                                          <HBox styleClass="manual-tip" spacing="10">
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #F59E0B;" />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: For large datasets, the process may take a few minutes. Please wait patiently." />
+                                          </HBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <TitledPane styleClass="manual-section">
+                                  <text>✏️ 3.5. Manual Editing</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="You can manually edit the generated exam schedule. All changes are validated in real-time and saved to history." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🖱️ Editing Methods:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Double Click: Double-click any row to open the detailed edit screen&#10;• Right-Click Menu: Right-click for quick changes&#10;• Edit Button: Click the 'Edit' button at the end of the row" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="⚡ Quick Change Options:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Quick Change Date: Change only the date&#10;• Quick Change Time: Change only the time&#10;• Quick Change Classroom: Change only the classroom" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📝 Full Edit:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="In the window that opens when you click Edit:&#10;• Use the date picker to set a new date&#10;• Select a new time from the dropdown menu&#10;• Choose a classroom with sufficient capacity&#10;• View the registered student list (Click '👥 Enrolled Students')" />
+                                          </VBox>
+                                          
+                                          <HBox styleClass="manual-tip" spacing="10">
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #e8c710ff;" />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: Every change is validated instantly and can be viewed via the '📜 History' button. A green checkmark indicates a valid change, while a red warning indicates a conflict." />
+                                          </HBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <TitledPane styleClass="manual-section">
+                                  <text>✓ 3.6. Validation and Constraint Checking</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="When manual changes are made, the system automatically checks all constraints." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🔍 Checked Constraints:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Classroom capacity: Number of students must not exceed capacity&#10;• Classroom conflict: The same room cannot be used for another exam simultaneously&#10;• Student conflict: A student cannot be in two exams at once&#10;• Time range: Exams must be between 09:00-18:30&#10;• Minimum gap: At least 3 hours between exams for students" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📊 Batch Validation:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="Click the 'Validate All' button to verify the entire schedule. This checks all exams and lists those with issues." />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🎨 Visual Feedback:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• ✓ Green: Change is valid, no constraint violations&#10;• ⚠ Red: Conflict detected, details will be shown&#10;• Capacity Indicator: Shows the classroom occupancy rate" />
                                           </VBox>
                                           
                                           <HBox styleClass="manual-warning" spacing="10">
-                                              <Label text="⚠️" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-warning-text" text="Uyarı: CSV dosyalarında noktalı virgül (;) veya virgül (,) ayırıcı kullanabilirsiniz." />
+                                              <Label text="🛑" style="-fx-font-size: 18px; -fx-text-fill: #DC2626;" />
+                                              <Label wrapText="true" styleClass="manual-warning-text" text="Important: You will receive a warning if you attempt to save changes with constraint violations. You will be asked if you still wish to proceed." />
                                           </HBox>
                                       </VBox>
                                   </content>
                               </TitledPane>
                               
-                              <!-- 3. Timetable Generation -->
                               <TitledPane styleClass="manual-section">
-                                  <text>📅 3. Zaman Çizelgesi Oluşturma</text>
+                                  <text>🔍 4. Filtering and Search</text>
                                   <content>
                                       <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Sistem, çakışmasız bir sınav programı oluşturmak için gelişmiş bir algoritma kullanır." />
+                                          <Label wrapText="true" styleClass="manual-text" text="You can easily search through the generated schedule." />
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="⚙️ Algoritma Özellikleri:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Binary Search ile optimal gün sayısı bulma&#10;• Öğrenci çakışma kontrolü&#10;• Sınıf kapasitesi kontrolü&#10;• Minimum 3 saat ara kısıtlaması&#10;• Günde maksimum 2 sınav kısıtlaması" />
+                                              <Label styleClass="manual-subtitle" text="🔍 Advanced Search Bar:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="Filter by different criteria using the search bar on the Timetable screen:&#10;&#10;• Course: Search by course code (e.g., CS101)&#10;• Date: Search by date (formats: dd/MM/yyyy, dd.MM.yyyy, dd/MM, or dd.MM)&#10;• Time: Search by time range (formats: HH:mm or HH:mm-HH:mm)&#10;• Classroom: Search by classroom name&#10;&#10;Click the '×' button to clear the search." />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🔄 Oluşturma Adımları:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="1. 'Generate Timetable' butonuna tıklayın&#10;2. İlerleme çubuğunu takip edin&#10;3. Program otomatik olarak Timetable görünümüne geçer" />
+                                              <Label styleClass="manual-subtitle" text="👤 Filter by Student:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="1. Click the 'Student Search' button&#10;2. Select 'Filter by Student'&#10;3. Search for a student name or select from the list&#10;4. Only that student's exams will be displayed" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📚 Filter by Course:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="1. Click the 'Student Search' button&#10;2. Select 'Filter by Course'&#10;3. Search for the course code or name&#10;4. Relevant exam details will be displayed" />
+                                          </VBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <TitledPane styleClass="manual-section">
+                                  <text>📜 4.5. Edit History</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="All edits are automatically recorded and can be viewed in the history." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📋 Viewing History:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="1. Click the '📜 History' button on the Timetable screen&#10;2. All changes are listed in chronological order&#10;3. Each record shows:&#10;   • Course code and name&#10;   • Type of change (Date, Time, Classroom)&#10;   • Old value (red)&#10;   • New value (green)&#10;   • Timestamp of change" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🗑 Clearing History:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="Click 'Clear History' in the History window to delete all records." />
                                           </VBox>
                                           
                                           <HBox styleClass="manual-tip" spacing="10">
-                                              <Label text="💡" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-tip-text" text="İpucu: Büyük veri setleri için işlem birkaç dakika sürebilir. Lütfen sabırla bekleyin." />
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #F59E0B;" />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: Edit history is kept while the application is open. It is reset when the application is closed." />
                                           </HBox>
                                       </VBox>
                                   </content>
                               </TitledPane>
                               
-                              <!-- 3.5. Manual Schedule Editing (FR5) -->
                               <TitledPane styleClass="manual-section">
-                                  <text>✏️ 3.5. Manuel Düzenleme (Manual Editing)</text>
+                                  <text>📤 5. Export</text>
                                   <content>
                                       <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Oluşturulan sınav programını manuel olarak düzenleyebilirsiniz. Tüm değişiklikler anlık olarak doğrulanır." />
+                                          <Label wrapText="true" styleClass="manual-text" text="You can export the generated exam schedule in different formats." />
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🖱️ Düzenleme Yöntemleri:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Çift Tıklama: Herhangi bir satıra çift tıklayarak detaylı düzenleme ekranını açın&#10;• Sağ Tık Menüsü: Hızlı değişiklikler için sağ tıklayın&#10;• Edit Butonu: Satır sonundaki 'Edit' butonuna tıklayın" />
+                                              <Label styleClass="manual-subtitle" text="📊 Export to CSV:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Click the 'Export CSV' button&#10;• Choose the save location&#10;• The file can be opened in Excel or other spreadsheet software" />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="⚡ Hızlı Düzenleme Seçenekleri:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Quick Change Date: Sadece tarihi değiştirin&#10;• Quick Change Time: Sadece saati değiştirin&#10;• Quick Change Classroom: Sadece sınıfı değiştirin" />
-                                          </VBox>
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📝 Tam Düzenleme:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="Edit butonuna tıkladığınızda açılan pencerede:&#10;• Tarih seçici ile yeni tarih belirleyin&#10;• Açılır menüden yeni saat seçin&#10;• Uygun kapasiteli sınıf seçin&#10;• Kayıtlı öğrenci listesini görüntüleyin" />
+                                              <Label styleClass="manual-subtitle" text="📑 Export to PDF:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Click the 'Export PDF' button&#10;• A professionally formatted PDF will be created&#10;• Ideal for printing and distribution" />
                                           </VBox>
                                           
                                           <HBox styleClass="manual-tip" spacing="10">
-                                              <Label text="💡" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-tip-text" text="İpucu: Her değişiklik anlık olarak doğrulanır. Yeşil onay işareti geçerli bir değişikliği, kırmızı uyarı ise bir çakışmayı gösterir." />
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #e8c710ff; " />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: The PDF format should be preferred for official announcements." />
                                           </HBox>
                                       </VBox>
                                   </content>
                               </TitledPane>
                               
-                              <!-- 3.6. Validation (FR13) -->
-                              <TitledPane styleClass="manual-section">
-                                  <text>✓ 3.6. Doğrulama ve Kısıtlama Kontrolü</text>
-                                  <content>
-                                      <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Manuel değişiklikler yapıldığında sistem otomatik olarak tüm kısıtlamaları kontrol eder." />
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🔍 Kontrol Edilen Kısıtlamalar:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Sınıf kapasitesi: Öğrenci sayısı sınıf kapasitesini aşmamalı&#10;• Sınıf çakışması: Aynı sınıf aynı anda başka sınav için kullanılmamalı&#10;• Öğrenci çakışması: Bir öğrenci aynı anda iki sınavda olamaz&#10;• Zaman aralığı: Sınavlar 09:00-18:30 arasında olmalı&#10;• Minimum ara: Öğrenciler için sınavlar arası en az 3 saat" />
-                                          </VBox>
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📊 Toplu Doğrulama:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="'Validate All' butonuna tıklayarak tüm programın doğrulamasını yapabilirsiniz. Bu, tüm sınavları kontrol eder ve sorunlu olanları listeler." />
-                                          </VBox>
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🎨 Görsel Geri Bildirim:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• ✓ Yeşil: Değişiklik geçerli, kısıtlama ihlali yok&#10;• ⚠ Kırmızı: Çakışma tespit edildi, detaylar gösterilir&#10;• Kapasite göstergesi: Sınıf doluluk oranını gösterir" />
-                                          </VBox>
-                                          
-                                          <HBox styleClass="manual-warning" spacing="10">
-                                              <Label text="⚠️" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-warning-text" text="Önemli: Kısıtlama ihlali olan değişiklikleri kaydetmeye çalışırsanız uyarı alırsınız. Yine de kaydetmek isteyip istemediğiniz sorulacaktır." />
-                                          </HBox>
-                                      </VBox>
-                                  </content>
-                              </TitledPane>
-                              
-                              <!-- 4. Filtering & Search -->
-                              <TitledPane styleClass="manual-section">
-                                  <text>🔍 4. Filtreleme ve Arama</text>
-                                  <content>
-                                      <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Oluşturulan programda kolayca arama yapabilirsiniz." />
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="👤 Öğrenci Bazlı Filtreleme:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="1. 'Filter / Search' butonuna tıklayın&#10;2. 'Filter by Student' seçin&#10;3. Öğrenci adını arayın veya listeden seçin&#10;4. Sadece o öğrencinin sınavları görüntülenir" />
-                                          </VBox>
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📚 Ders Bazlı Filtreleme:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="1. 'Filter / Search' butonuna tıklayın&#10;2. 'Filter by Course' seçin&#10;3. Ders kodunu veya adını arayın&#10;4. İlgili sınav detayları görüntülenir" />
-                                          </VBox>
-                                      </VBox>
-                                  </content>
-                              </TitledPane>
-                              
-                              <!-- 5. Export -->
-                              <TitledPane styleClass="manual-section">
-                                  <text>📤 5. Dışa Aktarma (Export)</text>
-                                  <content>
-                                      <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Oluşturulan sınav programını farklı formatlarda dışa aktarabilirsiniz." />
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📊 CSV Dışa Aktarma:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• 'Export CSV' butonuna tıklayın&#10;• Kayıt konumunu seçin&#10;• Program Excel veya diğer tablolama yazılımlarında açılabilir" />
-                                          </VBox>
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📑 PDF Dışa Aktarma:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• 'Export PDF' butonuna tıklayın&#10;• Profesyonel formatlı bir PDF oluşturulur&#10;• Yazdırma ve dağıtım için ideal" />
-                                          </VBox>
-                                          
-                                          <HBox styleClass="manual-tip" spacing="10">
-                                              <Label text="💡" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-tip-text" text="İpucu: PDF formatı resmi duyurular için tercih edilmelidir." />
-                                          </HBox>
-                                      </VBox>
-                                  </content>
-                              </TitledPane>
-                              
-                              <!-- 6. Dashboard -->
                               <TitledPane styleClass="manual-section">
                                   <text>📊 6. Dashboard Analytics</text>
                                   <content>
                                       <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Dashboard, sınav programının görsel analizini sunar." />
+                                          <Label wrapText="true" styleClass="manual-text" text="The Dashboard provides a visual analysis of the exam schedule. Charts are interactive—click on them for detailed information." />
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📈 Günlük Sınav Grafiği:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Bar chart olarak her gün kaç sınav olduğunu gösterir&#10;• Yoğun günleri kolayca tespit edin" />
+                                              <Label styleClass="manual-subtitle" text="📈 Exams Per Day Chart:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Displays the number of exams per day as a bar chart&#10;• Easily identify busy days&#10;• 🖱️ Click a bar to list all exams for that day" />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🎯 Sınıf Kullanım Grafiği:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Pie chart olarak sınıf kullanım oranlarını gösterir&#10;• Hangi sınıfların daha fazla kullanıldığını görün" />
+                                              <Label styleClass="manual-subtitle" text="🎯 Room Utilization Chart:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• Displays room usage rates as a pie chart&#10;• See which rooms are used most frequently&#10;• 🖱️ Click a slice to list all exams in that room" />
+                                          </VBox>
+                                          
+                                          <HBox styleClass="manual-tip" spacing="10">
+                                              <Label text="💡" style="-fx-font-size: 18px; -fx-text-fill: #e8c710ff; " />
+                                              <Label wrapText="true" styleClass="manual-tip-text" text="Tip: A hand cursor appears when hovering over interactive chart elements." />
+                                          </HBox>
+                                      </VBox>
+                                  </content>
+                              </TitledPane>
+                              
+                              <TitledPane styleClass="manual-section">
+                                  <text>🎓 7. Student Portal</text>
+                                  <content>
+                                      <VBox spacing="15" styleClass="manual-content">
+                                          <Label wrapText="true" styleClass="manual-text" text="Students can view their own personal exam schedules." />
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="🔐 Logging In:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="1. Click the 'Student Portal' button&#10;2. Enter your student ID&#10;3. Your personal exam schedule will be displayed" />
+                                          </VBox>
+                                          
+                                          <VBox styleClass="manual-subsection">
+                                              <Label styleClass="manual-subtitle" text="📋 Viewing:" />
+                                              <Label wrapText="true" styleClass="manual-text" text="• You will only see your own exams&#10;• Date, time, and classroom information are listed&#10;• Organized in chronological order" />
                                           </VBox>
                                       </VBox>
                                   </content>
                               </TitledPane>
                               
-                              <!-- 7. Student Portal -->
                               <TitledPane styleClass="manual-section">
-                                  <text>🎓 7. Öğrenci Portalı</text>
-                                  <content>
-                                      <VBox spacing="15" styleClass="manual-content">
-                                          <Label wrapText="true" styleClass="manual-text" text="Öğrenciler kendi sınav programlarını görüntüleyebilir." />
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="🔐 Giriş Yapma:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="1. 'Student Portal' butonuna tıklayın&#10;2. Öğrenci numaranızı girin&#10;3. Kişisel sınav programınız görüntülenir" />
-                                          </VBox>
-                                          
-                                          <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="📋 Görüntüleme:" />
-                                              <Label wrapText="true" styleClass="manual-text" text="• Sadece kendi sınavlarınızı görürsünüz&#10;• Tarih, saat ve sınıf bilgileri listelenir&#10;• Kronolojik sırada düzenlenir" />
-                                          </VBox>
-                                      </VBox>
-                                  </content>
-                              </TitledPane>
-                              
-                              <!-- 8. FAQ -->
-                              <TitledPane styleClass="manual-section">
-                                  <text>❓ 8. Sık Sorulan Sorular (FAQ)</text>
+                                  <text>❓ 8. Frequently Asked Questions (FAQ)</text>
                                   <content>
                                       <VBox spacing="15" styleClass="manual-content">
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="S: CSV dosyam yüklenmiyor, ne yapmalıyım?" />
-                                              <Label wrapText="true" styleClass="manual-text" text="C: Dosya formatını kontrol edin. UTF-8 encoding kullandığınızdan ve sütun ayırıcıların doğru olduğundan emin olun." />
+                                              <Label styleClass="manual-subtitle" text="Q: My CSV file won't upload, what should I do?" />
+                                              <Label wrapText="true" styleClass="manual-text" text="A: Check the file format. Ensure you are using UTF-8 encoding and that the column separators are correct." />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="S: Program oluşturma çok uzun sürüyor?" />
-                                              <Label wrapText="true" styleClass="manual-text" text="C: Büyük veri setleri (10,000+ öğrenci) için işlem 1-2 dakika sürebilir. Bu normaldir." />
+                                              <Label styleClass="manual-subtitle" text="Q: Schedule generation is taking too long?" />
+                                              <Label wrapText="true" styleClass="manual-text" text="A: For very large datasets (10,000+ students), the process can take 1-2 minutes. This is normal." />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="S: Çakışma uyarısı alıyorum, ne anlama geliyor?" />
-                                              <Label wrapText="true" styleClass="manual-text" text="C: Bazı öğrencilerin aynı zaman diliminde birden fazla sınavı var. 'Conflicts' butonuyla detayları görüntüleyin." />
+                                              <Label styleClass="manual-subtitle" text="Q: I am getting a conflict warning, what does it mean?" />
+                                              <Label wrapText="true" styleClass="manual-text" text="A: Some students have multiple exams in the same time slot. View details via the 'Conflicts' button." />
                                           </VBox>
                                           
                                           <VBox styleClass="manual-subsection">
-                                              <Label styleClass="manual-subtitle" text="S: Verileri nasıl silerim?" />
-                                              <Label wrapText="true" styleClass="manual-text" text="C: Data Import sayfasındaki 'Delete All Data' butonunu kullanın. Bu işlem geri alınamaz!" />
+                                              <Label styleClass="manual-subtitle" text="Q: How do I delete data?" />
+                                              <Label wrapText="true" styleClass="manual-text" text="A: Use the 'Delete All Data' button on the Data Import page. This action cannot be undone!" />
                                           </VBox>
                                           
                                           <HBox styleClass="manual-warning" spacing="10">
-                                              <Label text="⚠️" style="-fx-font-size: 18px;" />
-                                              <Label wrapText="true" styleClass="manual-warning-text" text="Önemli: Veri silme işlemi geri alınamaz. Silmeden önce yedek aldığınızdan emin olun." />
+                                              <Label text="🛑" style="-fx-font-size: 18px; -fx-text-fill: #DC2626;" />
+                                              <Label wrapText="true" styleClass="manual-warning-text" text="Important: Data deletion is permanent. Ensure you have a backup before deleting." />
                                           </HBox>
                                       </VBox>
                                   </content>
