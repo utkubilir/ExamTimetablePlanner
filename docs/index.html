@@ -3,131 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Exam Timetable Planner</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            line-height: 1.6;
-            max-width: 900px;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        ul {
-            margin-left: 20px;
-        }
-        code {
-            background-color: #f4f4f4;
-            padding: 4px 6px;
-            border-radius: 4px;
-        }
-        footer {
-            margin-top: 40px;
-            font-size: 0.9em;
-            color: #555;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
-<h1>Exam Timetable Planner</h1>
-<p>
-    Exam Timetable Planner is a standalone Windows desktop application that automatically
-    generates optimized exam schedules for educational institutions. The system processes
-    courses, classrooms, student enrollments, and predefined business constraints to produce
-    a conflict-free and efficient exam timetable.
-</p>
+    <aside class="sidebar">
+        <h2>ExamPlanner</h2>
+        <p>Project Report</p>
+    </aside>
 
-<h2>Target Users</h2>
-<p>
-    The primary users of this application are Student Affairs personnel responsible for creating
-    and maintaining examination schedules.
-</p>
+    <main class="main-content">
+        <header>
+            <h1>Exam Timetable Planner</h1>
+            <p>Automated Exam Scheduling System</p>
+        </header>
 
-<h2>Key Features</h2>
-<ul>
-    <li>Import course, students, classroom, and attendence data from CSV files</li>
-    <li>Automatically generate an optimized exam timetable</li>
-    <li>View the master exam schedule in a structured table format</li>
-    <li>Search schedules by student ID or course code</li>
-    <li>Manually modify exam times and classrooms</li>
-    <li>Instant validation of all manual changes against scheduling constraints</li>
-    <li>Export the final timetable for external use</li>
-</ul>
-
-<h2>Scheduling Constraints</h2>
-<ul>
-    <li>Exams are scheduled between 09:00 and 18:30</li>
-    <li>A student cannot have more than two exams on the same day</li>
-    <li>A minimum 3-hour gap is enforced between exams on the same day</li>
-    <li>A classroom cannot be assigned to multiple exams at the same time</li>
-    <li>Classroom capacity must be sufficient for the number of students</li>
-</ul>
-
-<h2>System Architecture</h2>
-<p>
-    The application follows a layered architecture to ensure modularity, maintainability,
-    and separation of concerns.
-</p>
-
-<ul>
-    <li><strong>Domain Layer</strong> – Core data models such as Course, Student, Classroom, and Exam</li>
-    <li><strong>Services Layer</strong> – Scheduling, constraint checking, and optimization logic</li>
-    <li><strong>Persistence Layer</strong> – CSV data loading and SQLite database management</li>
-    <li><strong>Presentation Layer</strong> – JavaFX user interface and controllers</li>
-</ul>
-
-<h2>Project Structure</h2>
-<pre>
-src/main/java/com/examplanner/
- ├── domain
- ├── services
- ├── persistence
- └── ui
-</pre>
-
-<h2>Technologies Used</h2>
-<ul>
-    <li>Java</li>
-    <li>JavaFX</li>
-    <li>SQLite</li>
-    <li>CSV File Processing</li>
-    <li>Git & GitHub</li>
-</ul>
-
-<h2>How to Run the Project</h2>
-<ol>
-    <li>Clone the GitHub repository</li>
-    <li>Open the project in a Java IDE (IntelliJ IDEA or Eclipse)</li>
-    <li>Ensure Java and JavaFX are properly configured</li>
-    <li>Run the Launcher class, which serves as the application entry point</li>
-    <li>Load input CSV files and start timetable generation</li>
-</ol>
-
-<h2>Project Team</h2>
-<ul>
-    <li>Doğan Mert İlhan</li>
-    <li>Utku Bilir</li>
-    <li>Deniz Yıldırım</li>
-    <li>Arda Barut</li>
-    <li>Furkan Galip</li>
-    <li>Mert Barmanbek</li>
-</ul>
-
-<h2>Source Code</h2>
-<p>
-    The complete source code is available on GitHub:
-    <br>
-    <a href="https://https://github.com/utkubilir/ExamTimetablePlanner">
-        https://https://github.com/utkubilir/ExamTimetablePlanneri
-    </a>
-</p>
-
-<footer>
-    <p>
-        Exam Timetable Planner – Software Engineering Project Documentation
-    </p>
-</footer>
+        <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p>
+                Exam Timetable Planner is a desktop application designed to
+                automatically generate optimized exam schedules.
+            </p>
+        </section>
+    </main>
 
 </body>
 </html>
