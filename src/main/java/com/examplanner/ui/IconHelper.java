@@ -163,4 +163,78 @@ public class IconHelper {
         icon.setStyle("-fx-icon-color: " + color + ";");
         return icon;
     }
+
+    // ============== Settings Icons ==============
+
+    public static FontIcon sun() {
+        FontIcon icon = createIcon("fas-sun", 18);
+        icon.setStyle("-fx-icon-color: #F59E0B;");
+        return icon;
+    }
+
+    public static FontIcon moon() {
+        FontIcon icon = createIcon("fas-moon", 18);
+        icon.setStyle("-fx-icon-color: #6366F1;");
+        return icon;
+    }
+
+    public static FontIcon globe() {
+        return createIcon("fas-globe", 18);
+    }
+
+    // ============== Edit Dialog Icons ==============
+
+    public static FontIcon calendar() {
+        FontIcon icon = createIcon("fas-calendar-day", 14);
+        icon.setStyle("-fx-icon-color: #6366F1;");
+        return icon;
+    }
+
+    public static FontIcon clock() {
+        FontIcon icon = createIcon("fas-clock", 14);
+        icon.setStyle("-fx-icon-color: #8B5CF6;");
+        return icon;
+    }
+
+    public static FontIcon location() {
+        FontIcon icon = createIcon("fas-map-marker-alt", 14);
+        icon.setStyle("-fx-icon-color: #EF4444;");
+        return icon;
+    }
+
+    public static FontIcon edit() {
+        FontIcon icon = createIcon("fas-edit", 16);
+        icon.setStyle("-fx-icon-color: #6366F1;");
+        return icon;
+    }
+
+    public static FontIcon check() {
+        FontIcon icon = createIcon("fas-check", 14);
+        icon.setStyle("-fx-icon-color: #10B981;");
+        return icon;
+    }
+
+    public static FontIcon clipboard() {
+        FontIcon icon = createIcon("fas-clipboard-list", 14);
+        icon.setStyle("-fx-icon-color: #6366F1;");
+        return icon;
+    }
+
+    public static FontIcon note() {
+        FontIcon icon = createIcon("fas-sticky-note", 14);
+        icon.setStyle("-fx-icon-color: #F59E0B;");
+        return icon;
+    }
+
+    public static FontIcon arrowRight() {
+        FontIcon icon = createIcon("fas-arrow-right", 12);
+        icon.setStyle("-fx-icon-color: #9CA3AF;");
+        return icon;
+    }
+
+    public static FontIcon chevronRight() {
+        FontIcon icon = createIcon("fas-chevron-right", 12);
+        icon.setStyle("-fx-icon-color: #9CA3AF;");
+        return icon;
+    }
 }

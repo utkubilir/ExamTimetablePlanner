@@ -1290,7 +1290,7 @@ public class MainController {
         HBox lightModeBtn = new HBox(12);
         lightModeBtn.getStyleClass().add("settings-option");
         lightModeBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label lightIcon = new Label("☀️");
+        FontIcon lightIcon = IconHelper.sun();
         lightIcon.getStyleClass().add("settings-option-icon");
         Label lightText = new Label(bundle.getString("settings.lightMode"));
         lightText.getStyleClass().add("settings-option-text");
@@ -1300,7 +1300,7 @@ public class MainController {
         HBox darkModeBtn = new HBox(12);
         darkModeBtn.getStyleClass().add("settings-option");
         darkModeBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label darkIcon = new Label("🌙");
+        FontIcon darkIcon = IconHelper.moon();
         darkIcon.getStyleClass().add("settings-option-icon");
         Label darkText = new Label(bundle.getString("settings.darkMode"));
         darkText.getStyleClass().add("settings-option-text");
@@ -1347,7 +1347,7 @@ public class MainController {
         HBox englishBtn = new HBox(12);
         englishBtn.getStyleClass().add("settings-option");
         englishBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label englishIcon = new Label("🇬🇧");
+        FontIcon englishIcon = IconHelper.custom("fas-flag-usa", 18, "#3B82F6");
         englishIcon.getStyleClass().add("settings-option-icon");
         Label englishText = new Label("English");
         englishText.getStyleClass().add("settings-option-text");
@@ -1357,7 +1357,7 @@ public class MainController {
         HBox turkishBtn = new HBox(12);
         turkishBtn.getStyleClass().add("settings-option");
         turkishBtn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        Label turkishIcon = new Label("🇹🇷");
+        FontIcon turkishIcon = IconHelper.custom("fas-flag", 18, "#EF4444");
         turkishIcon.getStyleClass().add("settings-option-icon");
         Label turkishText = new Label("Türkçe");
         turkishText.getStyleClass().add("settings-option-text");
@@ -2187,7 +2187,7 @@ public class MainController {
                     courseLabel.setWrapText(true);
                     courseLabel.setMaxWidth(Double.MAX_VALUE);
 
-                    Label roomLabel = new Label("📍 " + exam.getClassroom().getName());
+                    Label roomLabel = new Label(exam.getClassroom().getName());
                     roomLabel.getStyleClass().add("exam-card-detail");
                     roomLabel.setStyle("-fx-font-size: 10px;");
                     roomLabel.setWrapText(true);
@@ -2626,7 +2626,7 @@ public class MainController {
         }
         timeCombo.setValue(exam.getSlot().getStartTime().format(timeFmt));
 
-        Label endLabel = new Label("→ " + exam.getSlot().getEndTime().format(timeFmt));
+        Label endLabel = new Label(exam.getSlot().getEndTime().format(timeFmt));
         endLabel.getStyleClass().addAll("label", "text-secondary");
         endLabel.setStyle("-fx-font-weight: bold;");
 
@@ -2634,7 +2634,7 @@ public class MainController {
             if (newVal != null) {
                 LocalTime newStart = LocalTime.parse(newVal, timeFmt);
                 LocalTime newEnd = newStart.plusMinutes(exam.getCourse().getExamDurationMinutes());
-                endLabel.setText("→ " + newEnd.format(timeFmt));
+                endLabel.setText(newEnd.format(timeFmt));
             }
         });
 
@@ -2903,7 +2903,7 @@ public class MainController {
             HBox.setHgrow(courseInfo, javafx.scene.layout.Priority.ALWAYS);
 
             // Room info
-            Label roomLabel = new Label("📍 " + exam.getClassroom().getName());
+            Label roomLabel = new Label(exam.getClassroom().getName());
             roomLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 11px;");
 
             examCard.getChildren().addAll(timeInfo, separator, courseInfo, roomLabel);
@@ -2962,7 +2962,7 @@ public class MainController {
         VBox header = new VBox(5);
         header.getStyleClass().add("modal-header");
 
-        Label title = new Label("✏️ Edit Exam: " + exam.getCourse().getName());
+        Label title = new Label("Edit Exam: " + exam.getCourse().getName());
         title.getStyleClass().add("section-title");
         title.setStyle("-fx-font-size: 18px;");
 
@@ -2984,8 +2984,8 @@ public class MainController {
         validationBox.setVisible(false);
         validationBox.setManaged(false);
 
-        Label validationIcon = new Label("✓");
-        validationIcon.setStyle("-fx-font-size: 16px;");
+        FontIcon validationIcon = IconHelper.check();
+        validationIcon.setIconSize(16);
         Label validationLabel = new Label("");
         validationLabel.setWrapText(true);
         validationLabel.setStyle("-fx-font-size: 13px;");
@@ -2993,7 +2993,7 @@ public class MainController {
 
         // Date Picker
         VBox dateSection = new VBox(5);
-        Label dateLabel = new Label("📅 Exam Date");
+        Label dateLabel = new Label("Exam Date");
         dateLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
         javafx.scene.control.DatePicker datePicker = new javafx.scene.control.DatePicker(exam.getSlot().getDate());
         datePicker.setMaxWidth(Double.MAX_VALUE);
@@ -3002,7 +3002,7 @@ public class MainController {
 
         // Time Selection
         VBox timeSection = new VBox(5);
-        Label timeLabel = new Label("🕒 Time Slot");
+        Label timeLabel = new Label("Time Slot");
         timeLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
 
         HBox timeBox = new HBox(10);
@@ -3044,7 +3044,7 @@ public class MainController {
 
         // Classroom Selection
         VBox classroomSection = new VBox(5);
-        Label classroomLabel = new Label("🏫 Classroom");
+        Label classroomLabel = new Label("Classroom");
         classroomLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #374151;");
 
         javafx.scene.control.ComboBox<Classroom> classroomCombo = new javafx.scene.control.ComboBox<>();
@@ -3144,7 +3144,7 @@ public class MainController {
         VBox currentInfoSection = new VBox(8);
         currentInfoSection
                 .setStyle("-fx-background-color: " + dmBgTertiary() + "; -fx-padding: 12; -fx-background-radius: 8;");
-        Label currentInfoTitle = new Label("📋 Current Assignment");
+        Label currentInfoTitle = new Label("Current Assignment");
         currentInfoTitle
                 .setStyle("-fx-font-weight: bold; -fx-text-fill: " + dmTextTertiary() + "; -fx-font-size: 13px;");
 
@@ -3165,8 +3165,8 @@ public class MainController {
         studentsSection.setStyle(
                 "-fx-padding: 8 12; -fx-background-color: #EEF2FF; -fx-background-radius: 6; -fx-cursor: hand;");
 
-        Label studentsIcon = new Label("👥");
-        studentsIcon.setStyle("-fx-font-size: 13px;");
+        FontIcon studentsIcon = IconHelper.attendance();
+        studentsIcon.setIconSize(14);
 
         Label studentsLabel = new Label("Enrolled Students (" + students.size() + ")");
         studentsLabel.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #4F46E5;");
@@ -3174,8 +3174,7 @@ public class MainController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
-        Label arrowIcon = new Label("›");
-        arrowIcon.setStyle("-fx-font-size: 14px; -fx-text-fill: #4F46E5; -fx-font-weight: bold;");
+        FontIcon arrowIcon = IconHelper.chevronRight();
 
         studentsSection.getChildren().addAll(studentsIcon, studentsLabel, spacer, arrowIcon);
 
@@ -3328,8 +3327,9 @@ public class MainController {
         header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         header.setStyle("-fx-padding: 20; -fx-background-color: linear-gradient(to right, #6366F1, #8B5CF6);");
 
-        Label titleIcon = new Label("📜");
-        titleIcon.setStyle("-fx-font-size: 24px;");
+        FontIcon titleIcon = IconHelper.history();
+        titleIcon.setIconSize(22);
+        titleIcon.setStyle("-fx-icon-color: white;");
 
         VBox titleBox = new VBox(2);
         Label title = new Label("Edit History");
@@ -3341,7 +3341,8 @@ public class MainController {
         Region headerSpacer = new Region();
         HBox.setHgrow(headerSpacer, javafx.scene.layout.Priority.ALWAYS);
 
-        Button clearHistoryBtn = new Button("🗑 Clear History");
+        Button clearHistoryBtn = new Button("Clear History");
+        clearHistoryBtn.setGraphic(IconHelper.delete());
         clearHistoryBtn.setStyle(
                 "-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-background-radius: 6; -fx-padding: 8 15; -fx-cursor: hand;");
         clearHistoryBtn.setOnAction(e -> {
@@ -3367,8 +3368,8 @@ public class MainController {
             emptyState.setAlignment(javafx.geometry.Pos.CENTER);
             emptyState.setStyle("-fx-padding: 50;");
 
-            Label emptyIcon = new Label("📝");
-            emptyIcon.setStyle("-fx-font-size: 48px;");
+            FontIcon emptyIcon = IconHelper.note();
+            emptyIcon.setIconSize(48);
 
             Label emptyText = new Label("No edits yet");
             emptyText.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + dmTextSecondary() + ";");
@@ -3400,13 +3401,18 @@ public class MainController {
                 Region entrySpacer = new Region();
                 HBox.setHgrow(entrySpacer, javafx.scene.layout.Priority.ALWAYS);
 
-                Label timeLabel = new Label("🕒 " + entry.getTimestamp());
+                HBox timeContainer = new HBox(5);
+                timeContainer.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                FontIcon clockIcon = IconHelper.clock();
+                clockIcon.setIconSize(11);
+                Label timeLabel = new Label(entry.getTimestamp());
                 timeLabel.setStyle("-fx-text-fill: #9CA3AF; -fx-font-size: 11px;");
+                timeContainer.getChildren().addAll(clockIcon, timeLabel);
 
                 entryHeader.getChildren().addAll(courseLabel, nameLabel, entrySpacer, timeLabel);
 
                 // Change description
-                Label changeLabel = new Label("📝 " + entry.getChangeDescription());
+                Label changeLabel = new Label(entry.getChangeDescription());
                 changeLabel.setStyle("-fx-text-fill: " + dmTextSecondary() + "; -fx-font-size: 12px;");
 
                 // Old -> New values
@@ -3422,8 +3428,8 @@ public class MainController {
                         "-fx-padding: 4 8; -fx-background-radius: 4;");
                 oldBox.getChildren().addAll(oldTitle, oldValue);
 
-                Label arrow = new Label("→");
-                arrow.setStyle("-fx-font-size: 16px; -fx-text-fill: #9CA3AF;");
+                FontIcon arrow = IconHelper.arrowRight();
+                arrow.setIconSize(14);
 
                 VBox newBox = new VBox(2);
                 Label newTitle = new Label(bundle.getString("history.label.after"));
