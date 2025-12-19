@@ -33,7 +33,11 @@ import javafx.collections.FXCollections;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Priority;
+import javafx.fxml.Initializable;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.collections.ObservableList;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
@@ -125,7 +129,7 @@ public class MainController {
     @FXML
     private VBox viewDashboard;
     @FXML
-    private Button btnUserManual;
+    private Button btnHelp;
     @FXML
     private javafx.scene.chart.BarChart<String, Number> chartExamsPerDay;
     @FXML
@@ -497,6 +501,9 @@ public class MainController {
 
         // Start always on launch (per user request)
         Platform.runLater(tourManager::start);
+
+        // Setup Keyboard Shortcuts
+        setupShortcuts();
     }
 
     private void setupCollapsibleSidebar() {
@@ -999,7 +1006,7 @@ public class MainController {
             sidebar.setVisible(true);
             sidebar.setManaged(true);
         }
-        setActive(btnUserManual);
+        // setActive(btnUserManual); // Button removed
     }
 
     private void setActive(Button btn) {
@@ -1523,8 +1530,9 @@ public class MainController {
             btnTimetable.setText(bundle.getString("sidebar.timetable"));
         if (btnStudentSearch != null)
             btnStudentSearch.setText(bundle.getString("sidebar.studentSearch"));
-        if (btnUserManual != null)
-            btnUserManual.setText(bundle.getString("sidebar.userManual"));
+        // if (btnUserManual != null)
+        // btnUserManual.setText(bundle.getString("sidebar.userManual")); // Button
+        // removed
         if (btnStudentPortal != null)
             btnStudentPortal.setText(bundle.getString("sidebar.studentPortal"));
         if (btnSettings != null)
@@ -1841,6 +1849,160 @@ public class MainController {
     /**
      * Apply dark mode styling to a dialog's root container and scene
      */
+    @FXML
+    private void handleHelp() {
+        if (bundle == null)
+            loadLanguage("en");
+
+        Stage helpStage = new Stage();
+        helpStage.initModality(Modality.APPLICATION_MODAL);
+        helpStage.initStyle(StageStyle.TRANSPARENT);
+        helpStage.setTitle("Help");
+
+        VBox helpContent = new VBox(15);
+        helpContent.getStyleClass().add("settings-popup"); // Reuse similar style
+        helpContent.setStyle("-fx-min-width: 300px; -fx-max-width: 300px;");
+
+        // Title
+        Label titleLabel = new Label("Help & Support");
+        titleLabel.getStyleClass().add("settings-title");
+
+        // --- User Manual ---
+        HBox manualBtn = createHelpOption("fas-book-open", "User Manual", "#3B82F6");
+        manualBtn.setOnMouseClicked(e -> {
+            helpStage.close();
+            showUserManual();
+        });
+
+        // --- Restart Tour ---
+        HBox tourBtn = createHelpOption("fas-play-circle", "Restart Guided Tour", "#10B981");
+        tourBtn.setOnMouseClicked(e -> {
+            helpStage.close();
+            if (tourManager != null) {
+                tourManager.forceStart();
+            }
+        });
+
+        // --- Report Issue ---
+        HBox reportBtn = createHelpOption("fas-bug", "Report Issue", "#EF4444");
+        reportBtn.setOnMouseClicked(e -> {
+            // helpStage.close(); // Optional: keep open
+            try {
+                java.awt.Desktop.getDesktop()
+                        .browse(new java.net.URI("https://github.com/utkubilir/SE-302-PROJECT/issues"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        // --- About Section ---
+        javafx.scene.control.Separator sep = new javafx.scene.control.Separator();
+
+        VBox aboutBox = new VBox(5);
+        aboutBox.setAlignment(javafx.geometry.Pos.CENTER);
+        Label lblApp = new Label("Exam Timetable Planner");
+        lblApp.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: -fx-color-text;");
+        Label lblVer = new Label("Version 1.0.0");
+        lblVer.setStyle("-fx-font-size: 12px; -fx-text-fill: -fx-color-text-secondary;");
+        // Developers (Rich Hyperlinks)
+        javafx.scene.layout.FlowPane devFlow = new javafx.scene.layout.FlowPane();
+        devFlow.setAlignment(javafx.geometry.Pos.CENTER);
+        devFlow.setHgap(10);
+        devFlow.setVgap(5);
+        devFlow.setPrefWrapLength(280);
+
+        String[] devs = {
+                "Utku Bilir", "Doğan Mert İlhan", "Deniz Yıldırım",
+                "Furkan Galip", "Arda Barut", "Mert Barmanbek"
+        };
+
+        for (String dev : devs) {
+            javafx.scene.control.Hyperlink link = new javafx.scene.control.Hyperlink(dev);
+            link.setStyle(
+                    "-fx-font-size: 11px; -fx-text-fill: -fx-color-accent; -fx-border-color: transparent; -fx-padding: 0 2px;");
+            link.setOnAction(e -> {
+                try {
+                    java.awt.Desktop.getDesktop()
+                            .browse(new java.net.URI("https://github.com/utkubilir/SE-302-PROJECT"));
+                } catch (Exception ex) {
+                }
+            });
+            devFlow.getChildren().add(link);
+        }
+
+        // Tech Stack
+        HBox techStack = new HBox(15);
+        techStack.setAlignment(javafx.geometry.Pos.CENTER);
+        techStack.setPadding(new javafx.geometry.Insets(10, 0, 0, 0));
+
+        techStack.getChildren().add(createTechIcon("fab-java", "Java 21"));
+        techStack.getChildren().add(createTechIcon("fas-cube", "JavaFX"));
+        techStack.getChildren().add(createTechIcon("fas-database", "SQLite"));
+        techStack.getChildren().add(createTechIcon("fas-code-branch", "Maven"));
+
+        aboutBox.getChildren().addAll(lblApp, lblVer, devFlow, techStack);
+
+        // Close button
+        Button closeBtn = new Button("Close");
+        closeBtn.getStyleClass().add("secondary-button");
+        closeBtn.setMaxWidth(Double.MAX_VALUE);
+        closeBtn.setOnAction(e -> helpStage.close());
+
+        helpContent.getChildren().addAll(
+                titleLabel,
+                manualBtn, tourBtn, reportBtn,
+                sep, aboutBox,
+                closeBtn);
+
+        // Apply dark mode
+        if (isDarkMode) {
+            helpContent.getStyleClass().add("dark-mode");
+        }
+
+        Scene helpScene = new Scene(helpContent);
+        helpScene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        helpScene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+
+        helpStage.setScene(helpScene);
+        helpStage.showAndWait();
+    }
+
+    private HBox createHelpOption(String iconLiteral, String text, String colorHex) {
+        HBox btn = new HBox(12);
+        btn.getStyleClass().add("settings-option");
+        btn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        FontIcon icon = IconHelper.custom(iconLiteral, 18, colorHex);
+        icon.getStyleClass().add("settings-option-icon");
+
+        Label lbl = new Label(text);
+        lbl.getStyleClass().add("settings-option-text");
+
+        btn.getChildren().addAll(icon, lbl);
+        return btn;
+    }
+
+    private VBox createTechIcon(String iconLiteral, String text) {
+        VBox box = new VBox(5);
+        box.setAlignment(javafx.geometry.Pos.CENTER);
+
+        // Use a default color, but CSS will override if we add a class
+        FontIcon icon = new FontIcon(iconLiteral);
+        icon.setIconSize(24);
+        icon.getStyleClass().add("tech-icon");
+        // Fallback style if class not defined
+        icon.setStyle("-fx-fill: -fx-color-text-secondary;");
+
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-font-size: 10px; -fx-text-fill: -fx-color-text-secondary;");
+
+        box.getChildren().addAll(icon, lbl);
+        return box;
+    }
+
+    /**
+     * Apply dark mode styling to a dialog's root container and scene
+     */
     private void applyDarkModeToDialog(javafx.scene.Parent root, Scene scene) {
         if (isDarkMode) {
             if (!root.getStyleClass().contains("dark-mode")) {
@@ -1848,8 +2010,105 @@ public class MainController {
             }
         }
         if (scene != null) {
-            scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+            if (isDarkMode) {
+                scene.setFill(javafx.scene.paint.Color.rgb(30, 41, 59));
+            } else {
+                scene.setFill(javafx.scene.paint.Color.WHITE);
+            }
         }
+    }
+
+    private void setupShortcuts() {
+        if (rootContainer == null || rootContainer.getScene() == null) {
+            // Scene might not be ready in initialize, use listeners or runLater logic if
+            // needed
+            // But since initialize is called before scene is set, we might need to add
+            // accelerator to the Scene closer to when it's shown.
+            // Better approach: We can bind to scene property or do it in MainApp.
+            // However, we can add global accelerators to button mnemonics or
+            // KeyCodeCombinations on a root pane event filter.
+
+            // Wait for scene to be available
+            Platform.runLater(() -> {
+                Scene scene = rootContainer.getScene();
+                if (scene != null) {
+                    scene.getAccelerators().put(
+                            new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.F1),
+                            this::handleHelp);
+                    scene.getAccelerators().put(
+                            new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.O,
+                                    javafx.scene.input.KeyCombination.SHORTCUT_DOWN),
+                            this::showDataImport);
+                    scene.getAccelerators().put(
+                            new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.G,
+                                    javafx.scene.input.KeyCombination.SHORTCUT_DOWN),
+                            this::showTimetable);
+                    scene.getAccelerators().put(
+                            new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.K,
+                                    javafx.scene.input.KeyCombination.SHORTCUT_DOWN),
+                            this::showShortcuts);
+
+                    // Exit
+                    scene.getAccelerators().put(
+                            new javafx.scene.input.KeyCodeCombination(javafx.scene.input.KeyCode.Q,
+                                    javafx.scene.input.KeyCombination.SHORTCUT_DOWN),
+                            this::handleExit);
+                }
+            });
+        }
+    }
+
+    private void showShortcuts() {
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initStyle(StageStyle.TRANSPARENT);
+        stage.setTitle("Keyboard Shortcuts");
+
+        VBox root = new VBox(15);
+        root.getStyleClass().add("settings-popup");
+        root.setPadding(new Insets(20));
+        root.setStyle("-fx-min-width: 350px;");
+
+        Label title = new Label("Keyboard Shortcuts");
+        title.getStyleClass().add("settings-title");
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(20);
+        grid.setVgap(10);
+
+        addShortcutRow(grid, 0, "F1", "Open Help");
+        addShortcutRow(grid, 1, "Ctrl/Cmd + K", "Show Shortcuts");
+        addShortcutRow(grid, 2, "Ctrl/Cmd + O", "Go to Data Import");
+        addShortcutRow(grid, 3, "Ctrl/Cmd + G", "Go to Timetable");
+        addShortcutRow(grid, 4, "Ctrl/Cmd + Q", "Exit Application");
+
+        Button closeBtn = new Button("Close");
+        closeBtn.getStyleClass().add("secondary-button");
+        closeBtn.setMaxWidth(Double.MAX_VALUE);
+        closeBtn.setOnAction(e -> stage.close());
+
+        root.getChildren().addAll(title, grid, closeBtn);
+
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+
+        applyDarkModeToDialog(root, scene);
+
+        stage.setScene(scene);
+        stage.showAndWait();
+    }
+
+    private void addShortcutRow(javafx.scene.layout.GridPane grid, int row, String keys, String desc) {
+        Label lblKeys = new Label(keys);
+        lblKeys.setStyle(
+                "-fx-font-weight: bold; -fx-padding: 4px 8px; -fx-background-color: -fx-color-surface-mixed; -fx-background-radius: 4px; -fx-text-fill: -fx-color-text;");
+
+        Label lblDesc = new Label(desc);
+        lblDesc.setStyle("-fx-text-fill: -fx-color-text;");
+
+        grid.add(lblKeys, 0, row);
+        grid.add(lblDesc, 1, row);
     }
 
     /**

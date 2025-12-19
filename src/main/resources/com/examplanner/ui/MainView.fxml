@@ -62,9 +62,6 @@
                         <Button fx:id="btnStudentSearch" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSidebarStudentSearch" styleClass="nav-button" text="Student Search">
                            <graphic><FontIcon iconLiteral="fas-user-graduate" iconSize="16" styleClass="nav-icon"/></graphic>
                         </Button>
-                        <Button fx:id="btnUserManual" maxWidth="Infinity" mnemonicParsing="false" onAction="#showUserManual" styleClass="nav-button" text="User Manual">
-                           <graphic><FontIcon iconLiteral="fas-book-open" iconSize="16" styleClass="nav-icon"/></graphic>
-                        </Button>
                         <Separator styleClass="nav-separator"/>
                         <Button fx:id="btnStudentPortal" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleStudentPortal" styleClass="nav-button" text="Student Portal">
                            <graphic><FontIcon iconLiteral="fas-door-open" iconSize="16" styleClass="nav-icon"/></graphic>
@@ -87,6 +84,9 @@
                   </VBox>
                </HBox>
                
+               <Button fx:id="btnHelp" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleHelp" styleClass="nav-button" text="Help">
+                  <graphic><FontIcon iconLiteral="fas-question-circle" iconSize="16" styleClass="nav-icon"/></graphic>
+               </Button>
                <Button fx:id="btnSettings" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSettings" styleClass="nav-button" text="Settings">
                   <graphic><FontIcon iconLiteral="fas-cog" iconSize="16" styleClass="nav-icon"/></graphic>
                </Button>
