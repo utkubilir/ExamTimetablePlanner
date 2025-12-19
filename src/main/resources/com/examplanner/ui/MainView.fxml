@@ -63,9 +63,6 @@
                            <graphic><FontIcon iconLiteral="fas-user-graduate" iconSize="16" styleClass="nav-icon"/></graphic>
                         </Button>
                         <Separator styleClass="nav-separator"/>
-                        <Button fx:id="btnStudentPortal" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleStudentPortal" styleClass="nav-button" text="Student Portal">
-                           <graphic><FontIcon iconLiteral="fas-door-open" iconSize="16" styleClass="nav-icon"/></graphic>
-                        </Button>
                      </VBox>
                   </StackPane>
                </content>
@@ -157,8 +154,11 @@
 
                <HBox spacing="10">
                   <Button fx:id="btnDeleteData" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleDeleteData" styleClass="danger-button" text="Delete All Data" />
-                  <Button fx:id="btnGenerateDataImport" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable" />
-               </HBox>
+                  <Button fx:id="btnGenerateDataImport" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable">
+                     <graphic>
+                        <FontIcon iconLiteral="fas-magic" iconSize="14" />
+                     </graphic>
+                  </Button>               </HBox>
             </children>
             <padding>
                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
@@ -169,11 +169,11 @@
          <VBox fx:id="viewTimetable" spacing="20.0" visible="false">
             <children>
                <HBox alignment="CENTER_LEFT" spacing="20">
-                   <Button onAction="#showDataImport" styleClass="secondary-button" text="Back">
+                   <Button fx:id="btnBack" onAction="#showDataImport" styleClass="secondary-button" text="Back">
                       <graphic><FontIcon iconLiteral="fas-arrow-left" iconSize="14" styleClass="btn-icon"/></graphic>
                    </Button>
                   <VBox>
-                     <Label styleClass="section-title" text="Exam Schedule" />
+                     <Label fx:id="lblTimetableTitle" styleClass="section-title" text="Exam Schedule" />
                      <Label fx:id="lblTimetableSubtitle" styleClass="section-subtitle" text="December 2025 - Final Exams" />
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
@@ -182,20 +182,19 @@
 
                   <!-- Advanced Search Bar -->
                   <HBox alignment="CENTER_LEFT" spacing="0" styleClass="modern-search-bar" prefWidth="350.0">
-                     <children>
-                        <FontIcon iconLiteral="fas-search" iconSize="14" style="-fx-icon-color: #9CA3AF; -fx-padding: 0 0 0 12;"/>
+                     <padding><Insets left="12" right="8"/></padding>
+                     <FontIcon iconLiteral="fas-search" iconSize="16" iconColor="#9CA3AF" />
 
-                        <TextField fx:id="txtCourseSearch" promptText="Sınav veya ders ara..."
-                                   HBox.hgrow="ALWAYS" styleClass="modern-search-field" />
+                     <TextField fx:id="txtCourseSearch" promptText="%search.prompt.course"
+                                styleClass="modern-search-field" HBox.hgrow="ALWAYS" />
 
-                        <Button fx:id="btnSearchFilter" onAction="#handleFilter" styleClass="modern-filter-btn" mnemonicParsing="false">
-                           <graphic>
-                              <FontIcon iconLiteral="fas-filter" iconSize="14" style="-fx-icon-color: #4b5563;"/>
-                           </graphic>
-                        </Button>
-                     </children>
+                     <Button fx:id="btnSearchFilter" onAction="#handleFilter" styleClass="modern-filter-btn">
+                        <graphic>
+                           <FontIcon iconLiteral="fas-filter" iconSize="16" iconColor="#4b5563" />
+                        </graphic>
+                     </Button>
                   </HBox>
-                  
+
                   <Button fx:id="btnHistory" mnemonicParsing="false" onAction="#showEditHistory" styleClass="secondary-button" text="History">
                      <graphic><FontIcon iconLiteral="fas-history" iconSize="14" styleClass="btn-icon"/></graphic>
                   </Button>
@@ -205,7 +204,7 @@
                   <Button fx:id="btnConflicts" mnemonicParsing="false" onAction="#handleConflicts" styleClass="secondary-button" text="Conflicts">
                      <graphic><FontIcon iconLiteral="fas-exclamation-triangle" iconSize="14" styleClass="btn-icon-warning"/></graphic>
                   </Button>
-                  <MenuButton styleClass="secondary-button" text="Export">
+                  <MenuButton fx:id="btnExport" styleClass="secondary-button" text="Export">
                      <graphic><FontIcon iconLiteral="fas-download" iconSize="14" styleClass="btn-icon"/></graphic>
                      <items>
                         <MenuItem mnemonicParsing="false" onAction="#handleExportCsv" text="Export to CSV">
@@ -216,8 +215,10 @@
                         </MenuItem>
                      </items>
                   </MenuButton>
-                  <Button fx:id="btnGenerateTimetable" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate">
-                     <graphic><FontIcon iconLiteral="fas-magic" iconSize="14" style="-fx-icon-color: white;"/></graphic>
+                  <Button fx:id="btnGenerateTimetable" maxWidth="Infinity" HBox.hgrow="ALWAYS" mnemonicParsing="false" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Generate Timetable">
+                     <graphic>
+                        <FontIcon iconLiteral="fas-magic" iconSize="14" />
+                     </graphic>
                   </Button>
                </HBox>
                

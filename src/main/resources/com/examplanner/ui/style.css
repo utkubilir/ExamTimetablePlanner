@@ -1664,25 +1664,46 @@
     -fx-border-color: #374151;
 }
 
+/* Arama çubuğunun dış çerçevesi */
 .modern-search-bar {
     -fx-background-color: white;
-    -fx-border-color: #E5E7EB;
-    -fx-border-radius: 20;
-    /* Tam oval görünüm */
-    -fx-background-radius: 20;
-    -fx-padding: 2;
+    -fx-background-radius: 25px;
+    -fx-border-color: #8B5CF6;       /* Bizim mor renk */
+    -fx-border-width: 1.5px;         /* Çizgiyi biraz daha belirgin yaptık */
+    -fx-border-radius: 25px;
+    -fx-max-width: 400px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 15;
+}
+
+
+.modern-search-bar:focused-within {
+    -fx-border-color: #7C3AED;
+    -fx-effect: dropshadow(three-pass-box, rgba(139, 92, 246, 0.3), 8, 0, 0, 0);
 }
 
 .modern-search-field {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-focus-color: transparent;
+    -fx-padding: 8 5;
+    -fx-text-fill: #1F2937;
+    -fx-prompt-text-fill: #9CA3AF;
 }
 
 .modern-filter-btn {
     -fx-background-color: transparent;
     -fx-cursor: hand;
 }
+
+.dark-mode .modern-search-bar {
+    -fx-background-color: #374151;
+    -fx-border-color: #A78BFA;
+}
+
+.dark-mode .modern-search-field {
+    -fx-text-fill: white;
+}
+
 /* Active Navigation State & Floating Indicator */
 .nav-button.active {
     -fx-background-color: derive(-fx-color-primary, 90%); /* Light background */

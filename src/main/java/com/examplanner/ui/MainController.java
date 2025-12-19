@@ -26,6 +26,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableCell;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -85,8 +89,6 @@ public class MainController {
     @FXML
     private Button btnStudentSearch;
     @FXML
-    private Button btnStudentPortal;
-    @FXML
     private Button btnSettings;
 
     @FXML
@@ -97,6 +99,28 @@ public class MainController {
     private Button btnDeleteData;
     @FXML
     private Button btnValidateAll;
+
+    @FXML
+    private Button btnHistory;       // Bunu ekle
+    @FXML
+    private Button btnConflicts;     // Bunu ekle
+    @FXML
+    private MenuButton btnExport;    // Bunu ekle (MenuButton olarak!)
+    @FXML
+    private Button btnBack;          // Timetable ekranındaki geri butonu için
+    @FXML
+    private Label lblTimetableTitle; // İşte eksik olan tanım bu!
+
+    @FXML
+    private Label lblAppTitle;
+    @FXML
+    private Label lblTimetableSubtitle;
+    @FXML
+    private Label lblTimetableTip;
+    @FXML
+    private Label lblDashboardSubtitle;
+    @FXML
+    private VBox viewUserManual;
 
     @FXML
     private VBox viewDataImport;
@@ -263,17 +287,6 @@ public class MainController {
         }
     }
 
-    @FXML
-    private Label lblAppTitle;
-    @FXML
-    private Label lblTimetableSubtitle;
-    @FXML
-    private Label lblTimetableTip;
-    @FXML
-    private Label lblDashboardSubtitle;
-    @FXML
-    private VBox viewUserManual;
-
     // Manual helper methods
     private void buildUserManual() {
         viewUserManual.getChildren().clear();
@@ -399,19 +412,18 @@ public class MainController {
     public void initialize() {
         // Load preferences
         Preferences prefs = Preferences.userNodeForPackage(getClass());
-        boolean dark = prefs.getBoolean("theme_preference", false);
-        isDarkMode = dark;
-        if (isDarkMode) {
-            applyTheme();
-        }
+        isDarkMode = prefs.getBoolean("theme_preference", false);
+        String lang = prefs.get("language_preference", "en");
+        loadLanguage(lang); // Load default language (English)
+
+        Platform.runLater(() -> {
+            if (isDarkMode) {
+                applyTheme();
+            }
+        });
 
         // Setup collapsible sidebar
         setupCollapsibleSidebar();
-
-        // Load language preference (default English)
-        String lang = prefs.get("language_preference", "en");
-        loadLanguage(lang); // Load default language (English)
-        loadLanguage("en");
         constraintChecker.setMinGapMinutes(180); // Default to requirements
         showDataImport();
 
@@ -1465,7 +1477,7 @@ public class MainController {
     }
 
     private void setLoadingState(boolean loading) {
-        String text = loading ? "Generating..." : "Generate Timetable";
+        String text = loading ? bundle.getString("loading.generating") : bundle.getString("dataImport.generateTimetable");
 
         if (btnGenerateDataImport != null) {
             btnGenerateDataImport.setDisable(loading);
@@ -1533,8 +1545,6 @@ public class MainController {
         // if (btnUserManual != null)
         // btnUserManual.setText(bundle.getString("sidebar.userManual")); // Button
         // removed
-        if (btnStudentPortal != null)
-            btnStudentPortal.setText(bundle.getString("sidebar.studentPortal"));
         if (btnSettings != null)
             btnSettings.setText(bundle.getString("sidebar.settings"));
         if (btnExit != null)
@@ -1563,8 +1573,28 @@ public class MainController {
             btnDeleteData.setText(bundle.getString("dataImport.deleteData"));
 
         // Timetable View
+        if (lblTimetableTitle != null)
+            lblTimetableTitle.setText(bundle.getString("timetable.title"));
         if (btnGenerateTimetable != null)
             btnGenerateTimetable.setText(bundle.getString("dataImport.generateTimetable"));
+        if (lblTimetableTitle != null)
+            lblTimetableTitle.setText(bundle.getString("timetable.title"));
+        if (lblTimetableSubtitle != null)
+            lblTimetableSubtitle.setText(bundle.getString("timetable.subtitle"));
+        if (lblTimetableTip != null)
+            lblTimetableTip.setText(bundle.getString("timetable.tip"));
+
+        // Butonlar (FXML'de fx:id verdiysen buralar çalışır)
+        if (btnHistory != null)
+            btnHistory.setText(bundle.getString("timetable.editHistory"));
+        if (btnValidateAll != null)
+            btnValidateAll.setText(bundle.getString("info.validationPassed"));
+        if (btnConflicts != null)
+            btnConflicts.setText(bundle.getString("info.noConflicts"));
+
+        // Eğer o MenuButton'a fx:id="btnExport" verdiysen:
+        if (btnExport != null)
+            btnExport.setText(bundle.getString("action.export"));
 
         // Timetable Columns
         if (colExamId != null)
@@ -2201,41 +2231,38 @@ public class MainController {
         javafx.scene.control.ContextMenu searchMenu = new javafx.scene.control.ContextMenu();
 
         // 1. DERS FİLTRESİ
-        javafx.scene.control.MenuItem courseItem = new javafx.scene.control.MenuItem(
-                bundle.getString("dataImport.courses"));
+        javafx.scene.control.MenuItem courseItem = new javafx.scene.control.MenuItem(bundle.getString("dataImport.courses"));
+        courseItem.setGraphic(IconHelper.courses()); // EKSİK OLAN SATIR BU!
         courseItem.setOnAction(e -> {
             cmbSearchType.setValue(bundle.getString("dataImport.courses"));
-            // Filtreyi anında çalıştırıyoruz
             applyAdvancedFilter(txtCourseSearch.getText());
         });
 
         // 2. TARİH FİLTRESİ
-        javafx.scene.control.MenuItem dateItem = new javafx.scene.control.MenuItem(
-                bundle.getString("examDetails.date"));
+        javafx.scene.control.MenuItem dateItem = new javafx.scene.control.MenuItem(bundle.getString("examDetails.date"));
+        dateItem.setGraphic(IconHelper.timetable()); // EKSİK OLAN SATIR BU!
         dateItem.setOnAction(e -> {
             cmbSearchType.setValue(bundle.getString("examDetails.date"));
             applyAdvancedFilter(txtCourseSearch.getText());
         });
 
         // 3. SAAT FİLTRESİ
-        javafx.scene.control.MenuItem timeItem = new javafx.scene.control.MenuItem(
-                bundle.getString("examDetails.time"));
+        javafx.scene.control.MenuItem timeItem = new javafx.scene.control.MenuItem(bundle.getString("examDetails.time"));
+        timeItem.setGraphic(IconHelper.clock()); // EKSİK OLAN SATIR BU!
         timeItem.setOnAction(e -> {
             cmbSearchType.setValue(bundle.getString("examDetails.time"));
             applyAdvancedFilter(txtCourseSearch.getText());
         });
 
         // 4. SINIF FİLTRESİ
-        javafx.scene.control.MenuItem roomItem = new javafx.scene.control.MenuItem(
-                bundle.getString("dataImport.classrooms"));
+        javafx.scene.control.MenuItem roomItem = new javafx.scene.control.MenuItem(bundle.getString("dataImport.classrooms"));
+        roomItem.setGraphic(IconHelper.classrooms()); // EKSİK OLAN SATIR BU!
         roomItem.setOnAction(e -> {
             cmbSearchType.setValue(bundle.getString("dataImport.classrooms"));
             applyAdvancedFilter(txtCourseSearch.getText());
         });
 
         searchMenu.getItems().addAll(courseItem, dateItem, timeItem, roomItem);
-
-        // Menüyü huni butonunun (btnSearchFilter) altında göster
         searchMenu.show(btnSearchFilter, javafx.geometry.Side.BOTTOM, 0, 5);
     }
 
@@ -2530,47 +2557,6 @@ public class MainController {
 
             showScrollableDialog("Validation Results", reportLines);
         }
-    }
-
-    @FXML
-    private void handleStudentPortal() {
-        setActive(btnStudentPortal);
-
-        if (students.isEmpty()) {
-            showError(bundle.getString("studentPortal.noDataTitle"), bundle.getString("studentPortal.loadFirst"));
-            return;
-        }
-
-        // Simulating a "Login"
-        javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog();
-        dialog.setTitle(bundle.getString("studentPortal.title"));
-        dialog.setHeaderText(bundle.getString("studentPortal.welcomeHeader"));
-        dialog.setContentText(bundle.getString("studentPortal.enterIdPrompt"));
-        applyDarkModeToDialogPane(dialog);
-
-        dialog.showAndWait().ifPresent(id -> {
-            Student found = students.stream()
-                    .filter(s -> s.getId().equalsIgnoreCase(id.trim()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (found != null) {
-                if (currentTimetable != null) {
-                    List<Exam> exams = currentTimetable.getExamsForStudent(found);
-                    showFilteredExams(
-                            MessageFormat.format(bundle.getString("studentPortal.welcomeUser"), found.getName()),
-                            exams);
-                } else {
-                    // Even if no timetable, show we found the student but no exams yet
-                    showInformation(
-                            MessageFormat.format(bundle.getString("studentPortal.welcomeUser"), found.getName()),
-                            bundle.getString("studentPortal.noTimetable"));
-                }
-            } else {
-                showError(bundle.getString("studentPortal.loginFailed"),
-                        MessageFormat.format(bundle.getString("studentPortal.idNotFound"), id));
-            }
-        });
     }
 
     private void showWarning(String title, String content) {
