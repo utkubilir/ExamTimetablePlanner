@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class SchedulerService {
 
     private ConstraintChecker constraintChecker;
+    private Random random; // For generating varied schedules each time
 
     // Pre-computed data structures for fast lookups
     private Map<String, List<Student>> courseStudentsMap;
@@ -31,6 +33,7 @@ public class SchedulerService {
 
     public SchedulerService() {
         this.constraintChecker = new ConstraintChecker();
+        this.random = new Random(); // New random seed each time for varied schedules
     }
 
     /** Generate optimized timetable with minimum days. */
@@ -164,38 +167,37 @@ public class SchedulerService {
         // Build lookup maps
         buildLookupMaps(enrollments);
 
-        // Sort courses and classrooms
-        List<Course> sortedCourses = applySortingHeuristic(courses);
+        // Sort courses DETERMINISTICALLY first to find true optimal
+        // This ensures optimal day count is consistent across runs
+        List<Course> deterministicCourses = applySortingHeuristicDeterministic(courses);
         List<Classroom> sortedClassrooms = classrooms.stream()
                 .sorted(Comparator.comparingInt(Classroom::getCapacity))
                 .collect(Collectors.toList());
         List<LocalTime> timeSlots = generateTimeSlots();
 
-        // Find optimal (minimum) days first
+        // Find optimal (minimum) days using DETERMINISTIC sorting
         int minDaysNeeded = calculateMinDaysNeeded(courses, classrooms);
         int low = Math.max(1, minDaysNeeded);
         int high = maxDays;
         int optimalDays = -1;
-        ExamTimetable optimalSchedule = null;
 
-        System.out.println("Finding optimal schedule...");
+        System.out.println("Finding optimal schedule (deterministic)...");
 
-        // Binary search for optimal
+        // Binary search for optimal using deterministic sorting
         while (low <= high) {
             int mid = low + (high - low) / 2;
-            ExamTimetable result = attemptSchedule(mid, sortedCourses, sortedClassrooms,
+            ExamTimetable result = attemptScheduleDeterministic(mid, deterministicCourses, sortedClassrooms,
                     timeSlots, enrollments, startDate);
 
             if (result != null) {
                 optimalDays = mid;
-                optimalSchedule = result;
                 high = mid - 1;
             } else {
                 low = mid + 1;
             }
         }
 
-        if (optimalSchedule == null) {
+        if (optimalDays == -1) {
             throw new RuntimeException(
                     "Could not find a valid schedule within " + maxDays + " days. " +
                             "Constraints may be too tight. Try extending the date range.");
@@ -203,11 +205,24 @@ public class SchedulerService {
 
         System.out.println("\n✓ OPTIMAL: " + optimalDays + " day(s)");
 
+        // Now generate actual schedule with RANDOMIZATION for variety
+        System.out.println("\nGenerating varied schedule for optimal days...");
+        List<Course> randomizedCourses = applySortingHeuristic(courses);
+        ExamTimetable optimalSchedule = attemptSchedule(optimalDays, randomizedCourses, sortedClassrooms,
+                timeSlots, enrollments, startDate);
+
+        // Fallback to deterministic if randomized fails (shouldn't happen but safety)
+        if (optimalSchedule == null) {
+            optimalSchedule = attemptScheduleDeterministic(optimalDays, deterministicCourses, sortedClassrooms,
+                    timeSlots, enrollments, startDate);
+        }
+
         // Create options container
         ScheduleOptions options = new ScheduleOptions(optimalDays, optimalSchedule);
         options.addOption(optimalDays, optimalSchedule);
 
         // Generate alternative schedules (optimal + 1, +2, +3, +4 days if within range)
+        // For alternatives, spread exams evenly across all days instead of compressing
         System.out.println("\nGenerating alternative schedules...");
         for (int extraDays = 1; extraDays <= 4; extraDays++) {
             int altDays = optimalDays + extraDays;
@@ -215,7 +230,8 @@ public class SchedulerService {
                 break; // Don't exceed user's date range
             }
 
-            ExamTimetable altSchedule = attemptSchedule(altDays, sortedCourses, sortedClassrooms,
+            // Use spreadEvenly=true for alternatives so they actually use all days
+            ExamTimetable altSchedule = attemptScheduleSpread(altDays, randomizedCourses, sortedClassrooms,
                     timeSlots, enrollments, startDate);
 
             if (altSchedule != null) {
@@ -276,14 +292,44 @@ public class SchedulerService {
         System.out.println("  Unique students: " + studentCoursesMap.size());
     }
 
-    /** Sort courses by difficulty (students desc, duration desc). */
+    /**
+     * Sort courses by difficulty (students desc, duration desc) with randomization.
+     * Courses are grouped into tiers by enrollment count, then shuffled within each
+     * tier
+     * to produce varied but valid schedules on each run.
+     */
     private List<Course> applySortingHeuristic(List<Course> courses) {
         List<Course> sorted = new ArrayList<>(courses);
+
+        // First, group courses by enrollment count tiers for randomization
+        // Shuffle within the list while maintaining general ordering
+        java.util.Collections.shuffle(sorted, random);
+
+        // Then apply stable sort by enrollment count and duration
+        // This maintains random order within same-priority courses
         sorted.sort(Comparator
                 .comparingInt((Course c) -> enrollmentCounts.getOrDefault(c.getCode(), 0))
                 .reversed()
                 .thenComparingInt(Course::getExamDurationMinutes)
                 .reversed());
+
+        return sorted;
+    }
+
+    /**
+     * Sort courses by difficulty (students desc, duration desc) DETERMINISTICALLY.
+     * Used for finding consistent optimal day count.
+     */
+    private List<Course> applySortingHeuristicDeterministic(List<Course> courses) {
+        List<Course> sorted = new ArrayList<>(courses);
+        // Sort by enrollment count (desc), then by duration (desc), then by code (for
+        // consistency)
+        sorted.sort(Comparator
+                .comparingInt((Course c) -> enrollmentCounts.getOrDefault(c.getCode(), 0))
+                .reversed()
+                .thenComparingInt(Course::getExamDurationMinutes)
+                .reversed()
+                .thenComparing(Course::getCode)); // Tertiary sort for full determinism
         return sorted;
     }
 
@@ -316,7 +362,15 @@ public class SchedulerService {
                 .orElse(0);
         int minDaysForStudents = (int) Math.ceil((double) maxExamsForStudent / 2.0);
 
-        return Math.max(minDaysForCapacity, minDaysForStudents);
+        // 3. Time slot constraint: with 3-hour gaps, max ~3 exams per day per timeslot
+        // Each 2-hour exam needs 3 hours gap, so roughly 3 exams fit in 9:00-18:30
+        int slotsPerDay = 3; // Conservative estimate
+        int minDaysForSlots = (int) Math.ceil((double) courses.size() / (classrooms.size() * slotsPerDay));
+
+        int result = Math.max(Math.max(minDaysForCapacity, minDaysForStudents), minDaysForSlots);
+        System.out.println("  Minimum days estimate: " + result + " (capacity=" + minDaysForCapacity + ", students="
+                + minDaysForStudents + ", slots=" + minDaysForSlots + ")");
+        return result;
     }
 
     /** Try to schedule all exams within given days. */
@@ -350,6 +404,208 @@ public class SchedulerService {
 
         System.out.println("  Failed after " + elapsed + "ms");
         return null;
+    }
+
+    /**
+     * Try to schedule all exams DETERMINISTICALLY (no randomization).
+     * Used for finding consistent optimal day count.
+     */
+    private ExamTimetable attemptScheduleDeterministic(int days, List<Course> sortedCourses,
+            List<Classroom> sortedClassrooms, List<LocalTime> timeSlots,
+            List<Enrollment> enrollments, LocalDate startDate) {
+
+        // Initialize schedule state
+        ScheduleState state = new ScheduleState(courseStudentsMap);
+
+        // Track classroom usage for better distribution
+        Map<String, Integer> classroomUsageCount = new HashMap<>();
+        for (Classroom c : sortedClassrooms) {
+            classroomUsageCount.put(c.getId(), 0);
+        }
+
+        // Shorter timeout - if it can't be scheduled quickly, it's likely impossible
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = 10000; // 10 seconds (was 60)
+
+        // Start backtracking WITHOUT randomization
+        boolean success = backtrackDeterministic(0, sortedCourses, state, sortedClassrooms,
+                timeSlots, startDate, days, startTime, timeoutMs, classroomUsageCount);
+
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        if (success) {
+            System.out
+                    .println("  [Deterministic] Scheduled " + state.getExams().size() + " exams in " + elapsed + "ms");
+            return new ExamTimetable(new ArrayList<>(state.getExams()), enrollments);
+        }
+
+        System.out.println("  [Deterministic] Failed after " + elapsed + "ms");
+        return null;
+    }
+
+    /**
+     * Try to schedule all exams with even spread across all days.
+     * This is used for alternative (non-optimal) schedules to ensure exams
+     * actually use all available days instead of being compressed.
+     */
+    private ExamTimetable attemptScheduleSpread(int days, List<Course> sortedCourses,
+            List<Classroom> sortedClassrooms, List<LocalTime> timeSlots,
+            List<Enrollment> enrollments, LocalDate startDate) {
+
+        // Initialize schedule state
+        ScheduleState state = new ScheduleState(courseStudentsMap);
+
+        // Track classroom usage for better distribution
+        Map<String, Integer> classroomUsageCount = new HashMap<>();
+        for (Classroom c : sortedClassrooms) {
+            classroomUsageCount.put(c.getId(), 0);
+        }
+
+        // Track exams per day for even distribution
+        Map<Integer, Integer> examsPerDay = new HashMap<>();
+        for (int i = 0; i < days; i++) {
+            examsPerDay.put(i, 0);
+        }
+
+        // Calculate target exams per day for even spread
+        int totalCourses = sortedCourses.size();
+        int targetExamsPerDay = (int) Math.ceil((double) totalCourses / days);
+
+        // Timeout configuration
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = 30000; // 30 seconds per attempt
+
+        // Start backtracking with spread strategy
+        boolean success = backtrackSpread(0, sortedCourses, state, sortedClassrooms,
+                timeSlots, startDate, days, startTime, timeoutMs, classroomUsageCount,
+                examsPerDay, targetExamsPerDay);
+
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        if (success) {
+            System.out.println("  Spread scheduled " + state.getExams().size() + " exams in " + elapsed + "ms");
+            return new ExamTimetable(new ArrayList<>(state.getExams()), enrollments);
+        }
+
+        System.out.println("  Spread failed after " + elapsed + "ms");
+        return null;
+    }
+
+    /**
+     * Recursive backtracking that spreads exams evenly across days.
+     * Prioritizes days with fewer exams to ensure even distribution.
+     */
+    private boolean backtrackSpread(int index, List<Course> courses, ScheduleState state,
+            List<Classroom> classrooms, List<LocalTime> timeSlots,
+            LocalDate startDate, int maxDays, long startTime, long timeoutMs,
+            Map<String, Integer> classroomUsageCount,
+            Map<Integer, Integer> examsPerDay, int targetExamsPerDay) {
+
+        // Check timeout
+        if (System.currentTimeMillis() - startTime > timeoutMs) {
+            return false;
+        }
+
+        // Base case: all courses scheduled
+        if (index == courses.size()) {
+            return true;
+        }
+
+        Course course = courses.get(index);
+        int studentCount = enrollmentCounts.getOrDefault(course.getCode(), 0);
+        List<Student> students = courseStudentsMap.getOrDefault(course.getCode(), List.of());
+
+        // Sort days by exam count (ascending) to spread evenly
+        List<Integer> dayOffsets = new ArrayList<>();
+        for (int i = 0; i < maxDays; i++) {
+            dayOffsets.add(i);
+        }
+        // Sort by exams already scheduled on that day (prefer emptier days)
+        dayOffsets.sort(Comparator.comparingInt(d -> examsPerDay.getOrDefault(d, 0)));
+
+        for (int dayOffset : dayOffsets) {
+            LocalDate date = startDate.plusDays(dayOffset);
+
+            // Skip if any student has max exams today
+            if (anyStudentHasMaxExamsOnDay(students, date, state)) {
+                continue;
+            }
+
+            // Find valid time slots for this day
+            List<LocalTime> validSlots = new ArrayList<>();
+            for (LocalTime slotStart : timeSlots) {
+                LocalTime slotEnd = slotStart.plusMinutes(course.getExamDurationMinutes());
+
+                // Check if exam fits within time window (ends by 18:30)
+                if (slotEnd.isAfter(LocalTime.of(18, 30))) {
+                    continue;
+                }
+
+                ExamSlot slot = new ExamSlot(date, slotStart, slotEnd);
+
+                // Quick check: Can ANY student take this exam at this time?
+                boolean canPlaceHere = true;
+                for (Student s : students) {
+                    List<Exam> studentExamsToday = state.getExamsForStudentDate(s.getId(), date);
+                    for (Exam existing : studentExamsToday) {
+                        // Check 3-hour gap requirement
+                        long gapMinutes = calculateGapMinutes(existing.getSlot(), slot);
+                        if (gapMinutes < 180) { // 3 hours = 180 minutes
+                            canPlaceHere = false;
+                            break;
+                        }
+                    }
+                    if (!canPlaceHere)
+                        break;
+                }
+
+                if (canPlaceHere) {
+                    validSlots.add(slotStart);
+                }
+            }
+
+            // Try valid time slots
+            for (LocalTime slotStart : validSlots) {
+                LocalTime slotEnd = slotStart.plusMinutes(course.getExamDurationMinutes());
+                ExamSlot slot = new ExamSlot(date, slotStart, slotEnd);
+
+                // Pick smallest suitable classroom first (best fit), then least-used
+                List<Classroom> suitableClassrooms = classrooms.stream()
+                        .filter(c -> studentCount <= c.getCapacity())
+                        .sorted(Comparator
+                                .comparingInt(Classroom::getCapacity) // Smallest capacity first
+                                .thenComparingInt(c -> classroomUsageCount.getOrDefault(c.getId(), 0))) // Then least
+                                                                                                        // used
+                        .collect(Collectors.toList());
+
+                for (Classroom classroom : suitableClassrooms) {
+                    Exam candidate = new Exam(course, classroom, slot);
+
+                    // Full constraint check via ConstraintChecker
+                    if (constraintChecker.checkAll(candidate, state)) {
+                        // Place the exam and update counters
+                        state.add(candidate);
+                        classroomUsageCount.merge(classroom.getId(), 1, Integer::sum);
+                        examsPerDay.merge(dayOffset, 1, Integer::sum);
+
+                        // Recurse to next course
+                        if (backtrackSpread(index + 1, courses, state, classrooms,
+                                timeSlots, startDate, maxDays, startTime, timeoutMs,
+                                classroomUsageCount, examsPerDay, targetExamsPerDay)) {
+                            return true;
+                        }
+
+                        // Backtrack: remove the exam and decrement counters
+                        state.removeLast();
+                        classroomUsageCount.merge(classroom.getId(), -1, Integer::sum);
+                        examsPerDay.merge(dayOffset, -1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        // No valid placement found for this course
+        return false;
     }
 
     /** Recursive backtracking with day compression. */
@@ -414,16 +670,24 @@ public class SchedulerService {
                 }
             }
 
+            // DON'T shuffle time slots - causes timeout
+            // Instead, randomize classroom selection below
+
             // Try valid time slots
             for (LocalTime slotStart : validSlots) {
                 LocalTime slotEnd = slotStart.plusMinutes(course.getExamDurationMinutes());
                 ExamSlot slot = new ExamSlot(date, slotStart, slotEnd);
 
-                // Pick least-used classroom
+                // Get suitable classrooms
                 List<Classroom> suitableClassrooms = classrooms.stream()
                         .filter(c -> studentCount <= c.getCapacity())
-                        .sorted(Comparator.comparingInt(c -> classroomUsageCount.getOrDefault(c.getId(), 0)))
+                        .sorted(Comparator
+                                .comparingInt(Classroom::getCapacity) // Smallest capacity first
+                                .thenComparingInt(c -> classroomUsageCount.getOrDefault(c.getId(), 0)))
                         .collect(Collectors.toList());
+
+                // Shuffle classrooms with similar capacity for varied results
+                java.util.Collections.shuffle(suitableClassrooms, random);
 
                 for (Classroom classroom : suitableClassrooms) {
                     Exam candidate = new Exam(course, classroom, slot);
@@ -436,6 +700,113 @@ public class SchedulerService {
 
                         // Recurse to next course
                         if (backtrack(index + 1, courses, state, classrooms,
+                                timeSlots, startDate, maxDays, startTime, timeoutMs, classroomUsageCount)) {
+                            return true;
+                        }
+
+                        // Backtrack: remove the exam and decrement usage counter
+                        state.removeLast();
+                        classroomUsageCount.merge(classroom.getId(), -1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        // No valid placement found for this course
+        return false;
+    }
+
+    /**
+     * Recursive backtracking WITHOUT randomization (deterministic).
+     * Used for finding consistent optimal day count.
+     */
+    private boolean backtrackDeterministic(int index, List<Course> courses, ScheduleState state,
+            List<Classroom> classrooms, List<LocalTime> timeSlots,
+            LocalDate startDate, int maxDays, long startTime, long timeoutMs,
+            Map<String, Integer> classroomUsageCount) {
+
+        // Check timeout
+        if (System.currentTimeMillis() - startTime > timeoutMs) {
+            return false;
+        }
+
+        // Base case: all courses scheduled
+        if (index == courses.size()) {
+            return true;
+        }
+
+        Course course = courses.get(index);
+        int studentCount = enrollmentCounts.getOrDefault(course.getCode(), 0);
+        List<Student> students = courseStudentsMap.getOrDefault(course.getCode(), List.of());
+
+        // Try earliest days first
+        for (int dayOffset = 0; dayOffset < maxDays; dayOffset++) {
+            LocalDate date = startDate.plusDays(dayOffset);
+
+            // Skip if any student has max exams today
+            if (anyStudentHasMaxExamsOnDay(students, date, state)) {
+                continue;
+            }
+
+            // Find valid time slots for this day
+            List<LocalTime> validSlots = new ArrayList<>();
+            for (LocalTime slotStart : timeSlots) {
+                LocalTime slotEnd = slotStart.plusMinutes(course.getExamDurationMinutes());
+
+                // Check if exam fits within time window (ends by 18:30)
+                if (slotEnd.isAfter(LocalTime.of(18, 30))) {
+                    continue;
+                }
+
+                ExamSlot slot = new ExamSlot(date, slotStart, slotEnd);
+
+                // Quick check: Can ANY student take this exam at this time?
+                boolean canPlaceHere = true;
+                for (Student s : students) {
+                    List<Exam> studentExamsToday = state.getExamsForStudentDate(s.getId(), date);
+                    for (Exam existing : studentExamsToday) {
+                        // Check 3-hour gap requirement
+                        long gapMinutes = calculateGapMinutes(existing.getSlot(), slot);
+                        if (gapMinutes < 180) { // 3 hours = 180 minutes
+                            canPlaceHere = false;
+                            break;
+                        }
+                    }
+                    if (!canPlaceHere)
+                        break;
+                }
+
+                if (canPlaceHere) {
+                    validSlots.add(slotStart);
+                }
+            }
+
+            // NO SHUFFLE HERE - deterministic order
+
+            // Try valid time slots
+            for (LocalTime slotStart : validSlots) {
+                LocalTime slotEnd = slotStart.plusMinutes(course.getExamDurationMinutes());
+                ExamSlot slot = new ExamSlot(date, slotStart, slotEnd);
+
+                // Pick smallest suitable classroom first (best fit), then least-used
+                List<Classroom> suitableClassrooms = classrooms.stream()
+                        .filter(c -> studentCount <= c.getCapacity())
+                        .sorted(Comparator
+                                .comparingInt(Classroom::getCapacity)
+                                .thenComparingInt(c -> classroomUsageCount.getOrDefault(c.getId(), 0)))
+                        .collect(Collectors.toList());
+
+                for (Classroom classroom : suitableClassrooms) {
+                    Exam candidate = new Exam(course, classroom, slot);
+
+                    // Full constraint check via ConstraintChecker
+                    if (constraintChecker.checkAll(candidate, state)) {
+                        // Place the exam and update usage counter
+                        state.add(candidate);
+                        classroomUsageCount.merge(classroom.getId(), 1, Integer::sum);
+
+                        // Recurse to next course
+                        if (backtrackDeterministic(index + 1, courses, state, classrooms,
                                 timeSlots, startDate, maxDays, startTime, timeoutMs, classroomUsageCount)) {
                             return true;
                         }

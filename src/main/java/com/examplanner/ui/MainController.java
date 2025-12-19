@@ -2997,10 +2997,11 @@ public class MainController {
         colClassroom.setCellValueFactory(
                 cellData -> new SimpleStringProperty(cellData.getValue().getClassroom().getName()));
 
-        // Students column
+        // Students column - use controller's enrollments which is populated at startup
         colStudents.setCellValueFactory(cellData -> {
             String courseCode = cellData.getValue().getCourse().getCode();
-            long studentCount = enrollments.stream()
+            // Use this.enrollments directly - this is loaded from DB at startup
+            long studentCount = this.enrollments.stream()
                     .filter(e -> e.getCourse().getCode().equals(courseCode))
                     .count();
             return new SimpleIntegerProperty((int) studentCount).asObject();

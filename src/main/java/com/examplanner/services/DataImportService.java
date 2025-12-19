@@ -73,7 +73,7 @@ public class DataImportService {
             boolean sawHeaderAttendance = false;
 
             while ((line = br.readLine()) != null && inspected < 50) {
-                line = line.trim();
+                line = stripBom(line.trim()); // Strip BOM from first line
                 if (line.isEmpty())
                     continue;
                 if (line.startsWith("ALL OF THE"))
@@ -92,7 +92,7 @@ public class DataImportService {
                 if (line.contains(",")) {
                     String[] cols = line.split(",");
                     for (String c : cols) {
-                        String h = c.trim().toLowerCase(Locale.ENGLISH);
+                        String h = stripBom(c.trim()).toLowerCase(Locale.ENGLISH); // Strip BOM from columns too
                         if (h.equals("coursecode") || h.equals("coursename") || h.equals("durationminutes")) {
                             sawHeaderCourse = true;
                         }
@@ -459,11 +459,22 @@ public class DataImportService {
         ensureKind(file, CsvKind.ATTENDANCE);
         List<Enrollment> enrollments = new ArrayList<>();
 
-        // Quick lookup maps
+        // Quick lookup maps - case insensitive for flexibility
         Map<String, Course> courseMap = new HashMap<>();
+        Map<String, Course> courseMapLower = new HashMap<>(); // For case-insensitive lookup
         for (Course c : courses) {
             courseMap.put(c.getCode(), c);
+            courseMapLower.put(c.getCode().toLowerCase(), c);
         }
+
+        // Debug: Print first few course codes
+        System.out.println("DEBUG: Available course codes (first 5):");
+        int count = 0;
+        for (String code : courseMap.keySet()) {
+            if (count++ < 5)
+                System.out.println("  - " + code);
+        }
+        System.out.println("  Total courses: " + courseMap.size());
 
         Map<String, Student> studentMap = new HashMap<>();
         if (existingStudents != null) {
@@ -555,27 +566,68 @@ public class DataImportService {
                 }
             }
         } else {
-            // Row-based CSV format
+            // Row-based CSV format - supports both:
+            // - 2 columns: StudentID,CourseCode
+            // - 3 columns: StudentID,StudentName,CourseCode
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
+                int columnCount = -1; // Will detect from header or first data row
+
                 while ((line = br.readLine()) != null) {
-                    line = line.trim();
+                    line = stripBom(line.trim());
                     if (line.isEmpty())
                         continue;
                     if (line.startsWith("ALL OF THE"))
                         continue;
-                    // StudentID,StudentName,CourseCode
-                    String[] parts = line.split(",");
-                    if (parts.length < 3)
-                        continue;
-                    String studentId = parts[0].trim();
-                    if (studentId.equalsIgnoreCase("StudentID"))
-                        continue;
-                    String studentName = parts[1].trim();
-                    String courseCode = parts[2].trim();
 
+                    String[] parts = line.split(",");
+                    if (parts.length < 2)
+                        continue;
+
+                    String firstCol = parts[0].trim();
+
+                    // Skip header row
+                    if (firstCol.equalsIgnoreCase("StudentID")) {
+                        // Detect column count from header
+                        columnCount = parts.length;
+                        continue;
+                    }
+
+                    // If we haven't detected column count yet, do it from data
+                    if (columnCount == -1) {
+                        columnCount = parts.length;
+                    }
+
+                    String studentId;
+                    String studentName;
+                    String courseCode;
+
+                    if (columnCount >= 3 && parts.length >= 3) {
+                        // 3-column format: StudentID,StudentName,CourseCode
+                        studentId = parts[0].trim();
+                        studentName = parts[1].trim();
+                        courseCode = parts[2].trim();
+                    } else if (parts.length >= 2) {
+                        // 2-column format: StudentID,CourseCode
+                        studentId = parts[0].trim();
+                        studentName = studentId; // Use ID as name
+                        courseCode = parts[1].trim();
+                    } else {
+                        continue;
+                    }
+
+                    // Try exact match first, then case-insensitive
                     Course course = courseMap.get(courseCode);
                     if (course == null) {
+                        course = courseMapLower.get(courseCode.toLowerCase());
+                    }
+                    if (course == null) {
+                        // Only log first few misses to avoid spam
+                        if (enrollments.isEmpty()) {
+                            System.err.println("DEBUG: First attendance courseCode tried: '" + courseCode + "'");
+                            System.err.println("DEBUG: Available courses sample: "
+                                    + courseMap.keySet().stream().limit(3).toList());
+                        }
                         System.err.println("Course code not found during import: " + courseCode);
                         continue;
                     }

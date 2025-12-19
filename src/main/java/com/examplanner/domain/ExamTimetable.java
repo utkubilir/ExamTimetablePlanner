@@ -34,6 +34,10 @@ public class ExamTimetable {
         this.exams = exams;
     }
 
+    public List<Enrollment> getEnrollments() {
+        return enrollments;
+    }
+
     /**
      * FR4: Iterates over all exams and returns only those that match the selected
      * course.
