@@ -37,6 +37,7 @@ import javafx.geometry.Pos;
 import javafx.collections.ObservableList;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -90,6 +91,28 @@ public class MainController {
     private VBox viewTimetable;
     @FXML
     private VBox sidebar;
+    @FXML
+    private HBox sidebarHeader;
+    @FXML
+    private FontIcon appLogo;
+    @FXML
+    private Button btnPin;
+    @FXML
+    private FontIcon pinIcon;
+    @FXML
+    private Region activeIndicator;
+    @FXML
+    private ScrollPane navScrollPane;
+    @FXML
+    private VBox navContainer;
+    @FXML
+    private HBox userProfileSection;
+    @FXML
+    private VBox userInfoBox;
+    @FXML
+    private Label lblUserName;
+    @FXML
+    private Label lblUserEmail;
     @FXML
     private VBox viewDashboard;
     @FXML
@@ -369,6 +392,9 @@ public class MainController {
             applyTheme();
         }
 
+        // Setup collapsible sidebar
+        setupCollapsibleSidebar();
+
         // Load language preference (default English)
         String lang = prefs.get("language_preference", "en");
         loadLanguage(lang); // Load default language (English)
@@ -424,6 +450,440 @@ public class MainController {
                 }
             }
         }
+    }
+
+    private void setupCollapsibleSidebar() {
+        if (sidebar == null)
+            return;
+
+        // Configure Navigation ScrollPane
+        if (navScrollPane != null) {
+            navScrollPane.setFitToWidth(true);
+            navScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            navScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        }
+
+        // Start in collapsed state
+        sidebar.getStyleClass().add("sidebar-collapsed");
+        sidebar.setPrefWidth(60);
+        sidebar.setMinWidth(60);
+        sidebar.setMaxWidth(60);
+
+        // Hide app title in collapsed state
+        if (lblAppTitle != null) {
+            lblAppTitle.setOpacity(0);
+            lblAppTitle.setVisible(false);
+            lblAppTitle.setManaged(false);
+        }
+
+        // Hide pin button in collapsed state
+        if (btnPin != null) {
+            btnPin.setVisible(false);
+            btnPin.setManaged(false);
+        }
+
+        // Hide user info in collapsed state
+        if (userInfoBox != null) {
+            userInfoBox.setVisible(false);
+            userInfoBox.setManaged(false);
+        }
+
+        // Set buttons to icon-only mode and add tooltips - check navContainer first
+        VBox buttonContainer = navContainer != null ? navContainer : null;
+        if (buttonContainer != null) {
+            setupButtonsInContainer(buttonContainer);
+        }
+
+        // Also setup buttons in sidebar footer
+        for (javafx.scene.Node node : sidebar.getChildren()) {
+            if (node instanceof VBox && node.getStyleClass().contains("sidebar-footer")) {
+                setupButtonsInContainer((VBox) node);
+            }
+        }
+
+        // Setup event handlers for mouse and keyboard
+        setupSidebarEventHandlers();
+
+        // Initialize Active Indicator Position
+        javafx.application.Platform.runLater(() -> {
+            if (activeIndicator != null && btnDataImport != null) {
+                // Initialize based on the default active view (Data Import)
+                updateActiveIndicator(btnDataImport);
+            }
+        });
+    }
+
+    private void setupButtonsInContainer(javafx.scene.layout.Pane container) {
+        for (javafx.scene.Node node : container.getChildren()) {
+            if (node instanceof Button) {
+                Button btn = (Button) node;
+                btn.setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
+                // Add tooltip with button text
+                javafx.scene.control.Tooltip tooltip = new javafx.scene.control.Tooltip(btn.getText());
+                tooltip.setShowDelay(javafx.util.Duration.millis(300));
+                tooltip.setStyle("-fx-font-size: 12px;");
+                btn.setTooltip(tooltip);
+            } else if (node instanceof VBox) {
+                setupButtonsInContainer((VBox) node);
+            }
+        }
+    }
+
+    private void setupSidebarEventHandlers() {
+        if (sidebar == null)
+            return;
+
+        // Expand on mouse enter with small delay to prevent flicker
+        sidebar.setOnMouseEntered(e -> {
+            if (sidebarCollapseTimer != null) {
+                sidebarCollapseTimer.stop();
+            }
+            if (!sidebarPinned) {
+                expandSidebar();
+            }
+        });
+
+        // Collapse on mouse exit with debounce (only if not pinned)
+        sidebar.setOnMouseExited(e -> {
+            if (!sidebarPinned) {
+                sidebarCollapseTimer = new javafx.animation.PauseTransition(javafx.util.Duration.millis(150));
+                sidebarCollapseTimer.setOnFinished(event -> collapseSidebar());
+                sidebarCollapseTimer.play();
+            }
+        });
+
+        // Setup keyboard shortcut (Ctrl+B) for sidebar toggle
+        sidebar.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.getAccelerators().put(
+                        new javafx.scene.input.KeyCodeCombination(
+                                javafx.scene.input.KeyCode.B,
+                                javafx.scene.input.KeyCombination.CONTROL_DOWN),
+                        () -> toggleSidebar());
+            }
+        });
+    }
+
+    private javafx.animation.PauseTransition sidebarCollapseTimer;
+    private boolean sidebarPinned = false;
+    private boolean sidebarExpanded = false;
+
+    @FXML
+    private void togglePinSidebar() {
+        sidebarPinned = !sidebarPinned;
+        updatePinButtonState();
+
+        if (sidebarPinned) {
+            expandSidebar();
+        }
+    }
+
+    private void updatePinButtonState() {
+        if (btnPin != null) {
+            if (sidebarPinned) {
+                btnPin.getStyleClass().add("pinned");
+                if (pinIcon != null) {
+                    pinIcon.setIconLiteral("fas-thumbtack");
+                }
+            } else {
+                btnPin.getStyleClass().remove("pinned");
+                if (pinIcon != null) {
+                    pinIcon.setIconLiteral("fas-thumbtack");
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets a loading state on a button by replacing its icon with a spinner.
+     * 
+     * @param btn     The button to modify
+     * @param loading True to show loading spinner, false to restore original
+     */
+    private void setButtonLoading(Button btn, boolean loading) {
+        if (btn == null)
+            return;
+
+        if (loading) {
+            btn.setDisable(true);
+            // Store original graphic if not already stored (to avoid overwriting with
+            // spinner)
+            if (!(btn.getGraphic() instanceof FontIcon
+                    && ((FontIcon) btn.getGraphic()).getIconLiteral().equals("fas-spinner"))) {
+                btn.setUserData(btn.getGraphic());
+            }
+
+            FontIcon spinner = IconHelper.spinner();
+            spinner.getStyleClass().add("spinner-icon");
+
+            // Add simple rotation animation
+            javafx.animation.RotateTransition rt = new javafx.animation.RotateTransition(
+                    javafx.util.Duration.millis(1000), spinner);
+            rt.setByAngle(360);
+            rt.setCycleCount(javafx.animation.Animation.INDEFINITE);
+            rt.setInterpolator(javafx.animation.Interpolator.LINEAR);
+            rt.play();
+
+            btn.setGraphic(spinner);
+        } else {
+            btn.setDisable(false);
+            if (btn.getUserData() instanceof javafx.scene.Node) {
+                btn.setGraphic((javafx.scene.Node) btn.getUserData());
+            }
+        }
+    }
+
+    /**
+     * Updates a badge count on a button.
+     * 
+     * @param btn   The button to modify
+     * @param count The number to display in the badge. 0 hides the badge.
+     */
+    private void setButtonBadge(Button btn, int count) {
+        if (btn == null)
+            return;
+
+        if (count > 0) {
+            // We need to wrap the icon and badge in a StackPane
+            // First, retrieve the base icon
+            javafx.scene.Node baseIcon = btn.getGraphic();
+
+            // If already a StackPane, reuse it or extract icon
+            if (baseIcon instanceof StackPane) {
+                if (((StackPane) baseIcon).getChildren().size() > 0) {
+                    baseIcon = ((StackPane) baseIcon).getChildren().get(0);
+                }
+            }
+
+            Label badge = new Label(count > 99 ? "99+" : String.valueOf(count));
+            badge.getStyleClass().add("badge");
+            StackPane.setAlignment(badge, Pos.TOP_RIGHT);
+
+            // Adjust margin to position badge nicely over the icon
+            StackPane.setMargin(badge, new javafx.geometry.Insets(-5, -5, 0, 0));
+
+            StackPane stack = new StackPane(baseIcon, badge);
+            stack.getStyleClass().add("icon-container"); // Helper class if needed
+            stack.setAlignment(Pos.CENTER);
+            btn.getStyleClass().add("nav-button-with-badge");
+        } else {
+            // Remove badge - restore original icon if it was wrapped
+            javafx.scene.Node currentGraphic = btn.getGraphic();
+            if (currentGraphic instanceof StackPane) {
+                StackPane stack = (StackPane) currentGraphic;
+                if (stack.getChildren().size() > 0) {
+                    btn.setGraphic(stack.getChildren().get(0));
+                }
+            }
+            btn.getStyleClass().remove("nav-button-with-badge");
+        }
+    }
+
+    /**
+     * Sets the active button in the sidebar and updates the floating indicator.
+     */
+    private void setActiveButton(Button btn) {
+        if (btn == null)
+            return;
+
+        // Remove active class from all buttons in navContainer
+        if (navContainer != null) {
+            for (javafx.scene.Node node : navContainer.getChildren()) {
+                if (node instanceof Button) {
+                    node.getStyleClass().remove("active");
+                }
+            }
+        }
+        // Also check settings button? It's in footer usually.
+        if (btnSettings != null)
+            btnSettings.getStyleClass().remove("active");
+
+        // Add active class to target
+        btn.getStyleClass().add("active");
+
+        // Update indicator animation
+        updateActiveIndicator(btn);
+    }
+
+    private void updateActiveIndicator(Button btn) {
+        if (activeIndicator == null || btn == null)
+            return;
+
+        // Ensure indicator is visible and managed if hidden
+        if (!activeIndicator.isVisible()) {
+            activeIndicator.setVisible(true);
+            activeIndicator.setManaged(false); // Should handle layout manually
+        }
+
+        // Calculate position relative to container
+        // Since both indicator and VBox are in StackPane (aligned TOP_LEFT),
+        // we can use BoundsInParent of button which is relative to VBox.
+        // If VBox has padding/margin, we need to account for that.
+
+        double targetY = btn.getBoundsInParent().getMinY();
+        double targetHeight = btn.getHeight();
+
+        // If button height isn't ready yet (e.g. initialization), use pref or default
+        if (targetHeight == 0)
+            targetHeight = 40;
+
+        // VBox padding correction if needed (usually 0 or handling by StackPane
+        // alignment)
+        if (navContainer != null) {
+            targetY += navContainer.getPadding().getTop();
+        }
+
+        // Animate position
+        javafx.animation.TranslateTransition tt = new javafx.animation.TranslateTransition(
+                javafx.util.Duration.millis(200), activeIndicator);
+        tt.setToY(targetY);
+        tt.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+
+        // Adjust height if needed (animate prefHeight via timeline if varied heights)
+        // For simplicity, assuming buttons have similar height, or just setting styling
+        // height
+        activeIndicator.setPrefHeight(targetHeight);
+        activeIndicator.setMinHeight(targetHeight);
+        activeIndicator.setMaxHeight(targetHeight);
+
+        tt.play();
+    }
+
+    private void toggleSidebar() {
+        if (sidebarExpanded) {
+            sidebarPinned = false;
+            updatePinButtonState();
+            collapseSidebar();
+        } else {
+            sidebarPinned = true;
+            updatePinButtonState();
+            expandSidebar();
+        }
+    }
+
+    private void expandSidebar() {
+        sidebarExpanded = true;
+        sidebar.getStyleClass().remove("sidebar-collapsed");
+        sidebar.getStyleClass().add("sidebar-expanded");
+
+        // Show app title first, then fade in
+        if (lblAppTitle != null) {
+            lblAppTitle.setVisible(true);
+            lblAppTitle.setManaged(true);
+        }
+
+        // Show pin button
+        if (btnPin != null) {
+            btnPin.setVisible(true);
+            btnPin.setManaged(true);
+        }
+
+        // Show user info
+        if (userInfoBox != null) {
+            userInfoBox.setVisible(true);
+            userInfoBox.setManaged(true);
+        }
+
+        // Parallel animation for width and title fade
+        javafx.animation.Timeline widthAnimation = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(250),
+                        new javafx.animation.KeyValue(sidebar.prefWidthProperty(), 250,
+                                javafx.animation.Interpolator.EASE_BOTH),
+                        new javafx.animation.KeyValue(sidebar.minWidthProperty(), 250,
+                                javafx.animation.Interpolator.EASE_BOTH),
+                        new javafx.animation.KeyValue(sidebar.maxWidthProperty(), 250,
+                                javafx.animation.Interpolator.EASE_BOTH)));
+
+        javafx.animation.FadeTransition titleFade = new javafx.animation.FadeTransition(
+                javafx.util.Duration.millis(200), lblAppTitle);
+        titleFade.setFromValue(0);
+        titleFade.setToValue(1);
+        titleFade.setDelay(javafx.util.Duration.millis(100));
+
+        javafx.animation.ParallelTransition parallel = new javafx.animation.ParallelTransition(widthAnimation,
+                titleFade);
+        parallel.play();
+
+        // Set buttons to show text with slight delay for smoother appearance
+        javafx.animation.PauseTransition buttonDelay = new javafx.animation.PauseTransition(
+                javafx.util.Duration.millis(80));
+        buttonDelay.setOnFinished(e -> {
+            for (javafx.scene.Node node : sidebar.getChildren()) {
+                if (node instanceof Button) {
+                    ((Button) node).setContentDisplay(javafx.scene.control.ContentDisplay.LEFT);
+                } else if (node instanceof VBox) {
+                    for (javafx.scene.Node child : ((VBox) node).getChildren()) {
+                        if (child instanceof Button) {
+                            ((Button) child).setContentDisplay(javafx.scene.control.ContentDisplay.LEFT);
+                        }
+                    }
+                }
+            }
+        });
+        buttonDelay.play();
+    }
+
+    private void collapseSidebar() {
+        sidebarExpanded = false;
+        sidebar.getStyleClass().remove("sidebar-expanded");
+        sidebar.getStyleClass().add("sidebar-collapsed");
+
+        // Set buttons to icon-only immediately for smoother collapse
+        for (javafx.scene.Node node : sidebar.getChildren()) {
+            if (node instanceof Button) {
+                ((Button) node).setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
+            } else if (node instanceof VBox) {
+                for (javafx.scene.Node child : ((VBox) node).getChildren()) {
+                    if (child instanceof Button) {
+                        ((Button) child).setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
+                    }
+                }
+            }
+        }
+
+        // Also collapse buttons in navContainer
+        if (navContainer != null) {
+            for (javafx.scene.Node node : navContainer.getChildren()) {
+                if (node instanceof Button) {
+                    ((Button) node).setContentDisplay(javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
+                }
+            }
+        }
+
+        // Fade out title first, then animate width
+        javafx.animation.FadeTransition titleFade = new javafx.animation.FadeTransition(
+                javafx.util.Duration.millis(100), lblAppTitle);
+        titleFade.setFromValue(1);
+        titleFade.setToValue(0);
+        titleFade.setOnFinished(e -> {
+            if (lblAppTitle != null) {
+                lblAppTitle.setVisible(false);
+                lblAppTitle.setManaged(false);
+            }
+            // Hide pin button
+            if (btnPin != null) {
+                btnPin.setVisible(false);
+                btnPin.setManaged(false);
+            }
+            // Hide user info
+            if (userInfoBox != null) {
+                userInfoBox.setVisible(false);
+                userInfoBox.setManaged(false);
+            }
+        });
+
+        javafx.animation.Timeline widthAnimation = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(200),
+                        new javafx.animation.KeyValue(sidebar.prefWidthProperty(), 60,
+                                javafx.animation.Interpolator.EASE_BOTH),
+                        new javafx.animation.KeyValue(sidebar.minWidthProperty(), 60,
+                                javafx.animation.Interpolator.EASE_BOTH),
+                        new javafx.animation.KeyValue(sidebar.maxWidthProperty(), 60,
+                                javafx.animation.Interpolator.EASE_BOTH)));
+
+        javafx.animation.ParallelTransition parallel = new javafx.animation.ParallelTransition(titleFade,
+                widthAnimation);
+        parallel.play();
     }
 
     private void setupAdvancedSearch() {
@@ -563,9 +1023,6 @@ public class MainController {
             sidebar.setManaged(true);
         }
         setActive(btnDataImport);
-        setInactive(btnTimetable);
-        setInactive(btnDashboard);
-        setInactive(btnUserManual);
     }
 
     @FXML
@@ -581,9 +1038,6 @@ public class MainController {
         }
 
         setActive(btnDashboard);
-        setInactive(btnDataImport);
-        setInactive(btnTimetable);
-        setInactive(btnUserManual);
 
         refreshDashboard();
     }
@@ -600,9 +1054,6 @@ public class MainController {
             sidebar.setManaged(false);
         }
         setActive(btnTimetable);
-        setInactive(btnDataImport);
-        setInactive(btnDashboard);
-        setInactive(btnUserManual);
         refreshTimetable();
     }
 
@@ -618,19 +1069,38 @@ public class MainController {
             sidebar.setManaged(true);
         }
         setActive(btnUserManual);
-        setInactive(btnDataImport);
-        setInactive(btnDashboard);
-        setInactive(btnTimetable);
     }
 
     private void setActive(Button btn) {
+        if (btn == null)
+            return;
+
+        // Remove active class from all buttons in navContainer
+        if (navContainer != null) {
+            for (javafx.scene.Node node : navContainer.getChildren()) {
+                if (node instanceof Button) {
+                    node.getStyleClass().remove("active");
+                }
+            }
+        }
+        // Also check settings and exit buttons
+        if (btnSettings != null)
+            btnSettings.getStyleClass().remove("active");
+        if (btnExit != null)
+            btnExit.getStyleClass().remove("active");
+
+        // Add active class to target
         if (!btn.getStyleClass().contains("active")) {
             btn.getStyleClass().add("active");
         }
+
+        // Update floating indicator
+        updateActiveIndicator(btn);
     }
 
     private void setInactive(Button btn) {
-        btn.getStyleClass().remove("active");
+        // No longer needed as setActive handles clearing,
+        // kept empty for compatibility if called elsewhere
     }
 
     @FXML
@@ -1902,6 +2372,8 @@ public class MainController {
 
     @FXML
     private void handleStudentPortal() {
+        setActive(btnStudentPortal);
+
         if (students.isEmpty()) {
             showError(bundle.getString("studentPortal.noDataTitle"), bundle.getString("studentPortal.loadFirst"));
             return;
@@ -3678,6 +4150,19 @@ public class MainController {
     @FXML
     private void handleSidebarStudentSearch() {
         // Sidebar'daki "Student Search" butonuna basınca çalışacak
+
+        viewDataImport.setVisible(false);
+        viewTimetable.setVisible(false);
+        viewDashboard.setVisible(false);
+        viewUserManual.setVisible(false);
+        // Student search is an overlay or dialog mostly, but let's assume it keeps main
+        // view state
+        // OR better: showTimetable and open filter?
+        // Current logic was just filterByStudent(). Let's keep it but update sidebar
+        // active state.
+
+        setActive(btnStudentSearch);
         filterByStudent();
     }
+
 }

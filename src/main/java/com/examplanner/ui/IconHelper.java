@@ -237,4 +237,10 @@ public class IconHelper {
         icon.setStyle("-fx-icon-color: #9CA3AF;");
         return icon;
     }
+
+    // ============== Loading Icons ==============
+
+    public static FontIcon spinner() {
+        return createIcon("fas-spinner", 16);
+    }
 }

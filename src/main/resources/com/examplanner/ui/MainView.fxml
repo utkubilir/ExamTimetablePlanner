@@ -31,40 +31,65 @@
    <left>
       <VBox fx:id="sidebar" prefWidth="250.0" styleClass="sidebar" BorderPane.alignment="CENTER">
          <children>
-            <HBox alignment="CENTER_LEFT" spacing="10">
-               <Label fx:id="lblAppTitle" styleClass="app-title" text="Exam Planner" />
+            <!-- Header with Logo and Pin Button -->
+            <HBox fx:id="sidebarHeader" alignment="CENTER_LEFT" spacing="10" styleClass="sidebar-header">
+               <FontIcon fx:id="appLogo" iconLiteral="fas-calendar-check" iconSize="24" styleClass="app-logo"/>
+               <Label fx:id="lblAppTitle" styleClass="app-title" text="Exam Planner" HBox.hgrow="ALWAYS"/>
+               <Button fx:id="btnPin" mnemonicParsing="false" onAction="#togglePinSidebar" styleClass="pin-button">
+                  <graphic><FontIcon fx:id="pinIcon" iconLiteral="fas-thumbtack" iconSize="14" styleClass="pin-icon"/></graphic>
+               </Button>
             </HBox>
             
-            <VBox spacing="5">
-               <Button fx:id="btnDataImport" maxWidth="Infinity" mnemonicParsing="false" onAction="#showDataImport" styleClass="nav-button, active" text="Data Import">
-                  <graphic><FontIcon iconLiteral="fas-file-import" iconSize="16" styleClass="nav-icon"/></graphic>
+            <!-- Scrollable Navigation Container -->
+            <ScrollPane fx:id="navScrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="nav-scroll-pane" VBox.vgrow="ALWAYS">
+               <content>
+                  <StackPane alignment="TOP_LEFT">
+                     <Region fx:id="activeIndicator" managed="false" styleClass="active-indicator" visible="false" />
+                     <VBox fx:id="navContainer" spacing="5" styleClass="nav-container">
+                        <Button fx:id="btnDataImport" maxWidth="Infinity" mnemonicParsing="false" onAction="#showDataImport" styleClass="nav-button, active" text="Data Import">
+                           <graphic><FontIcon iconLiteral="fas-file-import" iconSize="16" styleClass="nav-icon"/></graphic>
+                        </Button>
+                        <Button fx:id="btnDashboard" maxWidth="Infinity" mnemonicParsing="false" onAction="#showDashboard" styleClass="nav-button" text="Dashboard">
+                           <graphic><FontIcon iconLiteral="fas-chart-bar" iconSize="16" styleClass="nav-icon"/></graphic>
+                        </Button>
+                        <Button fx:id="btnTimetable" maxWidth="Infinity" mnemonicParsing="false" onAction="#showTimetable" styleClass="nav-button" text="Timetable">
+                           <graphic><FontIcon iconLiteral="fas-calendar-alt" iconSize="16" styleClass="nav-icon"/></graphic>
+                        </Button>
+                        <Button fx:id="btnStudentSearch" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSidebarStudentSearch" styleClass="nav-button" text="Student Search">
+                           <graphic><FontIcon iconLiteral="fas-user-graduate" iconSize="16" styleClass="nav-icon"/></graphic>
+                        </Button>
+                        <Button fx:id="btnUserManual" maxWidth="Infinity" mnemonicParsing="false" onAction="#showUserManual" styleClass="nav-button" text="User Manual">
+                           <graphic><FontIcon iconLiteral="fas-book-open" iconSize="16" styleClass="nav-icon"/></graphic>
+                        </Button>
+                        <Separator styleClass="nav-separator"/>
+                        <Button fx:id="btnStudentPortal" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleStudentPortal" styleClass="nav-button" text="Student Portal">
+                           <graphic><FontIcon iconLiteral="fas-door-open" iconSize="16" styleClass="nav-icon"/></graphic>
+                        </Button>
+                     </VBox>
+                  </StackPane>
+               </content>
+            </ScrollPane>
+            
+            <!-- Bottom Section: Settings, User Profile, Exit -->
+            <VBox spacing="5" styleClass="sidebar-footer">
+               <Separator styleClass="nav-separator"/>
+               
+               <!-- User Profile Section -->
+               <HBox fx:id="userProfileSection" alignment="CENTER_LEFT" spacing="10" styleClass="user-profile">
+                  <FontIcon iconLiteral="fas-user-circle" iconSize="32" styleClass="user-avatar"/>
+                  <VBox fx:id="userInfoBox" HBox.hgrow="ALWAYS">
+                     <Label fx:id="lblUserName" styleClass="user-name" text="Administrator"/>
+                     <Label fx:id="lblUserEmail" styleClass="user-email" text="admin@exam.edu"/>
+                  </VBox>
+               </HBox>
+               
+               <Button fx:id="btnSettings" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSettings" styleClass="nav-button" text="Settings">
+                  <graphic><FontIcon iconLiteral="fas-cog" iconSize="16" styleClass="nav-icon"/></graphic>
                </Button>
-               <Button fx:id="btnDashboard" maxWidth="Infinity" mnemonicParsing="false" onAction="#showDashboard" styleClass="nav-button" text="Dashboard">
-                  <graphic><FontIcon iconLiteral="fas-chart-bar" iconSize="16" styleClass="nav-icon"/></graphic>
-               </Button>
-               <Button fx:id="btnTimetable" maxWidth="Infinity" mnemonicParsing="false" onAction="#showTimetable" styleClass="nav-button" text="Timetable">
-                  <graphic><FontIcon iconLiteral="fas-calendar-alt" iconSize="16" styleClass="nav-icon"/></graphic>
-               </Button>
-               <Button fx:id="btnStudentFilter" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSidebarStudentSearch" styleClass="nav-button" text="Student Search">
-                  <graphic><FontIcon iconLiteral="fas-user-graduate" iconSize="16" styleClass="nav-icon"/></graphic>
-               </Button>
-               <Button fx:id="btnUserManual" maxWidth="Infinity" mnemonicParsing="false" onAction="#showUserManual" styleClass="nav-button" text="User Manual">
-                  <graphic><FontIcon iconLiteral="fas-book-open" iconSize="16" styleClass="nav-icon"/></graphic>
-               </Button>
-               <Separator />
-               <Button fx:id="btnStudentPortal" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleStudentPortal" styleClass="nav-button" text="Student Portal">
-                  <graphic><FontIcon iconLiteral="fas-door-open" iconSize="16" styleClass="nav-icon"/></graphic>
+               <Button fx:id="btnExit" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleExit" styleClass="nav-button, exit-button" text="Exit">
+                  <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconSize="16" styleClass="nav-icon"/></graphic>
                </Button>
             </VBox>
-            
-            <Region VBox.vgrow="ALWAYS" />
-            
-            <Button fx:id="btnSettings" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleSettings" styleClass="nav-button" text="Settings">
-               <graphic><FontIcon iconLiteral="fas-cog" iconSize="16" styleClass="nav-icon"/></graphic>
-            </Button>
-            <Button fx:id="btnExit" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleExit" styleClass="nav-button" text="Exit">
-               <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconSize="16" styleClass="nav-icon"/></graphic>
-            </Button>
          </children>
       </VBox>
    </left>
