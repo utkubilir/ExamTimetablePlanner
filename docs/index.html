@@ -4,59 +4,100 @@
     <meta charset="UTF-8">
     <title>Exam Timetable Planner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+        .sidebar {
+            width: 260px;
+            padding: 1.5rem;
+            background: #f4f4f4;
+            height: 100vh;
+            position: fixed;
+        }
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            max-width: 900px;
+        }
+        h1, h2 {
+            margin-top: 0;
+        }
+        .card {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #eee;
+        }
+    </style>
 </head>
 <body>
 
-    <aside class="sidebar" id="sidebar">
-        <h2>📅 ExamPlanner</h2>
-        <nav>
-            <a href="#introduction">1. Introduction</a><br>
-            <a href="#objectives">2. Objectives</a><br>
-            <a href="#features">3. Features</a><br>
-            <a href="#screenshots">4. Screenshots</a>
-        </nav>
-    </aside>
+<aside class="sidebar">
+    <h2>📅 ExamPlanner</h2>
+    <nav>
+        <a href="#features">Features</a><br>
+        <a href="#constraints">Constraints</a><br>
+        <a href="#references">References</a>
+    </nav>
+</aside>
 
-    <main class="main-content">
+<main class="main-content">
 
-        <header>
-            <h1>Exam Timetable Planner</h1>
-            <p>Automated Exam Scheduling System for Educational Institutions</p>
-        </header>
+    <h1>Exam Timetable Planner</h1>
 
-        <section id="introduction">
-            <h2>1. Introduction</h2>
-            <p>
-                Exam Timetable Planner automatically generates conflict-free
-                exam schedules based on predefined constraints.
-            </p>
-        </section>
+    <section id="features">
+        <h2>Key Features</h2>
+        <div class="card">CSV Data Import</div>
+        <div class="card">Smart Scheduling</div>
+        <div class="card">Manual Override</div>
+    </section>
 
-        <section id="objectives">
-            <h2>2. Project Objectives</h2>
-            <ul>
-                <li>Automation of exam scheduling</li>
-                <li>Constraint satisfaction</li>
-                <li>User-friendly interface</li>
-            </ul>
-        </section>
+    <section id="constraints">
+        <h2>Scheduling Constraints</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Constraint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Daily Limit</td>
+                    <td>Maximum 2 exams per day</td>
+                </tr>
+                <tr>
+                    <td>Gap Requirement</td>
+                    <td>Minimum 3 hours between exams</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
-        <section id="features">
-            <h2>3. Key Features</h2>
-            <ul>
-                <li>CSV Data Import</li>
-                <li>Smart Scheduling Algorithm</li>
-                <li>Visual Timetable</li>
-                <li>Export Options</li>
-            </ul>
-        </section>
+    <section id="references">
+        <h2>References</h2>
+        <ul>
+            <li>JavaFX Documentation</li>
+            <li>JUnit 5 User Guide</li>
+        </ul>
+    </section>
 
-        <section id="screenshots">
-            <h2>4. Screenshots</h2>
-            <p>Screenshots will be added after deployment.</p>
-        </section>
-
-    </main>
+</main>
 
 </body>
 </html>
