@@ -1714,3 +1714,58 @@
     -fx-background-color: #818CF8;
     -fx-effect: dropshadow(three-pass-box, rgba(129, 140, 248, 0.4), 8, 0, 2, 0);
 }
+
+/* =========================================
+   Guided Tour Components
+   ========================================= */
+
+.tour-bubble {
+    -fx-background-color: -fx-color-bg;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 4);
+    -fx-border-color: -fx-color-border;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+}
+
+.tour-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text;
+    -fx-padding: 0 0 5 0;
+}
+
+.tour-description {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-padding: 0 0 10 0;
+}
+
+.tour-btn-next {
+    -fx-background-color: -fx-color-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+
+.tour-btn-next:hover {
+    -fx-background-color: derive(-fx-color-primary, -10%);
+}
+
+.tour-btn-skip {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-padding: 6 12 6 12;
+    -fx-cursor: hand;
+}
+
+.tour-btn-skip:hover {
+    -fx-text-fill: -fx-color-text;
+}
+
+/* Dark mode adjustments for tour bubble specific overrides if needed */
+.dark-mode .tour-bubble {
+    -fx-background-color: #1F2937; /* Dark bubbles */
+}

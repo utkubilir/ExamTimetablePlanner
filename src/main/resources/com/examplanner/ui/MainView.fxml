@@ -27,7 +27,9 @@
 <?import javafx.scene.shape.SVGPath?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane prefHeight="800.0" prefWidth="1200.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.examplanner.ui.MainController">
+<StackPane fx:id="rootContainer" prefHeight="800.0" prefWidth="1200.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.examplanner.ui.MainController">
+   <children>
+      <BorderPane>
    
    <!-- Sidebar -->
    <left>
@@ -285,4 +287,6 @@
       </StackPane>
    </center>
    
-</BorderPane>
+      </BorderPane>
+   </children>
+</StackPane>

@@ -61,7 +61,14 @@ import java.util.ResourceBundle;
 import java.util.Locale;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import com.examplanner.ui.tour.TourManager;
+import com.examplanner.ui.tour.TourStep;
+import com.examplanner.ui.tour.TourStep.TourPosition;
+
 public class MainController {
+
+    @FXML
+    private StackPane rootContainer;
 
     @FXML
     private Button btnDataImport;
@@ -450,6 +457,44 @@ public class MainController {
                 }
             }
         }
+
+        // Initialize Guided Tour
+        initTour();
+    }
+
+    private void initTour() {
+        if (rootContainer == null)
+            return;
+
+        TourManager tourManager = new TourManager(rootContainer);
+
+        // Define steps
+        tourManager.addStep(new TourStep(
+                btnDataImport,
+                "Import Data",
+                "Start here! Import your Courses, Classrooms, and Students from CSV files.",
+                TourPosition.RIGHT));
+
+        tourManager.addStep(new TourStep(
+                btnTimetable,
+                "Generate Timetable",
+                "Once your data is ready, click here to generate and view the exam schedule.",
+                TourPosition.RIGHT));
+
+        tourManager.addStep(new TourStep(
+                btnDashboard,
+                "Dashboard",
+                "View visual statistics about room usage and student exam load.",
+                TourPosition.RIGHT));
+
+        tourManager.addStep(new TourStep(
+                btnSettings,
+                "Settings",
+                "Customize the application theme (Dark/Light) and language preferences.",
+                TourPosition.RIGHT));
+
+        // Start if first run
+        Platform.runLater(tourManager::showIfFirstTime);
     }
 
     private void setupCollapsibleSidebar() {
