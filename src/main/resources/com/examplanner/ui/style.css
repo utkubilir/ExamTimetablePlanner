@@ -1839,10 +1839,72 @@
     -fx-text-fill: -fx-color-text;
 }
 
+/* Tour Previous Button */
+.tour-btn-previous {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-padding: 6 12 6 12;
+    -fx-cursor: hand;
+    -fx-border-color: -fx-color-border;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.tour-btn-previous:hover {
+    -fx-background-color: -fx-color-primary-light;
+    -fx-text-fill: -fx-color-primary;
+}
+
+.tour-btn-previous:disabled {
+    -fx-opacity: 0.4;
+    -fx-cursor: default;
+}
+
+/* Tour Step Counter */
+.tour-step-counter {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-weight: bold;
+    -fx-background-color: -fx-color-primary-light;
+    -fx-background-radius: 10px;
+    -fx-padding: 2 8 2 8;
+}
+
+/* Tour Progress Dots */
+.tour-progress-dots {
+    -fx-padding: 8 0 5 0;
+}
+
+.tour-dot-active {
+    -fx-effect: dropshadow(three-pass-box, rgba(99, 102, 241, 0.5), 4, 0, 0, 0);
+}
+
+.tour-dot-completed {
+    -fx-effect: none;
+}
+
+.tour-dot-inactive {
+    -fx-effect: none;
+}
+
 /* Dark mode adjustments for tour bubble specific overrides if needed */
 .dark-mode .tour-bubble {
     -fx-background-color: #1F2937;
     /* Dark bubbles */
+}
+
+.dark-mode .tour-step-counter {
+    -fx-background-color: rgba(99, 102, 241, 0.3);
+    -fx-text-fill: #A78BFA;
+}
+
+.dark-mode .tour-btn-previous {
+    -fx-border-color: #4B5563;
+}
+
+.dark-mode .tour-btn-previous:hover {
+    -fx-background-color: rgba(139, 92, 246, 0.2);
+    -fx-text-fill: #A78BFA;
 }
 
 /* Modern Search Bar */

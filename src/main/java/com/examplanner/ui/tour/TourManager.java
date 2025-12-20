@@ -18,10 +18,15 @@ public class TourManager {
     public TourManager(StackPane rootContainer) {
         this.rootContainer = rootContainer;
         this.overlay = new TourOverlay(this::next, this::end);
+        this.overlay.setOnPrevious(this::previous);
     }
 
     public void setLocalizedLabels(String skipText, String nextText) {
         overlay.setButtonLabels(skipText, nextText);
+    }
+
+    public void setLocalizedLabels(String skipText, String previousText, String nextText) {
+        overlay.setButtonLabels(skipText, previousText, nextText);
     }
 
     public void addStep(TourStep step) {
@@ -47,6 +52,9 @@ public class TourManager {
         isRunning = true;
         currentStepIndex = -1;
 
+        // Set total steps for progress indicator
+        overlay.setTotalSteps(steps.size());
+
         if (!rootContainer.getChildren().contains(overlay)) {
             // Bind size to root
             overlay.prefWidthProperty().bind(rootContainer.widthProperty());
@@ -60,9 +68,16 @@ public class TourManager {
     public void next() {
         currentStepIndex++;
         if (currentStepIndex < steps.size()) {
-            overlay.showStep(steps.get(currentStepIndex));
+            overlay.showStep(steps.get(currentStepIndex), currentStepIndex);
         } else {
             end();
+        }
+    }
+
+    public void previous() {
+        if (currentStepIndex > 0) {
+            currentStepIndex--;
+            overlay.showStep(steps.get(currentStepIndex), currentStepIndex);
         }
     }
 
@@ -78,5 +93,13 @@ public class TourManager {
 
     public boolean isRunning() {
         return isRunning;
+    }
+
+    public int getTotalSteps() {
+        return steps.size();
+    }
+
+    public int getCurrentStepIndex() {
+        return currentStepIndex;
     }
 }

@@ -1,16 +1,19 @@
 package com.examplanner.ui.tour;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -22,16 +25,22 @@ public class TourOverlay extends Pane {
 
     private final Runnable onNext;
     private final Runnable onSkip;
+    private Runnable onPrevious;
 
     private VBox messageBubble;
     private Label lblTitle;
     private Label lblDescription;
+    private Label lblStepCounter;
+    private HBox progressDots;
     private Button btnSkip;
+    private Button btnPrevious;
     private Button btnNext;
     private Shape spotlightMask;
     private javafx.scene.shape.Polygon arrow;
 
-    private TourStep currentStep; // Track current step for resize/interaction
+    private TourStep currentStep;
+    private int currentStepIndex = 0;
+    private int totalSteps = 0;
 
     public TourOverlay(Runnable onNext, Runnable onSkip) {
         this.onNext = onNext;
@@ -43,68 +52,108 @@ public class TourOverlay extends Pane {
         widthProperty().addListener((obs, oldVal, newVal) -> refreshLayout());
         heightProperty().addListener((obs, oldVal, newVal) -> refreshLayout());
 
+        // Keyboard Navigation
+        this.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.RIGHT) {
+                onNext.run();
+                e.consume();
+            } else if (e.getCode() == KeyCode.LEFT) {
+                if (onPrevious != null)
+                    onPrevious.run();
+                e.consume();
+            } else if (e.getCode() == KeyCode.ESCAPE) {
+                onSkip.run();
+                e.consume();
+            }
+        });
+
         // Handle interactions
         this.setOnMouseClicked(e -> {
-            // Check if click is inside the target hole (click-through)
             if (currentStep != null && isClickOnTarget(e.getX(), e.getY())) {
                 e.consume();
-                // Trigger the target action if it's a button
                 Node target = currentStep.targetNode();
                 if (target instanceof Button) {
                     ((Button) target).fire();
                 }
-                // Advance tour
                 onNext.run();
             } else {
-                // Consume other clicks to block app interaction
                 e.consume();
             }
         });
+
+        // Make focusable for keyboard events
+        this.setFocusTraversable(true);
     }
 
     private void initializeUI() {
         // Message Bubble Container
         messageBubble = new VBox(10);
         messageBubble.setPadding(new Insets(15));
-        messageBubble.setMaxWidth(300);
+        messageBubble.setMaxWidth(320);
         messageBubble.getStyleClass().add("tour-bubble");
 
         // Arrow pointer
         arrow = new javafx.scene.shape.Polygon();
         arrow.getStyleClass().add("tour-arrow");
-        arrow.setFill(Color.web("#ffffff")); // Default match bubble bg (updated in CSS)
+        arrow.setFill(Color.web("#ffffff"));
 
-        // Title
+        // Header with title and step counter
+        HBox headerBox = new HBox(10);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
+
         lblTitle = new Label();
         lblTitle.getStyleClass().add("tour-title");
         lblTitle.setWrapText(true);
+        HBox.setHgrow(lblTitle, Priority.ALWAYS);
+
+        lblStepCounter = new Label();
+        lblStepCounter.getStyleClass().add("tour-step-counter");
+
+        headerBox.getChildren().addAll(lblTitle, lblStepCounter);
 
         // Description
         lblDescription = new Label();
         lblDescription.getStyleClass().add("tour-description");
         lblDescription.setWrapText(true);
 
+        // Progress Dots
+        progressDots = new HBox(6);
+        progressDots.setAlignment(Pos.CENTER);
+        progressDots.getStyleClass().add("tour-progress-dots");
+
         // Buttons
-        HBox buttonBox = new HBox(10);
+        HBox buttonBox = new HBox(8);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
 
         btnSkip = new Button("Skip");
         btnSkip.getStyleClass().add("tour-btn-skip");
         btnSkip.setOnAction(e -> onSkip.run());
 
+        btnPrevious = new Button("Previous");
+        btnPrevious.getStyleClass().add("tour-btn-previous");
+        btnPrevious.setOnAction(e -> {
+            if (onPrevious != null)
+                onPrevious.run();
+        });
+
         btnNext = new Button("Next");
         btnNext.getStyleClass().add("tour-btn-next");
         btnNext.setOnAction(e -> onNext.run());
 
-        buttonBox.getChildren().addAll(btnSkip, btnNext);
+        // Spacer to push navigation buttons right
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        messageBubble.getChildren().addAll(lblTitle, lblDescription, buttonBox);
-        getChildren().addAll(maskGroup(), arrow, messageBubble); // Order matters
+        buttonBox.getChildren().addAll(btnSkip, spacer, btnPrevious, btnNext);
 
-        // Initial visibility
+        messageBubble.getChildren().addAll(headerBox, lblDescription, progressDots, buttonBox);
+        getChildren().addAll(maskGroup(), arrow, messageBubble);
+
         setVisible(false);
-        // Initial visibility
-        setVisible(false);
+    }
+
+    public void setOnPrevious(Runnable onPrevious) {
+        this.onPrevious = onPrevious;
     }
 
     public void setButtonLabels(String skipText, String nextText) {
@@ -114,25 +163,89 @@ public class TourOverlay extends Pane {
             btnNext.setText(nextText);
     }
 
-    public void showStep(TourStep step) {
+    public void setButtonLabels(String skipText, String previousText, String nextText) {
+        if (btnSkip != null)
+            btnSkip.setText(skipText);
+        if (btnPrevious != null)
+            btnPrevious.setText(previousText);
+        if (btnNext != null)
+            btnNext.setText(nextText);
+    }
+
+    public void setTotalSteps(int total) {
+        this.totalSteps = total;
+        updateProgressDots();
+    }
+
+    public void showStep(TourStep step, int stepIndex) {
         this.currentStep = step;
+        this.currentStepIndex = stepIndex;
         if (step == null)
             return;
 
         // Update content
         lblTitle.setText(step.title());
         lblDescription.setText(step.description());
+        lblStepCounter.setText((stepIndex + 1) + "/" + totalSteps);
+
+        // Update progress dots
+        updateProgressDots();
+
+        // Update Previous button state
+        btnPrevious.setDisable(stepIndex == 0);
+        btnPrevious.setVisible(stepIndex > 0);
+        btnPrevious.setManaged(stepIndex > 0);
+
+        // Update Next button text for last step
+        if (stepIndex == totalSteps - 1) {
+            btnNext.setText(btnNext.getText().equals("Next") ? "Finish" : btnNext.getText());
+        }
 
         refreshLayout();
 
-        FadeTransition ft = new FadeTransition(Duration.millis(300), this);
+        // Combined fade + scale animation
+        messageBubble.setScaleX(0.9);
+        messageBubble.setScaleY(0.9);
+
+        FadeTransition ft = new FadeTransition(Duration.millis(250), this);
         ft.setFromValue(0);
         ft.setToValue(1);
-        setVisible(true);
-        ft.play();
 
-        // Accessibility focus
-        messageBubble.requestFocus();
+        ScaleTransition st = new ScaleTransition(Duration.millis(300), messageBubble);
+        st.setFromX(0.9);
+        st.setFromY(0.9);
+        st.setToX(1.0);
+        st.setToY(1.0);
+
+        ParallelTransition pt = new ParallelTransition(ft, st);
+        setVisible(true);
+        pt.play();
+
+        // Request focus for keyboard navigation
+        this.requestFocus();
+    }
+
+    // Legacy method for backward compatibility
+    public void showStep(TourStep step) {
+        showStep(step, currentStepIndex);
+    }
+
+    private void updateProgressDots() {
+        progressDots.getChildren().clear();
+        for (int i = 0; i < totalSteps; i++) {
+            Circle dot = new Circle(4);
+            if (i == currentStepIndex) {
+                dot.getStyleClass().add("tour-dot-active");
+                dot.setFill(Color.web("#6366F1"));
+            } else if (i < currentStepIndex) {
+                dot.getStyleClass().add("tour-dot-completed");
+                dot.setFill(Color.web("#10B981"));
+            } else {
+                dot.getStyleClass().add("tour-dot-inactive");
+                dot.setFill(Color.web("#D1D5DB"));
+            }
+            progressDots.getChildren().add(dot);
+        }
     }
 
     private void refreshLayout() {

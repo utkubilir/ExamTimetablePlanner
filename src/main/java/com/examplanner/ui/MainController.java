@@ -728,27 +728,62 @@ public class MainController {
             return;
 
         this.tourManager = new TourManager(rootContainer);
-        tourManager.setLocalizedLabels(bundle.getString("tour.skip"), bundle.getString("tour.next"));
+        tourManager.setLocalizedLabels(
+                bundle.getString("tour.skip"),
+                bundle.getString("tour.previous"),
+                bundle.getString("tour.next"));
 
-        // Define steps
+        // Define steps - ordered by user workflow
+
+        // Step 1: Data Import button (sidebar navigation)
         tourManager.addStep(new TourStep(
                 btnDataImport,
                 bundle.getString("tour.import.title"),
                 bundle.getString("tour.import.desc"),
                 TourPosition.RIGHT));
 
+        // Step 2: Generate Timetable button (main action)
+        if (btnGenerateDataImport != null) {
+            tourManager.addStep(new TourStep(
+                    btnGenerateDataImport,
+                    bundle.getString("tour.generate.title"),
+                    bundle.getString("tour.generate.desc"),
+                    TourPosition.TOP));
+        }
+
+        // Step 3: Timetable view (sidebar navigation)
         tourManager.addStep(new TourStep(
                 btnTimetable,
                 bundle.getString("tour.timetable.title"),
                 bundle.getString("tour.timetable.desc"),
                 TourPosition.RIGHT));
 
+        // Step 4: Dashboard (sidebar navigation)
         tourManager.addStep(new TourStep(
                 btnDashboard,
                 bundle.getString("tour.dashboard.title"),
                 bundle.getString("tour.dashboard.desc"),
                 TourPosition.RIGHT));
 
+        // Step 5: Student Search (sidebar navigation)
+        if (btnStudentSearch != null) {
+            tourManager.addStep(new TourStep(
+                    btnStudentSearch,
+                    bundle.getString("tour.search.title"),
+                    bundle.getString("tour.search.desc"),
+                    TourPosition.RIGHT));
+        }
+
+        // Step 6: Help button (sidebar footer)
+        if (btnHelp != null) {
+            tourManager.addStep(new TourStep(
+                    btnHelp,
+                    bundle.getString("tour.help.title"),
+                    bundle.getString("tour.help.desc"),
+                    TourPosition.RIGHT));
+        }
+
+        // Step 7: Settings (sidebar footer)
         tourManager.addStep(new TourStep(
                 btnSettings,
                 bundle.getString("tour.settings.title"),
