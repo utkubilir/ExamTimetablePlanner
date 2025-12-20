@@ -119,6 +119,28 @@ public class MainController {
     @FXML
     private javafx.scene.chart.PieChart chartRoomUsage;
 
+    // Dashboard Statistics Cards
+    @FXML
+    private Label lblStatExamsValue;
+    @FXML
+    private Label lblStatStudentsValue;
+    @FXML
+    private Label lblStatClassroomsValue;
+    @FXML
+    private Label lblStatDaysValue;
+
+    // Dashboard Additional Charts
+    @FXML
+    private javafx.scene.chart.BarChart<String, Number> chartTimeSlots;
+    @FXML
+    private javafx.scene.chart.BarChart<String, Number> chartStudentLoad;
+
+    // Dashboard Conflict Warning
+    @FXML
+    private javafx.scene.layout.HBox conflictWarningBox;
+    @FXML
+    private Label lblConflictDetails;
+
     @FXML
     private Button btnSearchFilter; // FXML'de verdiğimiz yeni ID
     @FXML
@@ -3776,6 +3798,16 @@ public class MainController {
 
     private void refreshDashboard() {
         if (currentTimetable == null || currentTimetable.getExams().isEmpty()) {
+            // Clear stats
+            if (lblStatExamsValue != null)
+                lblStatExamsValue.setText("0");
+            if (lblStatStudentsValue != null)
+                lblStatStudentsValue.setText("0");
+            if (lblStatClassroomsValue != null)
+                lblStatClassroomsValue.setText("0");
+            if (lblStatDaysValue != null)
+                lblStatDaysValue.setText("0");
+
             // Clear charts when no data
             if (chartExamsPerDay != null) {
                 chartExamsPerDay.getData().clear();
@@ -3783,45 +3815,116 @@ public class MainController {
             if (chartRoomUsage != null) {
                 chartRoomUsage.getData().clear();
             }
+            if (chartTimeSlots != null) {
+                chartTimeSlots.getData().clear();
+            }
+            if (chartStudentLoad != null) {
+                chartStudentLoad.getData().clear();
+            }
+
+            // Hide conflict warning
+            if (conflictWarningBox != null) {
+                conflictWarningBox.setVisible(false);
+                conflictWarningBox.setManaged(false);
+            }
             return;
         }
 
-        // 1. Exams Per Day (Bar Chart)
+        List<Exam> exams = currentTimetable.getExams();
+
+        // ==========================================
+        // 1. SUMMARY STATISTICS CARDS
+        // ==========================================
+
+        // Total Exams
+        if (lblStatExamsValue != null) {
+            lblStatExamsValue.setText(String.valueOf(exams.size()));
+        }
+
+        // Unique Courses (as proxy for students - Course model doesn't track enrolled
+        // students)
+        if (lblStatStudentsValue != null) {
+            long uniqueCourses = exams.stream()
+                    .map(e -> e.getCourse().getCode())
+                    .distinct()
+                    .count();
+            lblStatStudentsValue.setText(String.valueOf(uniqueCourses));
+        }
+
+        // Unique Classrooms
+        if (lblStatClassroomsValue != null) {
+            long uniqueRooms = exams.stream()
+                    .map(e -> e.getClassroom().getName())
+                    .distinct()
+                    .count();
+            lblStatClassroomsValue.setText(String.valueOf(uniqueRooms));
+        }
+
+        // Exam Days
+        if (lblStatDaysValue != null) {
+            long examDays = exams.stream()
+                    .map(e -> e.getSlot().getDate())
+                    .distinct()
+                    .count();
+            lblStatDaysValue.setText(String.valueOf(examDays));
+        }
+
+        // ==========================================
+        // 2. CONFLICT WARNING
+        // ==========================================
+        if (conflictWarningBox != null) {
+            // Check for conflicts (simplified check)
+            int conflictCount = 0;
+            // Here you could add actual conflict detection logic
+            // For now, we'll hide it
+            if (conflictCount > 0) {
+                conflictWarningBox.setVisible(true);
+                conflictWarningBox.setManaged(true);
+                if (lblConflictDetails != null) {
+                    lblConflictDetails.setText(conflictCount + " issue(s) detected");
+                }
+            } else {
+                conflictWarningBox.setVisible(false);
+                conflictWarningBox.setManaged(false);
+            }
+        }
+
+        // ==========================================
+        // 3. EXAMS PER DAY (Bar Chart)
+        // ==========================================
         chartExamsPerDay.getData().clear();
         chartExamsPerDay.setAnimated(false);
 
         if (chartExamsPerDay.getXAxis() instanceof javafx.scene.chart.CategoryAxis) {
             javafx.scene.chart.CategoryAxis xAxis = (javafx.scene.chart.CategoryAxis) chartExamsPerDay.getXAxis();
-            xAxis.setTickLabelRotation(90);
-            xAxis.setTickLabelGap(10);
+            xAxis.setTickLabelRotation(45);
+            xAxis.setTickLabelGap(5);
         }
 
-        Map<LocalDate, Long> examsByDate = currentTimetable.getExams().stream()
+        Map<LocalDate, Long> examsByDate = exams.stream()
                 .collect(Collectors.groupingBy(e -> e.getSlot().getDate(), Collectors.counting()));
 
-        javafx.scene.chart.XYChart.Series<String, Number> series = new javafx.scene.chart.XYChart.Series<>();
-        series.setName("Exams");
+        javafx.scene.chart.XYChart.Series<String, Number> datesSeries = new javafx.scene.chart.XYChart.Series<>();
+        datesSeries.setName("Exams");
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
-
-        // Create a map for date lookup
         Map<String, LocalDate> dateMap = new HashMap<>();
 
-        // Sort by date
         examsByDate.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> {
                     String dateStr = entry.getKey().format(fmt);
                     dateMap.put(dateStr, entry.getKey());
-                    series.getData()
-                            .add(new javafx.scene.chart.XYChart.Data<>(dateStr, entry.getValue()));
+                    datesSeries.getData().add(new javafx.scene.chart.XYChart.Data<>(dateStr, entry.getValue()));
                 });
 
-        chartExamsPerDay.getData().add(series);
+        chartExamsPerDay.getData().add(datesSeries);
 
-        // 2. Room Utilization (Pie Chart)
+        // ==========================================
+        // 4. ROOM UTILIZATION (Pie Chart)
+        // ==========================================
         chartRoomUsage.getData().clear();
-        Map<String, Long> roomUsage = currentTimetable.getExams().stream()
+        Map<String, Long> roomUsage = exams.stream()
                 .collect(Collectors.groupingBy(e -> e.getClassroom().getName(), Collectors.counting()));
 
         roomUsage.forEach((room, count) -> {
@@ -3829,10 +3932,66 @@ public class MainController {
             chartRoomUsage.getData().add(pieData);
         });
 
-        // Add click handlers after the scene is rendered using Platform.runLater
+        // ==========================================
+        // 5. TIME SLOT DISTRIBUTION (Bar Chart)
+        // ==========================================
+        if (chartTimeSlots != null) {
+            chartTimeSlots.getData().clear();
+            chartTimeSlots.setAnimated(false);
+
+            Map<String, Long> slotUsage = exams.stream()
+                    .collect(Collectors.groupingBy(e -> {
+                        java.time.LocalTime start = e.getSlot().getStartTime();
+                        java.time.LocalTime end = e.getSlot().getEndTime();
+                        return start.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) + "-" +
+                                end.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                    }, Collectors.counting()));
+
+            javafx.scene.chart.XYChart.Series<String, Number> slotSeries = new javafx.scene.chart.XYChart.Series<>();
+            slotSeries.setName("Exams");
+
+            slotUsage.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        slotSeries.getData()
+                                .add(new javafx.scene.chart.XYChart.Data<>(entry.getKey(), entry.getValue()));
+                    });
+
+            chartTimeSlots.getData().add(slotSeries);
+        }
+
+        // ==========================================
+        // 6. STUDENT EXAM LOAD DISTRIBUTION
+        // ==========================================
+        if (chartStudentLoad != null) {
+            chartStudentLoad.getData().clear();
+            chartStudentLoad.setAnimated(false);
+
+            // Courses per Classroom distribution (alternative metric since student
+            // enrollment not available)
+            Map<String, Long> classroomExamCount = exams.stream()
+                    .collect(Collectors.groupingBy(e -> e.getClassroom().getName(), Collectors.counting()));
+
+            javafx.scene.chart.XYChart.Series<String, Number> loadSeries = new javafx.scene.chart.XYChart.Series<>();
+            loadSeries.setName("Exams");
+
+            classroomExamCount.entrySet().stream()
+                    .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                    .limit(8) // Top 8 classrooms
+                    .forEach(entry -> {
+                        loadSeries.getData()
+                                .add(new javafx.scene.chart.XYChart.Data<>(entry.getKey(), entry.getValue()));
+                    });
+
+            chartStudentLoad.getData().add(loadSeries);
+        }
+
+        // ==========================================
+        // 7. ADD CLICK HANDLERS
+        // ==========================================
         javafx.application.Platform.runLater(() -> {
             // Bar chart click handlers
-            for (javafx.scene.chart.XYChart.Data<String, Number> data : series.getData()) {
+            for (javafx.scene.chart.XYChart.Data<String, Number> data : datesSeries.getData()) {
                 if (data.getNode() != null) {
                     data.getNode().setStyle("-fx-cursor: hand;");
                     data.getNode().setOnMouseClicked(event -> {

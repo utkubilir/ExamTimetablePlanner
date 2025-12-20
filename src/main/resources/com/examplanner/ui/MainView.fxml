@@ -256,13 +256,68 @@
                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
              </padding>
              <children>
-                 <Label fx:id="lblDashboardTitle" styleClass="section-title" text="Analytics Dashboard" />
-                 <Label fx:id="lblDashboardSubtitle" styleClass="section-subtitle" text="Schedule Insights" />
+                 <!-- Header with title and actions -->
+                 <HBox alignment="CENTER_LEFT" spacing="20">
+                     <VBox>
+                         <Label fx:id="lblDashboardTitle" styleClass="section-title" text="Analytics Dashboard" />
+                         <Label fx:id="lblDashboardSubtitle" styleClass="section-subtitle" text="Schedule Insights" />
+                     </VBox>
+                     <Region HBox.hgrow="ALWAYS" />
+                     <!-- Quick Actions -->
+                     <Button fx:id="btnDashboardExport" onAction="#handleExportPdf" styleClass="secondary-button" text="Export Report">
+                        <graphic><FontIcon iconLiteral="fas-file-pdf" iconSize="14" styleClass="btn-icon"/></graphic>
+                     </Button>
+                     <Button fx:id="btnDashboardConflicts" onAction="#handleConflicts" styleClass="secondary-button" text="View Conflicts">
+                        <graphic><FontIcon iconLiteral="fas-exclamation-triangle" iconSize="14" styleClass="btn-icon-warning"/></graphic>
+                     </Button>
+                     <Button fx:id="btnDashboardRegenerate" onAction="#handleGenerateTimetable" styleClass="primary-button" text="Regenerate">
+                        <graphic><FontIcon iconLiteral="fas-sync-alt" iconSize="14" style="-fx-icon-color: white;"/></graphic>
+                     </Button>
+                 </HBox>
                  
+                 <!-- Summary Statistics Cards -->
+                 <HBox fx:id="statsContainer" spacing="15" styleClass="stats-row">
+                     <!-- Total Exams Card -->
+                     <VBox fx:id="statCardExams" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+                         <FontIcon iconLiteral="fas-calendar-check" iconSize="28" styleClass="stat-icon stat-icon-primary"/>
+                         <Label fx:id="lblStatExamsValue" styleClass="stat-value" text="0"/>
+                         <Label fx:id="lblStatExamsLabel" styleClass="stat-label" text="Total Exams"/>
+                     </VBox>
+                     <!-- Total Courses Card -->
+                     <VBox fx:id="statCardStudents" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+                         <FontIcon iconLiteral="fas-user-graduate" iconSize="28" styleClass="stat-icon stat-icon-success"/>
+                         <Label fx:id="lblStatStudentsValue" styleClass="stat-value" text="0"/>
+                         <Label fx:id="lblStatStudentsLabel" styleClass="stat-label" text="Courses"/>
+                     </VBox>
+                     <!-- Total Classrooms Card -->
+                     <VBox fx:id="statCardClassrooms" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+                         <FontIcon iconLiteral="fas-building" iconSize="28" styleClass="stat-icon stat-icon-info"/>
+                         <Label fx:id="lblStatClassroomsValue" styleClass="stat-value" text="0"/>
+                         <Label fx:id="lblStatClassroomsLabel" styleClass="stat-label" text="Classrooms"/>
+                     </VBox>
+                     <!-- Exam Days Card -->
+                     <VBox fx:id="statCardDays" styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+                         <FontIcon iconLiteral="fas-clock" iconSize="28" styleClass="stat-icon stat-icon-warning"/>
+                         <Label fx:id="lblStatDaysValue" styleClass="stat-value" text="0"/>
+                         <Label fx:id="lblStatDaysLabel" styleClass="stat-label" text="Exam Days"/>
+                     </VBox>
+                 </HBox>
+                 
+                 <!-- Conflict Warning (shown when conflicts exist) -->
+                 <HBox fx:id="conflictWarningBox" spacing="15" styleClass="warning-box" visible="false" managed="false" alignment="CENTER_LEFT">
+                     <FontIcon iconLiteral="fas-exclamation-triangle" iconSize="20" styleClass="warning-icon"/>
+                     <VBox HBox.hgrow="ALWAYS">
+                         <Label fx:id="lblConflictTitle" styleClass="warning-title" text="Conflicts Detected"/>
+                         <Label fx:id="lblConflictDetails" styleClass="warning-details" text="2 capacity issues, 1 time overlap"/>
+                     </VBox>
+                     <Button fx:id="btnViewConflicts" onAction="#handleConflicts" styleClass="warning-button" text="View Details"/>
+                 </HBox>
+                 
+                 <!-- Charts Row 1: Exams Per Day + Room Utilization -->
                  <HBox spacing="20" VBox.vgrow="ALWAYS">
                      <VBox styleClass="card" HBox.hgrow="ALWAYS">
                          <Label fx:id="lblExamsPerDay" styleClass="card-title" text="Exams Per Day" />
-                         <BarChart fx:id="chartExamsPerDay">
+                         <BarChart fx:id="chartExamsPerDay" VBox.vgrow="ALWAYS">
                              <xAxis>
                                  <CategoryAxis label="Date" />
                              </xAxis>
@@ -274,7 +329,34 @@
                      
                      <VBox styleClass="card" HBox.hgrow="ALWAYS">
                          <Label fx:id="lblRoomUtilization" styleClass="card-title" text="Room Utilization" />
-                         <PieChart fx:id="chartRoomUsage" />
+                         <PieChart fx:id="chartRoomUsage" VBox.vgrow="ALWAYS" />
+                     </VBox>
+                 </HBox>
+                 
+                 <!-- Charts Row 2: Time Slots + Student Load (optional expansion) -->
+                 <HBox fx:id="chartsRow2" spacing="20" VBox.vgrow="ALWAYS">
+                     <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                         <Label fx:id="lblTimeSlots" styleClass="card-title" text="Time Slot Distribution" />
+                         <BarChart fx:id="chartTimeSlots" VBox.vgrow="ALWAYS">
+                             <xAxis>
+                                 <CategoryAxis label="Time Slot" />
+                             </xAxis>
+                             <yAxis>
+                                 <NumberAxis label="Exams" />
+                             </yAxis>
+                         </BarChart>
+                     </VBox>
+                     
+                     <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                         <Label fx:id="lblStudentLoad" styleClass="card-title" text="Top Classrooms" />
+                         <BarChart fx:id="chartStudentLoad" VBox.vgrow="ALWAYS">
+                             <xAxis>
+                                 <CategoryAxis label="Classroom" />
+                             </xAxis>
+                             <yAxis>
+                                 <NumberAxis label="Exams" />
+                             </yAxis>
+                         </BarChart>
                      </VBox>
                  </HBox>
              </children>

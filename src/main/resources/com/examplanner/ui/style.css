@@ -2512,3 +2512,232 @@
 .searchable-dialog.dark-mode .viewport {
     -fx-background-color: #1F2937;
 }
+
+/* ========================================
+   DASHBOARD STYLES
+   ======================================== */
+
+/* Stats Row Container */
+.stats-row {
+    -fx-spacing: 15;
+}
+
+/* Stat Card */
+.stat-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12;
+    -fx-border-color: #E5E7EB;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 20 15;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 8, 0, 0, 2);
+}
+
+.stat-card:hover {
+    -fx-border-color: #8B5CF6;
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.15), 12, 0, 0, 4);
+}
+
+/* Stat Icons */
+.stat-icon {
+    -fx-icon-color: #8B5CF6;
+}
+
+.stat-icon-primary {
+    -fx-icon-color: #8B5CF6;
+}
+
+.stat-icon-success {
+    -fx-icon-color: #10B981;
+}
+
+.stat-icon-info {
+    -fx-icon-color: #3B82F6;
+}
+
+.stat-icon-warning {
+    -fx-icon-color: #F59E0B;
+}
+
+/* Stat Value (Big Number) */
+.stat-value {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2937;
+}
+
+/* Stat Label */
+.stat-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+
+/* Warning Box (Conflicts) */
+.warning-box {
+    -fx-background-color: #FEF3C7;
+    -fx-background-radius: 10;
+    -fx-border-color: #F59E0B;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 12 18;
+}
+
+.warning-icon {
+    -fx-icon-color: #D97706;
+}
+
+.warning-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #92400E;
+}
+
+.warning-details {
+    -fx-font-size: 12px;
+    -fx-text-fill: #B45309;
+}
+
+.warning-button {
+    -fx-background-color: #F59E0B;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-padding: 8 16;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.warning-button:hover {
+    -fx-background-color: #D97706;
+}
+
+/* Dashboard Charts */
+.chart {
+    -fx-background-color: transparent;
+}
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+    -fx-padding: 5;
+}
+
+/* Bar Chart Colors */
+.default-color0.chart-bar {
+    -fx-bar-fill: #8B5CF6;
+}
+
+.default-color0.chart-bar:hover {
+    -fx-bar-fill: #7C3AED;
+}
+
+/* Pie Chart Colors */
+.default-color0.chart-pie {
+    -fx-pie-color: #8B5CF6;
+}
+
+.default-color1.chart-pie {
+    -fx-pie-color: #10B981;
+}
+
+.default-color2.chart-pie {
+    -fx-pie-color: #3B82F6;
+}
+
+.default-color3.chart-pie {
+    -fx-pie-color: #F59E0B;
+}
+
+.default-color4.chart-pie {
+    -fx-pie-color: #EF4444;
+}
+
+.default-color5.chart-pie {
+    -fx-pie-color: #EC4899;
+}
+
+.default-color6.chart-pie {
+    -fx-pie-color: #06B6D4;
+}
+
+.default-color7.chart-pie {
+    -fx-pie-color: #84CC16;
+}
+
+/* ========================================
+   DASHBOARD DARK MODE
+   ======================================== */
+
+.dark-mode .stat-card {
+    -fx-background-color: #1F2937;
+    -fx-border-color: #374151;
+}
+
+.dark-mode .stat-card:hover {
+    -fx-border-color: #A78BFA;
+}
+
+.dark-mode .stat-value {
+    -fx-text-fill: #F9FAFB;
+}
+
+.dark-mode .stat-label {
+    -fx-text-fill: #9CA3AF;
+}
+
+.dark-mode .warning-box {
+    -fx-background-color: #451A03;
+    -fx-border-color: #92400E;
+}
+
+.dark-mode .warning-title {
+    -fx-text-fill: #FDE68A;
+}
+
+.dark-mode .warning-details {
+    -fx-text-fill: #FCD34D;
+}
+
+.dark-mode .warning-button {
+    -fx-background-color: #B45309;
+}
+
+.dark-mode .warning-button:hover {
+    -fx-background-color: #92400E;
+}
+
+/* Dark Mode Charts */
+.dark-mode .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.dark-mode .chart-legend {
+    -fx-background-color: transparent;
+}
+
+.dark-mode .chart-legend-item-text {
+    -fx-text-fill: #D1D5DB;
+}
+
+.dark-mode .axis-label {
+    -fx-text-fill: #9CA3AF;
+}
+
+.dark-mode .axis-tick-label {
+    -fx-text-fill: #6B7280;
+}
+
+.dark-mode .chart-vertical-grid-lines,
+.dark-mode .chart-horizontal-grid-lines {
+    -fx-stroke: #374151;
+}
+
+.dark-mode .default-color0.chart-bar {
+    -fx-bar-fill: #A78BFA;
+}
+
+.dark-mode .default-color0.chart-bar:hover {
+    -fx-bar-fill: #C4B5FD;
+}
