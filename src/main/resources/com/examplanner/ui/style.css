@@ -1204,6 +1204,11 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.4), 20, 0, 0, 5);
 }
 
+/* Icon with glow effect */
+.splash-icon {
+    -fx-effect: dropshadow(three-pass-box, rgba(255, 255, 255, 0.6), 15, 0, 0, 0);
+}
+
 .splash-title-main {
     -fx-font-size: 42px;
     -fx-font-weight: bold;
@@ -1214,8 +1219,9 @@
 
 .splash-subtitle-elegant {
     -fx-font-size: 16px;
-    -fx-text-fill: rgba(255, 255, 255, 0.85);
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
     -fx-font-family: "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-weight: normal;
 }
 
 .splash-loading-container {
@@ -1223,43 +1229,54 @@
 }
 
 .splash-progress-modern {
-    -fx-pref-height: 6px;
-    -fx-background-radius: 3;
+    -fx-pref-height: 8px;
+    -fx-background-radius: 4;
     -fx-max-width: 350;
 }
 
 .splash-progress-modern>.track {
-    -fx-background-color: rgba(255, 255, 255, 0.2);
-    -fx-background-radius: 3;
+    -fx-background-color: rgba(255, 255, 255, 0.25);
+    -fx-background-radius: 4;
     -fx-background-insets: 0;
 }
 
 .splash-progress-modern>.bar {
     -fx-background-color: linear-gradient(to right, #a78bfa, #f9a8d4, #fcd34d);
-    -fx-background-radius: 3;
+    -fx-background-radius: 4;
     -fx-background-insets: 0;
 }
 
-.splash-loading-dot {
-    -fx-font-size: 10px;
-    -fx-text-fill: #a78bfa;
+.splash-loading-dots {
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
+    -fx-font-weight: bold;
+    -fx-min-width: 25px;
 }
 
 .splash-status-modern {
     -fx-font-size: 13px;
-    -fx-text-fill: rgba(255, 255, 255, 0.8);
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
     -fx-font-family: "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 .splash-version-elegant {
-    -fx-font-size: 12px;
-    -fx-text-fill: rgba(255, 255, 255, 0.6);
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.7);
     -fx-font-weight: bold;
 }
 
 .splash-copyright {
-    -fx-font-size: 10px;
-    -fx-text-fill: rgba(255, 255, 255, 0.4);
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(255, 255, 255, 0.5);
+}
+
+.splash-tip {
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.75);
+    -fx-font-style: italic;
+    -fx-padding: 8 15 8 15;
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 20;
 }
 
 /* Legacy splash styles (preserved for compatibility) */

@@ -5,38 +5,63 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.shape.Circle?>
 
 <StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
-           styleClass="splash-screen" prefWidth="500" prefHeight="350">
+           styleClass="splash-screen" prefWidth="550" prefHeight="400">
     
-    <VBox alignment="CENTER" spacing="20">
+    <!-- Floating Particles Container (background) -->
+    <Pane fx:id="particleContainer" mouseTransparent="true" />
+    
+    <!-- Main Content -->
+    <VBox alignment="CENTER" spacing="12">
         <padding>
-            <Insets bottom="40" left="40" right="40" top="40" />
+            <Insets bottom="25" left="50" right="50" top="35" />
         </padding>
         
-        <!-- App Icon -->
-        <ImageView fitWidth="80" fitHeight="80" preserveRatio="true">
-            <image>
-                <Image url="@icon.png" />
-            </image>
-        </ImageView>
+        <!-- App Icon with glow effect -->
+        <StackPane fx:id="iconContainer">
+            <ImageView fx:id="appIcon" fitWidth="100" fitHeight="100" preserveRatio="true" styleClass="splash-icon">
+                <image>
+                    <Image url="@icon.png" />
+                </image>
+            </ImageView>
+        </StackPane>
         
-        <!-- App Title -->
-        <Label text="Exam Planner" styleClass="splash-title" />
+        <!-- App Title with shimmer effect -->
+        <Label fx:id="titleLabel" text="Exam Planner" styleClass="splash-title-main" />
         
         <!-- Subtitle -->
-        <Label text="Sınav Takvimi Yönetim Sistemi" styleClass="splash-subtitle" />
+        <Label text="Sınav Takvimi Yönetim Sistemi" styleClass="splash-subtitle-elegant" />
+        
+        <!-- Spacer -->
+        <Region prefHeight="20" />
         
         <!-- Loading Progress -->
-        <VBox alignment="CENTER" spacing="10">
-            <ProgressBar fx:id="progressBar" styleClass="splash-progress" prefWidth="300" />
-            <Label fx:id="lblStatus" text="Yükleniyor..." styleClass="splash-status" />
+        <VBox alignment="CENTER" spacing="10" styleClass="splash-loading-container">
+            <ProgressBar fx:id="progressBar" styleClass="splash-progress-modern" prefWidth="360" />
+            <HBox alignment="CENTER" spacing="5">
+                <Label fx:id="lblStatus" text="Başlatılıyor" styleClass="splash-status-modern" />
+                <Label fx:id="loadingDots" text="..." styleClass="splash-loading-dots" />
+            </HBox>
         </VBox>
         
-        <!-- Version -->
-        <Label text="v1.0.0" styleClass="splash-version" />
+        <!-- Loading Tip -->
+        <Label fx:id="tipLabel" text="💡 Kısayol: F1 ile yardım menüsünü açabilirsiniz" styleClass="splash-tip" />
+        
+        <!-- Spacer -->
+        <Region prefHeight="8" />
+        
+        <!-- Version and Copyright -->
+        <VBox alignment="CENTER" spacing="2">
+            <Label text="v1.0.0" styleClass="splash-version-elegant" />
+            <Label text="© 2024 SE-302 Project Team • Yaşar Üniversitesi" styleClass="splash-copyright" />
+        </VBox>
     </VBox>
     
 </StackPane>
