@@ -34,29 +34,18 @@ document.querySelectorAll('.nav-link').forEach(link => {
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
 
-window.addEventListener('scroll', () => {
-    let current = '';
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop - 120;
-        if (window.scrollY >= sectionTop) {
-            current = section.getAttribute('id');
-        }
-    });
 
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
-            link.classList.add('active');
-        }
-    });
-});
+// Reading & Progress Bar
+const progressBar = document.getElementById('progressBar');
+const readingProgress = document.getElementById('readingProgress');
 
-// Progress Bar
 window.addEventListener('scroll', () => {
     const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
     const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
     const scrolled = (winScroll / height) * 100;
-    document.getElementById('progressBar').style.width = scrolled + '%';
+
+    if (progressBar) progressBar.style.width = scrolled + '%';
+    if (readingProgress) readingProgress.style.width = scrolled + '%';
 });
 
 // Back to Top
@@ -78,9 +67,32 @@ backToTop?.addEventListener('click', () => {
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('theme');
 
+// Function to update Mermaid theme
+function updateMermaidTheme(isDark) {
+    if (typeof mermaid !== 'undefined') {
+        try {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: isDark ? 'dark' : 'default'
+            });
+            // Re-render all mermaid diagrams
+            document.querySelectorAll('.mermaid').forEach(el => {
+                const code = el.textContent || el.innerText;
+                el.removeAttribute('data-processed');
+                el.innerHTML = code;
+            });
+            mermaid.init(undefined, '.mermaid');
+        } catch (e) {
+            console.warn('Mermaid theme update failed:', e);
+        }
+    }
+}
+
 if (savedTheme === 'dark') {
     document.body.classList.add('dark-mode');
-    themeToggle.textContent = '☀️';
+    if (themeToggle) themeToggle.textContent = '☀️';
+    // Update Mermaid on page load if dark mode
+    document.addEventListener('DOMContentLoaded', () => updateMermaidTheme(true));
 }
 
 themeToggle?.addEventListener('click', () => {
@@ -88,6 +100,7 @@ themeToggle?.addEventListener('click', () => {
     const isDark = document.body.classList.contains('dark-mode');
     themeToggle.textContent = isDark ? '☀️' : '🌙';
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateMermaidTheme(isDark);
 });
 
 // Search
@@ -189,3 +202,61 @@ document.querySelectorAll('pre:not(.mermaid)').forEach(pre => {
 
     wrapper.appendChild(btn);
 });
+
+// Lightbox Logic
+const lightbox = document.createElement('div');
+lightbox.className = 'lightbox';
+lightbox.innerHTML = `
+    <div class="lightbox-close">&times;</div>
+    <img src="" alt="Full size screenshot" class="lightbox-img">
+`;
+document.body.appendChild(lightbox);
+
+const lightboxImg = lightbox.querySelector('.lightbox-img');
+const lightboxClose = lightbox.querySelector('.lightbox-close');
+
+document.querySelectorAll('.screenshot-img').forEach(img => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', () => {
+        lightboxImg.src = img.src;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+    });
+});
+
+function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
+});
+
+// Close on ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+        closeLightbox();
+    }
+});
+
+// Enhanced Scroll-Spy (Intersection Observer)
+const observerOptions = {
+    root: null,
+    rootMargin: '-20% 0px -70% 0px',
+    threshold: 0
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            navLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+            });
+        }
+    });
+}, observerOptions);
+
+sections.forEach(section => observer.observe(section));

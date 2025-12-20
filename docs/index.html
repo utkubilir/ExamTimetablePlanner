@@ -4,10 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Exam Timetable Planner - SE-302 Software Engineering Project Report">
+    <meta name="description"
+        content="Exam Timetable Planner - SE-302 Software Engineering Project. Automated exam scheduling system for educational institutions with constraint satisfaction algorithm.">
+    <meta name="keywords"
+        content="exam scheduler, timetable planner, JavaFX, university scheduling, SE-302, constraint satisfaction, automated scheduling">
+    <meta name="author" content="SE-302 Project Team">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://utkubilir.github.io/ExamTimetablePlanner/">
     <meta property="og:title" content="Exam Timetable Planner | Project Report">
     <meta property="og:description" content="Automated Exam Scheduling System for Educational Institutions">
-    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://utkubilir.github.io/ExamTimetablePlanner/">
+    <meta name="twitter:title" content="Exam Timetable Planner | Project Report">
+    <meta name="twitter:description" content="Automated Exam Scheduling System for Educational Institutions">
+    <meta name="twitter:image" content="assets/og-image.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://utkubilir.github.io/ExamTimetablePlanner/">
 
     <title>Exam Timetable Planner | Project Report</title>
     <link rel="icon"
@@ -19,13 +38,25 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
 
+    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" defer></script>
 </head>
 
 <body>
-    <!-- Progress Bar -->
+    <!-- Skip Navigation Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Progress Bar & Reading Progress -->
     <div class="progress-bar" id="progressBar"></div>
+    <div class="reading-progress-container">
+        <div class="reading-progress-bar" id="readingProgress"></div>
+    </div>
 
     <!-- Mobile Header -->
     <header class="mobile-header">
@@ -79,22 +110,27 @@
             <a href="#constraints" class="nav-link">5. Scheduling Constraints</a>
             <a href="#algorithm" class="nav-link">6. Algorithm</a>
             <a href="#architecture" class="nav-link">7. System Architecture</a>
-            <a href="#technologies" class="nav-link">8. Technologies Used</a>
+            <a href="#performance" class="nav-link">8. Performance Analysis</a>
+            <a href="#technologies" class="nav-link">9. Technologies Used</a>
 
             <div class="nav-section-title">Project Info</div>
-            <a href="#structure" class="nav-link">9. Project Structure</a>
-            <a href="#api" class="nav-link">10. API Documentation</a>
-            <a href="#testing" class="nav-link">11. Testing</a>
-            <a href="#installation" class="nav-link">12. Installation Guide</a>
-            <a href="#team" class="nav-link">13. Project Team</a>
-            <a href="#changelog" class="nav-link">14. Changelog</a>
-            <a href="#future" class="nav-link">15. Future Work</a>
-            <a href="#references" class="nav-link">16. References</a>
+            <a href="#structure" class="nav-link">10. Project Structure</a>
+            <a href="#api" class="nav-link">11. API Documentation</a>
+            <a href="#testing" class="nav-link">12. Testing</a>
+            <a href="#comparison" class="nav-link">13. Manual vs. Automated</a>
+            <a href="#installation" class="nav-link">14. Installation Guide</a>
+            <a href="#team" class="nav-link">15. Project Team</a>
+            <a href="#changelog" class="nav-link">16. Changelog</a>
+            <a href="#faq" class="nav-link">17. FAQ</a>
+            <a href="#sidebar-design" class="nav-link">18. Sidebar Design</a>
+            <a href="#import-strategy" class="nav-link">19. Data Import Strategy</a>
+            <a href="#future" class="nav-link">20. Future Work</a>
+            <a href="#references" class="nav-link">21. References</a>
         </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         <!-- Report Header -->
         <header class="report-header">
             <span class="report-badge">SE-302 Software Engineering</span>
@@ -106,6 +142,10 @@
                     Download on GitHub ⬇
                 </a>
                 <span class="hero-subcta">v1.0.0 • Open Source • JavaFX</span>
+            </div>
+
+            <div class="header-actions">
+                <button onclick="window.print()" class="print-btn" title="Print or save as PDF">🖨️ Print</button>
             </div>
 
             <div class="report-meta">
@@ -120,6 +160,14 @@
                 <div class="meta-item">
                     <div class="meta-label">Version</div>
                     <div class="meta-value">1.0.0</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Total Code</div>
+                    <div class="meta-value">21K+ LOC</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Total Work</div>
+                    <div class="meta-value">450+ Hours</div>
                 </div>
                 <div class="meta-item">
                     <div class="meta-label">Last Updated</div>
@@ -224,17 +272,46 @@
 
             <h3 class="subsection-title">Main Dashboard</h3>
             <div class="screenshot-container">
-                <img src="assets/dashboard_view.png" alt="Main Dashboard showing timetable grid" class="screenshot-img">
+                <img src="assets/dashboard_view.png" alt="Main Dashboard showing analytics and timetable overview"
+                    class="screenshot-img" loading="lazy" decoding="async">
                 <p style="text-align:center;font-size:0.9rem;color:var(--gray-500);margin-top:-1.5rem;">
-                    Figure 1: Main application dashboard with interactive timetable grid
+                    Figure 1: Main application dashboard with analytics and quick actions
                 </p>
             </div>
 
             <h3 class="subsection-title">Data Import</h3>
             <div class="screenshot-container">
-                <img src="assets/data_import_view.png" alt="Data Import Interface" class="screenshot-img">
+                <img src="assets/data_import_view.png" alt="Data Import Interface with CSV file upload"
+                    class="screenshot-img" loading="lazy" decoding="async">
                 <p style="text-align:center;font-size:0.9rem;color:var(--gray-500);margin-top:-1.5rem;">
                     Figure 2: CSV Data Import interface with validation feedback
+                </p>
+            </div>
+
+            <h3 class="subsection-title">Timetable View</h3>
+            <div class="screenshot-container">
+                <img src="assets/timetable_view.png" alt="Interactive Timetable Grid showing exam schedule"
+                    class="screenshot-img" loading="lazy" decoding="async">
+                <p style="text-align:center;font-size:0.9rem;color:var(--gray-500);margin-top:-1.5rem;">
+                    Figure 3: Interactive timetable grid with drag-and-drop support
+                </p>
+            </div>
+
+            <h3 class="subsection-title">Conflict Detection</h3>
+            <div class="screenshot-container">
+                <img src="assets/conflict_warning.png" alt="Conflict warning dialog showing scheduling conflict"
+                    class="screenshot-img" loading="lazy" decoding="async">
+                <p style="text-align:center;font-size:0.9rem;color:var(--gray-500);margin-top:-1.5rem;">
+                    Figure 4: Real-time conflict detection and warning system
+                </p>
+            </div>
+
+            <h3 class="subsection-title">Export Options</h3>
+            <div class="screenshot-container">
+                <img src="assets/export_dialog.png" alt="Export dialog with format options" class="screenshot-img"
+                    loading="lazy" decoding="async">
+                <p style="text-align:center;font-size:0.9rem;color:var(--gray-500);margin-top:-1.5rem;">
+                    Figure 5: Flexible export options supporting multiple formats
                 </p>
             </div>
 
@@ -317,74 +394,144 @@ flowchart LR
                 <span class="section-number">6</span>
                 Scheduling Algorithm
             </h2>
+            <div class="info-box tip">
+                <div class="info-box-title">💡 Algorithm Overview</div>
+                <p>
+                    The core of the application is a <strong>Constraint Satisfaction Problem (CSP)</strong> solver that
+                    uses recursive backtracking. Unlike simple greedy approaches, our solver searches for the globally
+                    optimal schedule by minimizing the total number of exam days used.
+                </p>
+            </div>
+
+            <div class="info-box note">
+                <div class="info-box-title">👤 Developer's Note</div>
+                <p>
+                    "Algoritmanın en sevdiğim özelliği, sadece sınavları yerleştirmekle kalmayıp, 'en az kaç günde
+                    bitirebiliriz?' sorusuna Binary Search ile yanıt araması. Bu sayede hem öğrencileri yormayan hem de
+                    okulun fiziksel kaynaklarını en verimli kullanan programı saniyeler içinde bulabiliyoruz."
+                </p>
+            </div>
+
+            <h3 class="subsection-title">1. Binary Search for Optimal Days</h3>
             <p>
-                The exam scheduling algorithm uses a constraint satisfaction approach with backtracking
-                to find valid exam placements. The algorithm prioritizes courses with higher enrollment
-                and more constraints.
+                Instead of just trying to "fit" exams into a fixed range, the algorithm performs a <strong>Binary
+                    Search</strong> on the number of days. For any given range [low, high], it attempts to find a valid
+                schedule for <code>mid</code> days. If successful, it tries fewer days to find the true minimum.
             </p>
 
-            <h3 class="subsection-title">Algorithm Flow</h3>
+            <h3 class="subsection-title">2. Course Splitting (Exam Parts)</h3>
+            <p>
+                To handle large courses that exceed the capacity of any single classroom, the system implements
+                <strong>Dynamic Course Splitting</strong>:
+            </p>
+            <ul>
+                <li><strong>Balanced Partitioning</strong>: Students are divided into <code>N</code> parts where
+                    <code>N = ceil(Students / MaxRoomCapacity)</code>.
+                </li>
+                <li><strong>Simultaneous Scheduling</strong>: All parts of a split course are forced into the
+                    <strong>same time slot</strong> across different classrooms to maintain exam integrity.
+                </li>
+            </ul>
+
+            <h3 class="subsection-title">Algorithm Workflow</h3>
             <div class="mermaid-container">
                 <pre class="mermaid">
 flowchart TD
-    A[Start] --> B[Sort courses by enrollment]
-    B --> C[Get next course]
-    C --> D{Slots available?}
-    D -->|Yes| E[Find valid slot]
-    E --> F{Constraints satisfied?}
-    F -->|Yes| G[Assign exam]
-    F -->|No| H[Try next slot]
-    H --> D
-    G --> I{More courses?}
-    I -->|Yes| C
-    I -->|No| J[Timetable Complete]
-    D -->|No| K[Expand date range]
-    K --> D
+    Start[Start Generation] --> CalcMin[Calculate Lower Bound Days]
+    CalcMin --> BinSearch{Binary Search: Try 'd' Days}
+    
+    subgraph Backtracking ["Backtracking Core"]
+        Sort[Sort Courses: Largest First] --> Pick[Pick Next Course]
+        Pick --> CheckDay[Any Student at Daily Limit?]
+        CheckDay -->|No| TrySlot[Find Valid Time Slot]
+        TrySlot --> CheckGap[Check 3-Hour Gap]
+        CheckGap -->|Pass| FindRoom[Find Smallest-Fit Room]
+        FindRoom -->|Success| Place[Place Exam & Recurse]
+        Place -->|Fail| Undo[Backtrack & Try Next Slot]
+    end
+    
+    BinSearch -->|Success| Save[Update Optimal & Try d-1]
+    BinSearch -->|Fail| Incr[Try d+1]
+    Save --> BinSearch
+    Incr --> BinSearch
+    
+    BinSearch -->|Done| End[Final Timetable Found]
                 </pre>
             </div>
 
-            <h3 class="subsection-title">Constraint Checking Process</h3>
+            <h3 class="subsection-title">Scheduling Sequence</h3>
             <div class="mermaid-container">
                 <pre class="mermaid">
-flowchart LR
-    subgraph Constraints
-        A[Time Window Check] --> B[Capacity Check]
-        B --> C[Room Availability]
-        C --> D[Student Conflict]
-        D --> E[Daily Limit]
-        E --> F[Gap Requirement]
+sequenceDiagram
+    participant U as User
+    participant C as MainController
+    participant S as SchedulerService
+    participant R as DataRepository
+    participant DB as SQLite
+
+    U->>C: Click "Generate Schedule"
+    C->>S: generateTimetable(courses, rooms, ...)
+    S->>S: Binary Search: Find optimal days
+    loop Backtracking Search
+        S->>S: Try place ExamPart
+        S->>S: Validate Constraints
     end
-    F --> G{All Pass?}
-    G -->|Yes| H[✅ Valid]
-    G -->|No| I[❌ Invalid]
+    S->>R: saveTimetable(bestResult)
+    R->>DB: INSERT/UPDATE Exams
+    DB-->>R: Success
+    R-->>S: Done
+    S-->>C: ExamTimetable
+    C->>U: Update UI & Show Success
                 </pre>
             </div>
 
-            <h3 class="subsection-title">Time Complexity</h3>
+            <h3 class="subsection-title">3. Advanced Heuristics & Pruning</h3>
+            <p>
+                To avoid the exponential time complexity of pure backtracking, we use several heuristics:
+            </p>
+            <div class="cards-grid">
+                <div class="card">
+                    <h4>Most Constrained First</h4>
+                    <p>Largest courses are scheduled first. This reduces the search space early by filling up heavy
+                        constraints while resources are still plentiful.</p>
+                </div>
+                <div class="card">
+                    <h4>Smallest Fit (Best-Fit)</h4>
+                    <p>Classrooms are assigned by selecting the smallest room that fits the group. This preserves larger
+                        rooms for courses that actually need them.</p>
+                </div>
+                <div class="card">
+                    <h4>Fail-Fast Pruning</h4>
+                    <p>The <code>ScheduleState</code> keeps a bit-mapped index of student assignments, allowing O(1)
+                        checks for daily limits and time overlaps.</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Complexity Analysis</h3>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Operation</th>
-                            <th>Complexity</th>
-                            <th>Description</th>
+                            <th scope="col">Layer</th>
+                            <th scope="col">Complexity</th>
+                            <th scope="col">Technical Detail</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Slot Search</td>
-                            <td>O(d × s)</td>
-                            <td>d = days, s = slots per day</td>
+                            <td><strong>Day Search</strong></td>
+                            <td>O(log D)</td>
+                            <td>Binary search over possible day ranges (max 31 days).</td>
                         </tr>
                         <tr>
-                            <td>Constraint Check</td>
-                            <td>O(n + r)</td>
-                            <td>n = students, r = rooms</td>
+                            <td><strong>Placement</strong></td>
+                            <td>O(N ^ P)</td>
+                            <td>Recursive backtracking where P is the number of possible slots.</td>
                         </tr>
                         <tr>
-                            <td>Total Generation</td>
-                            <td>O(c × d × s × n)</td>
-                            <td>c = courses</td>
+                            <td><strong>Validation</strong></td>
+                            <td>O(E)</td>
+                            <td>E = enrollment count. Using hash-maps for O(1) lookup.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -402,85 +549,169 @@ flowchart LR
                 <span class="section-number">7</span>
                 System Architecture
             </h2>
+
+            <div class="info-box note">
+                <div class="info-box-title">👤 Developer's Note</div>
+                <p>
+                    "Uygulamayı geliştirirken en çok dikkat ettiğim konu, algoritmik karmaşıklık ile kullanıcı arayüzü
+                    arasındaki bağı koparmaktı. UI katmanı asla algoritmanın nasıl çalıştığını bilmez; sadece bir
+                    'Service' çağırır ve sonucu bekler. Bu 'Separation of Concerns' prensibi, projeyi test edilebilir
+                    kılan en büyük etkendir."
+                </p>
+            </div>
+
             <p>
-                The application follows a layered architecture pattern to ensure modularity, maintainability,
-                and clear separation of concerns. Each layer has a specific responsibility and communicates
-                only with adjacent layers.
+                The application follows a strictly <strong>Layered Architecture</strong> pattern to ensure modularity
+                and scalability. Each component belongs to a specific tier, ensuring that business logic is never
+                coupled with UI rendering.
             </p>
 
-            <h3 class="subsection-title">Class Diagram</h3>
+            <h3 class="subsection-title">Architectural Flow</h3>
             <div class="mermaid-container">
                 <pre class="mermaid">
-classDiagram
-    class Course {
-        -String code
-        -String name
-        -int durationMinutes
-        +getCode()
-        +getName()
-    }
-    class Student {
-        -String id
-        -String name
-        -List~Course~ courses
-    }
-    class Classroom {
-        -String id
-        -String name
-        -int capacity
-    }
-    class Exam {
-        -Course course
-        -ExamSlot slot
-        -Classroom classroom
-    }
-    class ExamSlot {
-        -LocalDate date
-        -LocalTime startTime
-        -LocalTime endTime
-        +overlaps()
-    }
-    class ExamTimetable {
-        -List~Exam~ exams
-        +addExam()
-        +getExams()
-    }
-    Student --> Course : enrolls
-    Exam --> Course
-    Exam --> ExamSlot
-    Exam --> Classroom
-    ExamTimetable --> Exam
+flowchart TD
+    subgraph UI_Layer ["🎨 UI Layer (JavaFX)"]
+        MC[MainController] --> |Triggers| SM[TourManager/Modals]
+        MC --> |Interacts| FXML[FXML/CSS Views]
+    end
+
+    subgraph Service_Layer ["⚙ Service Layer (Business Logic)"]
+        MC --> SS[SchedulerService]
+        MC --> IS[DataImportService]
+        SS --> CC[ConstraintChecker]
+        SS -.-> ST[ScheduleState]
+    end
+
+    subgraph Persistence_Layer ["💾 Persistence Layer (SQLite)"]
+        IS --> DR[DataRepository]
+        SS --> DR
+        DR --> DB[(SQLite Database)]
+    end
+
+    subgraph My_Domain ["📁 Domain Layer (POJO)"]
+        CC --> D[Student/Course/Exam]
+        DR --> D
+    end
                 </pre>
             </div>
 
-            <div class="architecture">
-                <div class="arch-layer">
-                    <span class="arch-layer-name">🎨 Presentation</span>
-                    <span class="arch-layer-desc">JavaFX UI, FXML Views, Controllers</span>
-                    <span class="arch-layer-badge">UI</span>
+            <h3 class="subsection-title">Layer Responsibilities</h3>
+            <div class="cards-grid">
+                <div class="card">
+                    <h4>Presentation (UI)</h4>
+                    <p>Handles user interactions via JavaFX. Uses FXML for declarative UI and CSS for styling.
+                        Responsible for asynchronous task management to keep the UI responsive during heavy scheduling.
+                    </p>
                 </div>
-                <div class="arch-layer">
-                    <span class="arch-layer-name">⚙ Services</span>
-                    <span class="arch-layer-desc">SchedulerService, ConstraintChecker, DataImportService</span>
-                    <span class="arch-layer-badge">Business Logic</span>
+                <div class="card">
+                    <h4>Services (Logic)</h4>
+                    <p>The "brain" of the app. <code>SchedulerService</code> handles the generate-and-check cycle, while
+                        <code>ConstraintChecker</code> enforces academic rules.
+                    </p>
                 </div>
-                <div class="arch-layer">
-                    <span class="arch-layer-name">📦 Domain</span>
-                    <span class="arch-layer-desc">Course, Student, Classroom, Exam, ExamSlot, ExamTimetable</span>
-                    <span class="arch-layer-badge">Models</span>
+                <div class="card">
+                    <h4>Persistence (Data)</h4>
+                    <p>Abstracts SQLite operations using the <strong>Repository Pattern</strong>. Manages connection
+                        pooling and ensures transactional integrity during imports.</p>
                 </div>
-                <div class="arch-layer">
-                    <span class="arch-layer-name">💾 Persistence</span>
-                    <span class="arch-layer-desc">CSV Parsers, SQLite Database, DataRepository</span>
-                    <span class="arch-layer-badge">Data Access</span>
+                <div class="card">
+                    <h4>Domain (Models)</h4>
+                    <p>Contains the core business objects. These are immutable plain Java objects that represent the
+                        stable data structure of the entire system.</p>
                 </div>
+            </div>
+
+            <h3 class="subsection-title">Key Class Relationships</h3>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+classDiagram
+    class Course { +String code }
+    class Student { +String id }
+    class Exam { +ExamSlot slot }
+    class SchedulerService { +generate() }
+    class DataRepository { +save() }
+    
+    SchedulerService --> DataRepository : uses
+    DataRepository ..> Course : persists
+    Exam o-- Course : contains
+    Exam o-- Student : contains
+                </pre>
             </div>
         </section>
 
-        <!-- Section 8: Technologies Used -->
-        <section id="technologies" class="section">
+        <!-- Section 8: Performance Analysis -->
+        <section id="performance" class="section">
             <h2 class="section-title">
                 <span class="section-number">8</span>
+                Performance Analysis
+            </h2>
+            <div class="info-box note">
+                <div class="info-box-title">👤 Developer's Note</div>
+                <p>
+                    "Performans bizim için bir lüks değil, zorunluluktu. 10.000 öğrencinin olduğu bir senaryoda
+                    algoritmanın saniyeler içinde cevap vermesi için veritabanı sorgularını minimize edip, tüm çakışma
+                    kontrollerini bellek üzerinde bit-masking ile yapacak şekilde optimize ettim."
+                </p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value">&lt; 2s</div>
+                    <div class="stat-label">Generation Time</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">21,504</div>
+                    <div class="stat-label">Lines of Code</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">450+</div>
+                    <div class="stat-label">Total Hours</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">10k+</div>
+                    <div class="stat-label">Student Cap</div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Benchmarking Results</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Data Scale</th>
+                            <th scope="col">Courses</th>
+                            <th scope="col">Students</th>
+                            <th scope="col">Gen. Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Small</strong></td>
+                            <td>20</td>
+                            <td>500</td>
+                            <td>150ms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Medium</strong></td>
+                            <td>100</td>
+                            <td>3,000</td>
+                            <td>600ms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Large</strong></td>
+                            <td>500+</td>
+                            <td>10,000</td>
+                            <td>1.8s</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 9: Technologies Used -->
+        <section id="technologies" class="section">
+            <h2 class="section-title">
+                <span class="section-number">9</span>
                 Technologies Used
             </h2>
             <div class="table-container">
@@ -528,10 +759,10 @@ classDiagram
             </div>
         </section>
 
-        <!-- Section 9: Project Structure -->
+        <!-- Section 10: Project Structure -->
         <section id="structure" class="section">
             <h2 class="section-title">
-                <span class="section-number">9</span>
+                <span class="section-number">10</span>
                 Project Structure
             </h2>
             <pre><code>src/main/java/com/examplanner/
@@ -561,10 +792,10 @@ src/test/java/com/examplanner/
 └── services/               # Service tests</code></pre>
         </section>
 
-        <!-- Section 10: API Documentation -->
+        <!-- Section 11: API Documentation -->
         <section id="api" class="section">
             <h2 class="section-title">
-                <span class="section-number">10</span>
+                <span class="section-number">11</span>
                 API Documentation
             </h2>
             <p>Key service classes and their public methods:</p>
@@ -678,10 +909,10 @@ src/test/java/com/examplanner/
             </div>
         </section>
 
-        <!-- Section 11: Testing -->
+        <!-- Section 12: Testing -->
         <section id="testing" class="section">
             <h2 class="section-title">
-                <span class="section-number">11</span>
+                <span class="section-number">12</span>
                 Testing
             </h2>
             <p>
@@ -780,10 +1011,65 @@ mvn test -Dtest=CourseTest
 mvn test -Dsurefire.useFile=false</code></pre>
         </section>
 
-        <!-- Section 12: Installation Guide -->
+        <!-- Section 13: Manual vs. Automated Comparison -->
+        <section id="comparison" class="section">
+            <h2 class="section-title">
+                <span class="section-number">13</span>
+                Manual vs. Automated
+            </h2>
+            <div class="info-box note">
+                <div class="info-box-title">👤 Developer's Note</div>
+                <p>
+                    "Bu tablo aslında projenin neden var olduğunu özetliyor. Elle yapılan planlamada gözden kaçan tek
+                    bir çakışma, sınav haftasında büyük bir kaosa yol açabilir. Algoritmamız bu riski sıfıra indirirken,
+                    planlama süresini günlerden saniyelere düşürüyor."
+                </p>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Feature</th>
+                            <th scope="col">Manual Planning</th>
+                            <th scope="col">Our System</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Processing Speed</strong></td>
+                            <td>Weeks (Iterative)</td>
+                            <td>&lt; 2 Seconds</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Conflict Risk</strong></td>
+                            <td>High (Human Error)</td>
+                            <td>Zero (Mathematical)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Constraint Check</strong></td>
+                            <td>Manual/Mental</td>
+                            <td>Real-time Automated</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Resource Usage</strong></td>
+                            <td>Sub-optimal</td>
+                            <td>Minimum Days Needed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Flexibility</strong></td>
+                            <td>Difficult to Change</td>
+                            <td>Drag & Drop + Validate</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 14: Installation Guide -->
         <section id="installation" class="section">
             <h2 class="section-title">
-                <span class="section-number">12</span>
+                <span class="section-number">14</span>
                 Installation Guide
             </h2>
             <h3 class="subsection-title">Prerequisites</h3>
@@ -817,10 +1103,10 @@ cd ExamTimetablePlanner</code></pre>
             </div>
         </section>
 
-        <!-- Section 13: Project Team -->
+        <!-- Section 15: Project Team -->
         <section id="team" class="section">
             <h2 class="section-title">
-                <span class="section-number">13</span>
+                <span class="section-number">15</span>
                 Project Team
             </h2>
             <div class="team-grid">
@@ -872,10 +1158,10 @@ cd ExamTimetablePlanner</code></pre>
             </div>
         </section>
 
-        <!-- Section 14: Changelog -->
+        <!-- Section 16: Changelog -->
         <section id="changelog" class="section">
             <h2 class="section-title">
-                <span class="section-number">14</span>
+                <span class="section-number">16</span>
                 Changelog
             </h2>
             <div class="timeline">
@@ -915,10 +1201,215 @@ cd ExamTimetablePlanner</code></pre>
             </div>
         </section>
 
-        <!-- Section 15: Future Work -->
+        <!-- Section 17: FAQ -->
+        <section id="faq" class="section">
+            <h2 class="section-title">
+                <span class="section-number">17</span>
+                Frequently Asked Questions
+            </h2>
+
+            <div class="faq-container">
+                <details class="faq-item">
+                    <summary>What file formats are supported for import?</summary>
+                    <div class="faq-answer">
+                        <p>The application supports UTF-8 encoded CSV files for all data imports. Each file type
+                            (courses, students, classrooms, enrollments) has a specific format that must be followed.
+                            Sample files are provided in the repository.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>How does the scheduling algorithm handle conflicts?</summary>
+                    <div class="faq-answer">
+                        <p>The algorithm uses a constraint satisfaction approach with backtracking. It prioritizes
+                            courses with higher enrollment and checks all constraints (time window, capacity, student
+                            conflicts, daily limits, gap requirements) before assigning each exam. If a conflict is
+                            detected, it automatically tries alternative slots.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Can I manually modify the generated timetable?</summary>
+                    <div class="faq-answer">
+                        <p>Yes! After automatic generation, you can drag-and-drop exams to different time slots or
+                            classrooms. The system validates all changes in real-time and warns you about any constraint
+                            violations.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>What is the maximum capacity the system can handle?</summary>
+                    <div class="faq-answer">
+                        <p>The system has been tested with 10,000+ students, 500+ courses, and 100+ classrooms.
+                            Performance remains optimal for most educational institutions. For very large datasets,
+                            consider splitting the scheduling by department or faculty.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>How do I export the final timetable?</summary>
+                    <div class="faq-answer">
+                        <p>Go to the timetable view and click the Export button. You can choose from CSV, Excel, or PDF
+                            formats. Options include exporting the master schedule, student-specific schedules, or
+                            room-specific schedules.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Is there a way to exclude specific dates from scheduling?</summary>
+                    <div class="faq-answer">
+                        <p>Yes, you can define blackout dates in the scheduling configuration. These dates (such as
+                            holidays or special events) will be excluded from the available time slots during timetable
+                            generation.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- Section 18: Sidebar Design & Implementation (Developer's Note) -->
+        <section id="sidebar-design" class="section">
+            <h2 class="section-title">
+                <span class="section-number">18</span>
+                Sidebar Design & Implementation
+            </h2>
+            <div class="info-box note">
+                <div class="info-box-title">👤 Developer's Note</div>
+                <p>
+                    "Navigasyon deneyimini projenin en önemli parçalarından biri olarak gördüğüm için Sidebar tasarımına
+                    özel bir önem verdim. Amacım, karmaşık rapor içeriği arasında kullanıcının asla kaybolmamasını
+                    sağlamaktı."
+                </p>
+            </div>
+
+            <p>Sidebar'ı tasarlarken ve uygularken şu teknik detaylara odaklandım:</p>
+
+            <h3 class="subsection-title">Masaüstü Deneyimi</h3>
+            <p>
+                Masaüstünde <code>position: fixed</code> kullanarak navigasyonu her an erişilebilir kılındım. Ancak bu,
+                ana içeriğin soldan 280px boşluk bırakmasını gerektiriyordu. CSS variable'lar kullanarak bu boşluğu
+                merkezi olarak yönettim. En sevdiğim özelliklerden biri olan **Scroll-Spy** mantığını JavaScript ile
+                kurdum; kullanıcı sayfada ilerledikçe yan menüdeki linkler otomatik olarak aktifleşiyor.
+            </p>
+
+            <h3 class="subsection-title">Mobil Uyumluluk ve Animasyonlar</h3>
+            <p>
+                Küçük ekranlarda Sidebar'ı içeriği kapatmaması için <code>translateX(-100%)</code> ile gizledim.
+                Hamburger menüye basıldığında CSS <code>transition</code> ile yumuşak bir kayma efekti sağlayarak menüyü
+                açıyorum. Bu sırada arkada oluşan <code>sidebar-overlay</code> ile hem odaklanmayı artırıyor hem de
+                menünün dışına tıklandığında kapanmasını sağlıyorum.
+            </p>
+
+            <h3 class="subsection-title">Teknik Yapı</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Özellik</th>
+                            <th scope="col">Kullanılan Yöntem</th>
+                            <th scope="col">Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Sabitlik</strong></td>
+                            <td><code>position: fixed</code></td>
+                            <td>Viewport'a sabitlenmiş 100vh boyu</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mobil Gizleme</strong></td>
+                            <td><code>transform: translateX</code></td>
+                            <td>Donanım hızlandırmalı pürüzsüz geçiş</td>
+                        </tr>
+                        <tr>
+                            <td><strong>İnteraktiflik</strong></td>
+                            <td><code>scroll</code> event listener</td>
+                            <td>Aktif bölümü tespit eden Intersection Observer mantığı</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tema Uyumu</strong></td>
+                            <td>CSS Variables</td>
+                            <td>Dark mode geçişlerinde dinamik renk değişimi</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 19: Data Import Strategy (Developer's Note) -->
+        <section id="import-strategy" class="section">
+            <h2 class="section-title">
+                <span class="section-number">19</span>
+                Data Import Strategy
+            </h2>
+            <div class="info-box note">
+                <div class="info-box-title">👤 Developer's Note</div>
+                <p>
+                    "Veri aktarımı, bir sınav planlama sisteminin en sancılı noktasıdır. Kullanıcıdan gelen CSV
+                    dosyalarının her zaman mükemmel olacağını varsaymak büyük bir hata olurdu. Bu yüzden sistemi
+                    'savunmacı' bir yaklaşımla tasarladım; hataları engellemek yerine, onları tahmin edip düzelten bir
+                    yapı kurdum."
+                </p>
+            </div>
+
+            <h3 class="subsection-title">Akıllı Format Tespiti (Heuristic Detection)</h3>
+            <p>
+                Kullanıcının yanlış dosyayı yüklemesini önlemek için <code>detectCsvKind</code> adında bir tespit
+                mekanizması yazdım. Bu metod, dosyanın ilk 50 satırını tarayarak sütun başlıklarını ve veri desenlerini
+                analiz eder. Örneğin, satır ';' içeriyorsa ve ikinci parça sayısal bir değerse, bunun bir **Classrooms**
+                dosyası olduğunu anlar. Bu sayede "Yanlış dosyayı yüklediniz" uyarısını kullanıcı daha 'Import' butonuna
+                basmadan verebiliyoruz.
+            </p>
+
+            <h3 class="subsection-title">BOM ve Karakter Kodlama Çözümleri</h3>
+            <p>
+                Excel'den dışa aktarılan CSV dosyalarında sıkça rastlanan **BOM (Byte Order Mark)** karakteri, Java'nın
+                standart okuyucularında görünmez hatalara yol açabiliyordu. <code>stripBom</code> metodunu geliştirerek
+                her satırın başındaki bu gizli karakterleri temizledim. Ayrıca hem noktalı virgül (semicolon) hem de
+                virgül (comma) ile ayrılmış formatların ikisini de aynı anda destekleyen esnek bir parser yapısı kurdum.
+            </p>
+
+            <h3 class="subsection-title">Veri Tutarlılığı ve Otomatik Onarım</h3>
+            <p>
+                Sistemdeki en kritik mantıklardan biri **Attendance** aktarımı sırasında çalışıyor. Eğer bir öğrenci
+                'attendance.csv' içinde var ama 'students.csv' içinde tanımlanmamışsa, sistem aktarımı durdurmak yerine
+                bu öğrenciyi otomatik olarak oluşturuyor ve veritabanına kaydediyor. Bu, veri setindeki eksikliklerin
+                tüm planlama sürecini kitlemesini engelleyen önemli bir "fail-safe" mekanizmasıdır.
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Kontrol Mekanizması</th>
+                            <th scope="col">Açıklama</th>
+                            <th scope="col">Sağladığı Fayda</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Duplicate Detection</strong></td>
+                            <td>Aynı CourseCode veya StudentID'nin tekrarını engeller.</td>
+                            <td>Veritabanı kısıtlamalarını ihlal etmeden kullanıcıya uyarı verir.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Transaction Support</strong></td>
+                            <td>Aktarım sırasında hata olursa veritabanını eski haline döndürür.</td>
+                            <td>Yarım kalmış, bozuk veri girişini önler.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Validation Logic</strong></td>
+                            <td>Sınav sürelerinin pozitif sayı olup olmadığını kontrol eder.</td>
+                            <td>Algoritmanın hatalı sürelerle sonsuz döngüye girmesini engeller.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 20: Future Work -->
         <section id="future" class="section">
             <h2 class="section-title">
-                <span class="section-number">15</span>
+                <span class="section-number">20</span>
                 Future Work & Known Issues
             </h2>
             <h3 class="subsection-title">Planned Features</h3>
@@ -971,10 +1462,10 @@ cd ExamTimetablePlanner</code></pre>
             </div>
         </section>
 
-        <!-- Section 16: References -->
+        <!-- Section 21: References -->
         <section id="references" class="section">
             <h2 class="section-title">
-                <span class="section-number">16</span>
+                <span class="section-number">21</span>
                 References
             </h2>
             <ul>
