@@ -2034,3 +2034,82 @@
 .primary-button .icon-calendar-check {
     -fx-background-color: white;
 }
+/* ===== NEW USER MANUAL CONTROLS ===== */
+.small-button {
+    -fx-background-color: white;
+    -fx-text-fill: -fx-color-text;
+    -fx-border-color: -fx-color-border;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 10;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.small-button:hover {
+    -fx-background-color: #F3F4F6;
+}
+
+.dark-mode .small-button {
+    -fx-background-color: #374151;
+    -fx-text-fill: #F9FAFB;
+    -fx-border-color: #4B5563;
+}
+
+.dark-mode .small-button:hover {
+    -fx-background-color: #4B5563;
+}
+
+.manual-safety {
+    -fx-border-color: #EF4444;
+    -fx-border-width: 0 0 0 4;
+    -fx-background-color: rgba(239, 68, 68, 0.1);
+    -fx-padding: 10;
+    -fx-background-radius: 4;
+}
+
+.dark-mode .manual-safety {
+    -fx-background-color: rgba(127, 29, 29, 0.3);
+}
+
+/* Rich Text Nodes */
+.manual-text-node {
+    -fx-fill: -fx-color-text;
+}
+
+.dark-mode .manual-text-node {
+    -fx-fill: #D1D5DB;
+}
+
+/* Manual Scroll Pane */
+.manual-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.manual-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.dark-mode .manual-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.dark-mode .manual-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Fix TitledPane Text Contrast in Dark Mode */
+.dark-mode .manual-section {
+    -fx-text-fill: #F9FAFB;
+}
+
+.dark-mode .manual-section > .title {
+    -fx-text-fill: #F9FAFB;
+}
+
+.dark-mode .manual-section > .title > .text {
+    -fx-fill: #F9FAFB;
+    -fx-text-fill: #F9FAFB;
+}

@@ -305,7 +305,28 @@ public class MainController {
         subtitle.getStyleClass().add("section-subtitle");
         titleBox.getChildren().addAll(title, subtitle);
 
-        header.getChildren().addAll(backBtn, titleBox);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Search Bar
+        HBox searchBox = new HBox(10);
+        searchBox.setAlignment(Pos.CENTER_RIGHT);
+
+        TextField searchField = new TextField();
+        searchField.setPromptText(bundle.getString("manual.search.placeholder"));
+        searchField.getStyleClass().add("search-field");
+        searchField.setPrefWidth(200);
+
+        // Controls
+        Button expandAllBtn = new Button(bundle.getString("manual.expandAll"));
+        expandAllBtn.getStyleClass().add("small-button");
+
+        Button collapseAllBtn = new Button(bundle.getString("manual.collapseAll"));
+        collapseAllBtn.getStyleClass().add("small-button");
+
+        searchBox.getChildren().addAll(searchField, expandAllBtn, collapseAllBtn);
+
+        header.getChildren().addAll(backBtn, titleBox, spacer, searchBox);
 
         // Content
         VBox content = new VBox(10);
@@ -372,10 +393,7 @@ public class MainController {
         // Safety Warning
         VBox safetyBox = createManualSubsection(bundle.getString("manual.safety.title"),
                 bundle.getString("manual.safety.text"));
-        safetyBox.setStyle(
-                "-fx-border-color: #EF4444; -fx-border-width: 0 0 0 4; -fx-background-color: rgba(239, 68, 68, 0.1); -fx-padding: 10; -fx-background-radius: 4;");
-        if (isDarkMode)
-            safetyBox.setStyle(safetyBox.getStyle() + "-fx-background-color: rgba(239, 68, 68, 0.2);");
+        safetyBox.getStyleClass().add("manual-safety");
 
         secAdvancedContent.getChildren().add(safetyBox);
 
@@ -402,12 +420,136 @@ public class MainController {
         content.getChildren().addAll(section1, section2, section3, section4, sectionAnalysis, sectionAdvanced, section5,
                 section6, section7);
 
+        // Search Logic
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            String term = newVal.toLowerCase();
+            for (javafx.scene.Node node : content.getChildren()) {
+                if (node instanceof TitledPane) {
+                    TitledPane tp = (TitledPane) node;
+                    boolean match = false;
+
+                    // Check Title
+                    if (tp.getText().toLowerCase().contains(term))
+                        match = true;
+
+                    // Check Content (Rough Check)
+                    if (!match && tp.getContent() instanceof VBox) {
+                        // Traverse content to find text matches (Not implemented fully deep, but
+                        // checking section/subsection titles/text)
+                        // A simple way is to check the UserData if we stored raw text, but we didn't.
+                        // So let's just default to showing all if empty, or filtering by title.
+                        // Actually, let's implement a recursive check or just check title for now to
+                        // keep it simple and performant?
+                        // "Professional" implies good search.
+                        // Let's iterate the children of the VBox content.
+                        VBox vb = (VBox) tp.getContent();
+                        for (javafx.scene.Node child : vb.getChildren()) {
+                            if (child instanceof javafx.scene.text.TextFlow) {
+                                // Checking TextFlow content is hard.
+                                match = true; // Assume match if we can't easily check? No.
+                            } else if (child instanceof VBox) {
+                                // Subsection
+                                // This is getting complex to read from UI nodes.
+                                // Better approach: We can't easily read back from TextFlows without iterating
+                                // Text nodes.
+                            }
+                        }
+                    }
+
+                    // Simplified Search: Just match Title for now, or match if term is empty.
+                    // Wait, I can search the 'text' I passed to createManualSection, IF I stored
+                    // it.
+                    // I'll resort to searching just the Title and maybe expanding all if term is
+                    // present.
+                    // Actually, if I want to search content, I should have stored the content
+                    // strings.
+                    // Let's search Title only for V1, or try to check Text nodes if possible.
+                    // Or... I can search the key 'bundle' values? No.
+
+                    // Revised Plan: Search Title only for robustness.
+                    if (term.isEmpty()) {
+                        tp.setVisible(true);
+                        tp.setManaged(true);
+                    } else {
+                        boolean visible = tp.getText().toLowerCase().contains(term);
+                        tp.setVisible(visible);
+                        tp.setManaged(visible);
+                        if (visible)
+                            tp.setExpanded(true);
+                    }
+                }
+            }
+        });
+
+        // Search logic Improvement: recursive text search
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            String term = newVal.toLowerCase();
+            for (javafx.scene.Node node : content.getChildren()) {
+                if (node instanceof TitledPane) {
+                    TitledPane tp = (TitledPane) node;
+                    boolean match = term.isEmpty();
+
+                    if (!match) {
+                        // Check title
+                        if (tp.getText().toLowerCase().contains(term))
+                            match = true;
+
+                        // Check content nodes (TextFlows)
+                        if (!match && tp.getContent() instanceof VBox) {
+                            match = containsText((VBox) tp.getContent(), term);
+                        }
+                    }
+
+                    tp.setVisible(match);
+                    tp.setManaged(match);
+                    if (match && !term.isEmpty())
+                        tp.setExpanded(true);
+                }
+            }
+        });
+
+        // Controls Logic
+        expandAllBtn.setOnAction(e -> content.getChildren().forEach(n -> {
+            if (n instanceof TitledPane)
+                ((TitledPane) n).setExpanded(true);
+        }));
+
+        collapseAllBtn.setOnAction(e -> content.getChildren().forEach(n -> {
+            if (n instanceof TitledPane)
+                ((TitledPane) n).setExpanded(false);
+        }));
+
         ScrollPane scroll = new ScrollPane(content);
+        scroll.getStyleClass().add("manual-scroll-pane");
         scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: transparent;");
+        scroll.setStyle("-fx-background-color: transparent;"); // Inline style might still be useful, keeping it just in
+                                                               // case, but CSS class is better.
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
         viewUserManual.getChildren().addAll(header, scroll);
+    }
+
+    // Helper to search text in VBox content (recursive for subsections)
+    private boolean containsText(VBox box, String term) {
+        for (javafx.scene.Node node : box.getChildren()) {
+            if (node instanceof javafx.scene.text.TextFlow) {
+                // Check Text nodes in Flow
+                for (javafx.scene.Node textNode : ((javafx.scene.text.TextFlow) node).getChildren()) {
+                    if (textNode instanceof javafx.scene.text.Text) {
+                        if (((javafx.scene.text.Text) textNode).getText().toLowerCase().contains(term))
+                            return true;
+                    }
+                }
+            } else if (node instanceof VBox) {
+                // Subsection VBox
+                if (containsText((VBox) node, term))
+                    return true;
+            } else if (node instanceof Label) {
+                if (((Label) node).getText().toLowerCase().contains(term))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private TitledPane createManualSection(String title, String mainText, boolean expanded) {
@@ -419,11 +561,7 @@ public class MainController {
         VBox content = new VBox(15);
         content.getStyleClass().add("manual-content");
 
-        Label text = new Label(mainText);
-        text.setWrapText(true);
-        text.getStyleClass().add("manual-text");
-
-        content.getChildren().add(text);
+        content.getChildren().add(parseRichText(mainText, "manual-text"));
         tp.setContent(content);
         return tp;
     }
@@ -435,15 +573,38 @@ public class MainController {
         Label lblTitle = new Label(title);
         lblTitle.getStyleClass().add("manual-subtitle");
 
-        Label lblText = new Label(text);
-        lblText.setWrapText(true);
-        lblText.getStyleClass().add("manual-text");
-        if (text.contains("Format")) { // Code styling heuristic
-            lblText.getStyleClass().add("manual-code");
+        javafx.scene.text.TextFlow flow = parseRichText(text, "manual-text");
+        if (text.contains("Format")) {
+            // flow.getStyleClass().add("manual-code"); // TextFlow doesn't support style
+            // class for content the same way?
+            // applying style to all text nodes? or container?
+            // Let's accept that "Format" heuristic might be lost or handled differently.
+            // But we can add style class to the flow itself if CSS supports it
+            flow.getStyleClass().add("manual-code-block");
         }
 
-        box.getChildren().addAll(lblTitle, lblText);
+        box.getChildren().addAll(lblTitle, flow);
         return box;
+    }
+
+    private javafx.scene.text.TextFlow parseRichText(String text, String baseStyleClass) {
+        javafx.scene.text.TextFlow flow = new javafx.scene.text.TextFlow();
+        flow.getStyleClass().add(baseStyleClass);
+
+        String[] parts = text.split("\\*\\*");
+        boolean bold = false;
+
+        for (String part : parts) {
+            javafx.scene.text.Text t = new javafx.scene.text.Text(part);
+            t.getStyleClass().add("manual-text-node");
+
+            if (bold) {
+                t.setStyle("-fx-font-weight: bold;");
+            }
+            flow.getChildren().add(t);
+            bold = !bold; // Toggle bold
+        }
+        return flow;
     }
 
     private HBox createManualTip(String text) {
