@@ -129,11 +129,25 @@ public class MainController {
     @FXML
     private Label lblStatDaysValue;
 
+    @FXML
+    private Label lblStatExamsLabel;
+    @FXML
+    private Label lblStatStudentsLabel;
+    @FXML
+    private Label lblStatClassroomsLabel;
+    @FXML
+    private Label lblStatDaysLabel;
+
     // Dashboard Additional Charts
     @FXML
     private javafx.scene.chart.BarChart<String, Number> chartTimeSlots;
     @FXML
     private javafx.scene.chart.BarChart<String, Number> chartStudentLoad;
+
+    @FXML
+    private Label lblTimeSlots;
+    @FXML
+    private Label lblStudentLoad;
 
     // Dashboard Conflict Warning
     @FXML
@@ -442,67 +456,6 @@ public class MainController {
         content.getChildren().addAll(section1, section2, section3, section4, sectionAnalysis, sectionAdvanced, section5,
                 section6, section7);
 
-        // Search Logic
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-            String term = newVal.toLowerCase();
-            for (javafx.scene.Node node : content.getChildren()) {
-                if (node instanceof TitledPane) {
-                    TitledPane tp = (TitledPane) node;
-                    boolean match = false;
-
-                    // Check Title
-                    if (tp.getText().toLowerCase().contains(term))
-                        match = true;
-
-                    // Check Content (Rough Check)
-                    if (!match && tp.getContent() instanceof VBox) {
-                        // Traverse content to find text matches (Not implemented fully deep, but
-                        // checking section/subsection titles/text)
-                        // A simple way is to check the UserData if we stored raw text, but we didn't.
-                        // So let's just default to showing all if empty, or filtering by title.
-                        // Actually, let's implement a recursive check or just check title for now to
-                        // keep it simple and performant?
-                        // "Professional" implies good search.
-                        // Let's iterate the children of the VBox content.
-                        VBox vb = (VBox) tp.getContent();
-                        for (javafx.scene.Node child : vb.getChildren()) {
-                            if (child instanceof javafx.scene.text.TextFlow) {
-                                // Checking TextFlow content is hard.
-                                match = true; // Assume match if we can't easily check? No.
-                            } else if (child instanceof VBox) {
-                                // Subsection
-                                // This is getting complex to read from UI nodes.
-                                // Better approach: We can't easily read back from TextFlows without iterating
-                                // Text nodes.
-                            }
-                        }
-                    }
-
-                    // Simplified Search: Just match Title for now, or match if term is empty.
-                    // Wait, I can search the 'text' I passed to createManualSection, IF I stored
-                    // it.
-                    // I'll resort to searching just the Title and maybe expanding all if term is
-                    // present.
-                    // Actually, if I want to search content, I should have stored the content
-                    // strings.
-                    // Let's search Title only for V1, or try to check Text nodes if possible.
-                    // Or... I can search the key 'bundle' values? No.
-
-                    // Revised Plan: Search Title only for robustness.
-                    if (term.isEmpty()) {
-                        tp.setVisible(true);
-                        tp.setManaged(true);
-                    } else {
-                        boolean visible = tp.getText().toLowerCase().contains(term);
-                        tp.setVisible(visible);
-                        tp.setManaged(visible);
-                        if (visible)
-                            tp.setExpanded(true);
-                    }
-                }
-            }
-        });
-
         // Search logic Improvement: recursive text search
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             String term = newVal.toLowerCase();
@@ -749,6 +702,116 @@ public class MainController {
             genIcon2.setStyle("-fx-background-color: white;");
             btnGenerateTimetable.setGraphic(genIcon2);
         }
+
+        applyLocalization();
+    }
+
+    private void applyLocalization() {
+        if (bundle == null)
+            return;
+
+        // Sidebar
+        if (lblAppTitle != null)
+            lblAppTitle.setText(bundle.getString("app.title"));
+        if (btnDataImport != null)
+            btnDataImport.setText(bundle.getString("sidebar.dataImport"));
+        if (btnDashboard != null)
+            btnDashboard.setText(bundle.getString("sidebar.dashboard"));
+        if (btnTimetable != null)
+            btnTimetable.setText(bundle.getString("sidebar.timetable"));
+        if (btnStudentSearch != null)
+            btnStudentSearch.setText(bundle.getString("sidebar.studentSearch"));
+        if (btnHelp != null)
+            btnHelp.setText(bundle.getString("sidebar.userManual"));
+        if (btnSettings != null)
+            btnSettings.setText(bundle.getString("sidebar.settings"));
+        if (btnExit != null)
+            btnExit.setText(bundle.getString("sidebar.exit"));
+
+        // Data Import View
+        if (lblDataImportTitle != null)
+            lblDataImportTitle.setText(bundle.getString("dataImport.title"));
+        if (lblDataImportSubtitle != null)
+            lblDataImportSubtitle.setText(bundle.getString("dataImport.subtitle"));
+        if (lblCoursesTitle != null)
+            lblCoursesTitle.setText(bundle.getString("dataImport.courses"));
+        if (lblStudentsTitle != null)
+            lblStudentsTitle.setText(bundle.getString("dataImport.students"));
+        if (lblClassroomsTitle != null)
+            lblClassroomsTitle.setText(bundle.getString("dataImport.classrooms"));
+        if (lblAttendanceTitle != null)
+            lblAttendanceTitle.setText(bundle.getString("dataImport.attendance"));
+
+        if (btnDeleteData != null)
+            btnDeleteData.setText(bundle.getString("dataImport.deleteData"));
+        if (btnGenerateDataImport != null)
+            btnGenerateDataImport.setText(bundle.getString("dataImport.generateTimetable"));
+
+        // Dashboard View
+        if (lblDashboardTitle != null)
+            lblDashboardTitle.setText(bundle.getString("dashboard.title"));
+        if (lblDashboardSubtitle != null)
+            lblDashboardSubtitle.setText(bundle.getString("dashboard.subtitle"));
+        if (lblStatExamsLabel != null)
+            lblStatExamsLabel.setText(bundle.getString("dashboard.totalExams"));
+        if (lblStatStudentsLabel != null)
+            lblStatStudentsLabel.setText(bundle.getString("dashboard.totalStudents"));
+        if (lblStatClassroomsLabel != null)
+            lblStatClassroomsLabel.setText(bundle.getString("dashboard.totalClassrooms"));
+        if (lblStatDaysLabel != null)
+            lblStatDaysLabel.setText(bundle.getString("dashboard.examDays"));
+
+        if (lblExamsPerDay != null)
+            lblExamsPerDay.setText(bundle.getString("dashboard.examsPerDay"));
+        if (lblRoomUtilization != null)
+            lblRoomUtilization.setText(bundle.getString("dashboard.roomUtilization"));
+        if (lblTimeSlots != null)
+            lblTimeSlots.setText(bundle.getString("dashboard.timeSlots"));
+        if (lblStudentLoad != null)
+            lblStudentLoad.setText(bundle.getString("dashboard.studentLoad"));
+
+        // Timetable View
+        if (lblTimetableTitle != null)
+            lblTimetableTitle.setText(bundle.getString("timetable.title"));
+        if (lblTimetableSubtitle != null)
+            lblTimetableSubtitle.setText(bundle.getString("timetable.subtitle"));
+        if (lblTimetableTip != null)
+            lblTimetableTip.setText(bundle.getString("timetable.tip"));
+
+        if (btnTimetableBack != null)
+            btnTimetableBack.setText(bundle.getString("button.back"));
+        if (btnHistory != null)
+            btnHistory.setText(bundle.getString("button.history"));
+        if (btnValidateAll != null)
+            btnValidateAll.setText(bundle.getString("button.validateAll"));
+        if (btnConflicts != null)
+            btnConflicts.setText(bundle.getString("button.conflicts"));
+        if (mbExport != null)
+            mbExport.setText(bundle.getString("button.export"));
+        if (miExportCsv != null)
+            miExportCsv.setText(bundle.getString("button.exportCsv"));
+        if (miExportPdf != null)
+            miExportPdf.setText(bundle.getString("button.exportPdf"));
+        if (btnGenerateTimetable != null)
+            btnGenerateTimetable.setText(bundle.getString("dataImport.generateTimetable"));
+
+        // Initialize tooltips for sidebar buttons (since text might be hidden in
+        // collapsed mode)
+        if (btnDataImport != null)
+            btnDataImport.setTooltip(new Tooltip(bundle.getString("sidebar.dataImport")));
+        if (btnDashboard != null)
+            btnDashboard.setTooltip(new Tooltip(bundle.getString("sidebar.dashboard")));
+        if (btnTimetable != null)
+            btnTimetable.setTooltip(new Tooltip(bundle.getString("sidebar.timetable")));
+        if (btnStudentSearch != null)
+            btnStudentSearch.setTooltip(new Tooltip(bundle.getString("sidebar.studentSearch")));
+        if (btnHelp != null)
+            btnHelp.setTooltip(new Tooltip(bundle.getString("sidebar.userManual")));
+        if (btnSettings != null)
+            btnSettings.setTooltip(new Tooltip(bundle.getString("sidebar.settings")));
+        if (btnExit != null)
+            btnExit.setTooltip(new Tooltip(bundle.getString("sidebar.exit")));
+
     }
 
     private void initTour() {
