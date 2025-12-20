@@ -397,8 +397,12 @@ flowchart LR
             <div class="info-box tip">
                 <div class="info-box-title">💡 Algorithm Overview</div>
                 <p>
-                    The core of the application is a <strong>Constraint Satisfaction Problem (CSP)</strong> solver that
-                    uses recursive backtracking. Unlike simple greedy approaches, our solver searches for the globally
+                    The core of the application is a <span class="tooltip-term"
+                        data-tooltip="CSP is a mathematical problem where variables must be assigned values satisfying a set of constraints. It's commonly used in scheduling, puzzle solving, and resource allocation.">Constraint
+                        Satisfaction Problem (CSP)</span> solver that
+                    uses <span class="tooltip-term"
+                        data-tooltip="A recursive algorithm that tries different options, and if a choice leads to a dead end, it 'backtracks' to the previous decision point and tries another option.">recursive
+                        backtracking</span>. Unlike simple greedy approaches, our solver searches for the globally
                     optimal schedule by minimizing the total number of exam days used.
                 </p>
             </div>
@@ -414,8 +418,10 @@ flowchart LR
 
             <h3 class="subsection-title">1. Binary Search for Optimal Days</h3>
             <p>
-                Instead of just trying to "fit" exams into a fixed range, the algorithm performs a <strong>Binary
-                    Search</strong> on the number of days. For any given range [low, high], it attempts to find a valid
+                Instead of just trying to "fit" exams into a fixed range, the algorithm performs a <span
+                    class="tooltip-term"
+                    data-tooltip="Binary Search is a divide-and-conquer algorithm that efficiently finds a value by repeatedly dividing the search interval in half. Time complexity: O(log n).">Binary
+                    Search</span> on the number of days. For any given range [low, high], it attempts to find a valid
                 schedule for <code>mid</code> days. If successful, it tries fewer days to find the true minimum.
             </p>
 
@@ -730,17 +736,23 @@ classDiagram
                             <td>Primary programming language</td>
                         </tr>
                         <tr>
-                            <td><strong>JavaFX</strong></td>
+                            <td><span class="tooltip-term"
+                                    data-tooltip="JavaFX is a modern GUI framework for Java that provides rich UI controls, CSS styling, and 3D graphics support. It replaced Swing as the main Java desktop toolkit.">JavaFX</span>
+                            </td>
                             <td>21</td>
                             <td>GUI framework for desktop interface</td>
                         </tr>
                         <tr>
-                            <td><strong>SQLite</strong></td>
+                            <td><span class="tooltip-term"
+                                    data-tooltip="SQLite is a lightweight, serverless, self-contained SQL database engine. It stores the entire database in a single file, perfect for desktop applications.">SQLite</span>
+                            </td>
                             <td>3.x</td>
                             <td>Embedded database for data persistence</td>
                         </tr>
                         <tr>
-                            <td><strong>Maven</strong></td>
+                            <td><span class="tooltip-term"
+                                    data-tooltip="Apache Maven is a build automation tool that manages project dependencies, compiles code, runs tests, and packages applications using a declarative pom.xml file.">Maven</span>
+                            </td>
                             <td>3.9+</td>
                             <td>Build automation and dependency management</td>
                         </tr>
