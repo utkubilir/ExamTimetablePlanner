@@ -341,7 +341,66 @@ public class MainController {
                 bundle.getString("manual.generation.text"),
                 false);
 
-        content.getChildren().addAll(section1, section2, section3);
+        // 4. Managing
+        TitledPane section4 = createManualSection(bundle.getString("manual.managing.title"),
+                bundle.getString("manual.managing.text"),
+                false);
+        VBox sec4Content = (VBox) section4.getContent();
+        sec4Content.getChildren().add(createManualSubsection(bundle.getString("manual.managing.editing.title"),
+                bundle.getString("manual.managing.editing.text")));
+        sec4Content.getChildren().add(createManualSubsection(bundle.getString("manual.managing.validation.title"),
+                bundle.getString("manual.managing.validation.text")));
+
+        // 5. Analysis (New)
+        TitledPane sectionAnalysis = createManualSection(bundle.getString("manual.analysis.title"),
+                bundle.getString("manual.analysis.text"),
+                false);
+        VBox secAnalysisContent = (VBox) sectionAnalysis.getContent();
+        secAnalysisContent.getChildren().add(createManualSubsection(bundle.getString("manual.analysis.dashboard.title"),
+                bundle.getString("manual.analysis.dashboard.text")));
+
+        // 6. Advanced (New)
+        TitledPane sectionAdvanced = createManualSection(bundle.getString("manual.advanced.title"),
+                bundle.getString("manual.advanced.text"),
+                false);
+        VBox secAdvancedContent = (VBox) sectionAdvanced.getContent();
+        secAdvancedContent.getChildren().add(createManualSubsection(bundle.getString("manual.advanced.search.title"),
+                bundle.getString("manual.advanced.search.text")));
+        secAdvancedContent.getChildren().add(createManualSubsection(bundle.getString("manual.advanced.conflicts.title"),
+                bundle.getString("manual.advanced.conflicts.text")));
+
+        // Safety Warning
+        VBox safetyBox = createManualSubsection(bundle.getString("manual.safety.title"),
+                bundle.getString("manual.safety.text"));
+        safetyBox.setStyle(
+                "-fx-border-color: #EF4444; -fx-border-width: 0 0 0 4; -fx-background-color: rgba(239, 68, 68, 0.1); -fx-padding: 10; -fx-background-radius: 4;");
+        if (isDarkMode)
+            safetyBox.setStyle(safetyBox.getStyle() + "-fx-background-color: rgba(239, 68, 68, 0.2);");
+
+        secAdvancedContent.getChildren().add(safetyBox);
+
+        // 5. Exporting
+        TitledPane section5 = createManualSection(bundle.getString("manual.exporting.title"),
+                bundle.getString("manual.exporting.text"),
+                false);
+        VBox sec5Content = (VBox) section5.getContent();
+        sec5Content.getChildren().add(createManualSubsection(bundle.getString("manual.exporting.formats.title"),
+                bundle.getString("manual.exporting.formats.text")));
+
+        // 6. Shortcuts
+        TitledPane section6 = createManualSection(bundle.getString("manual.shortcuts.title"),
+                bundle.getString("manual.shortcuts.text"),
+                false);
+        VBox sec6Content = (VBox) section6.getContent();
+        sec6Content.getChildren().add(createManualSubsection("", bundle.getString("manual.shortcuts.list")));
+
+        // 7. Tips
+        TitledPane section7 = createManualSection(bundle.getString("manual.tips.title"),
+                bundle.getString("manual.tips.text"),
+                false);
+
+        content.getChildren().addAll(section1, section2, section3, section4, sectionAnalysis, sectionAdvanced, section5,
+                section6, section7);
 
         ScrollPane scroll = new ScrollPane(content);
         scroll.setFitToWidth(true);
@@ -1044,6 +1103,8 @@ public class MainController {
             sidebar.setVisible(true);
             sidebar.setManaged(true);
         }
+
+        buildUserManual();
         // setActive(btnUserManual); // Button removed
     }
 
@@ -1467,7 +1528,7 @@ public class MainController {
             // Cache all schedule options for quick switching later
             this.cachedScheduleOptions = options;
             this.cachedScheduleStartDate = startDate;
-            
+
             // Find the index of selected option
             List<ScheduleOptions.ScheduleOption> allOpts = options.getAllOptions();
             for (int i = 0; i < allOpts.size(); i++) {
@@ -1501,7 +1562,7 @@ public class MainController {
                                     currentTimetable.getExams().size()));
         }
     }
-    
+
     /**
      * Update the schedule selector ComboBox with all available schedule options.
      */
@@ -1509,11 +1570,11 @@ public class MainController {
         if (cmbScheduleSelector == null || cachedScheduleOptions == null) {
             return;
         }
-        
+
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM", bundle.getLocale());
-        
+
         cmbScheduleSelector.getItems().clear();
-        
+
         List<ScheduleOptions.ScheduleOption> allOpts = cachedScheduleOptions.getAllOptions();
         for (ScheduleOptions.ScheduleOption opt : allOpts) {
             LocalDate endDate = cachedScheduleStartDate.plusDays(opt.getDays() - 1);
@@ -1525,17 +1586,17 @@ public class MainController {
             }
             cmbScheduleSelector.getItems().add(label);
         }
-        
+
         // Select the current schedule
         cmbScheduleSelector.getSelectionModel().select(currentScheduleIndex);
-        
+
         // Show the selector
         if (scheduleSelectionBox != null) {
             scheduleSelectionBox.setVisible(true);
             scheduleSelectionBox.setManaged(true);
         }
     }
-    
+
     /**
      * Handle schedule change from ComboBox selection.
      */
@@ -1544,43 +1605,43 @@ public class MainController {
         if (cmbScheduleSelector == null || cachedScheduleOptions == null) {
             return;
         }
-        
+
         int selectedIndex = cmbScheduleSelector.getSelectionModel().getSelectedIndex();
         if (selectedIndex < 0 || selectedIndex == currentScheduleIndex) {
             return; // No change or invalid
         }
-        
+
         List<ScheduleOptions.ScheduleOption> allOpts = cachedScheduleOptions.getAllOptions();
         if (selectedIndex >= allOpts.size()) {
             return;
         }
-        
+
         ScheduleOptions.ScheduleOption selected = allOpts.get(selectedIndex);
         currentScheduleIndex = selectedIndex;
-        
+
         System.out.println("Switching to " + selected.getDays() + "-day schedule");
-        
+
         // Update timetable without regenerating
         this.currentTimetable = selected.getSchedule();
         repository.saveTimetable(currentTimetable);
-        
+
         // Clear edit history since this is a different schedule
         editHistory.clear();
-        
+
         refreshTimetable();
-        
+
         // Update subtitle with new date range
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", bundle.getLocale());
-        lblTimetableSubtitle.setText(cachedScheduleStartDate.format(dateFormatter) + " - " + 
+        lblTimetableSubtitle.setText(cachedScheduleStartDate.format(dateFormatter) + " - " +
                 bundle.getString("timetable.subtitle.suffix"));
-        
+
         // Show brief notification
-        String msg = bundle.getLocale().getLanguage().equals("tr") 
-                ? selected.getDays() + " günlük programa geçildi" 
+        String msg = bundle.getLocale().getLanguage().equals("tr")
+                ? selected.getDays() + " günlük programa geçildi"
                 : "Switched to " + selected.getDays() + "-day schedule";
         showInfo(bundle.getString("dialog.scheduleCreated.title"), msg);
     }
-    
+
     private void showInfo(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -3172,7 +3233,7 @@ public class MainController {
         // Actions column with Edit button
         colActions.setCellFactory(param -> new TableCell<Exam, Void>() {
             private Button editBtn;
-            
+
             private Button createEditButton() {
                 Button btn = new Button(bundle.getString("action.edit"));
                 btn.setStyle(
