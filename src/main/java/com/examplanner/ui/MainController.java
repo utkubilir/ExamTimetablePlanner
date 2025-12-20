@@ -2671,12 +2671,32 @@ public class MainController {
                 .sorted(Comparator.comparing(Student::getName))
                 .collect(Collectors.toList());
 
+        // Create enrollment count function
+        java.util.function.Function<Student, Integer> enrollmentCountFunc = student -> (int) enrollments.stream()
+                .filter(e -> e.getStudent().getId().equals(student.getId()))
+                .count();
+
+        // Create exam count function (only if timetable exists)
+        java.util.function.Function<Student, Integer> examCountFunc = student -> {
+            if (currentTimetable != null) {
+                return currentTimetable.getExamsForStudent(student).size();
+            }
+            return 0;
+        };
+
         SearchableDialog<Student> dialog = new SearchableDialog<>(
-                "Select Student",
-                "Filter by Student",
+                bundle.getString("studentSearch.title"),
+                bundle.getString("studentSearch.subtitle"),
                 studentList,
                 (student, query) -> student.getName().toLowerCase().contains(query)
-                        || student.getId().toLowerCase().contains(query));
+                        || student.getId().toLowerCase().contains(query),
+                bundle,
+                enrollmentCountFunc,
+                examCountFunc,
+                isDarkMode);
+
+        // Apply dark mode to dialog
+        applyDarkModeToDialogPane(dialog);
 
         dialog.showAndWait().ifPresent(student -> {
             showStudentTimetable(student);
@@ -2689,23 +2709,7 @@ public class MainController {
             return;
         }
 
-        // DEBUG: Check enrollments for this student
-        System.out.println("=== DEBUG: Checking student " + student.getId() + " ===");
-        System.out.println("Total enrollments in system: " + enrollments.size());
-        long studentEnrollmentCount = enrollments.stream()
-                .filter(e -> e.getStudent().getId().equals(student.getId()))
-                .count();
-        System.out.println("Enrollments for this student: " + studentEnrollmentCount);
-        enrollments.stream()
-                .filter(e -> e.getStudent().getId().equals(student.getId()))
-                .forEach(e -> System.out.println("  - Enrolled in: " + e.getCourse().getCode()));
-
         List<Exam> exams = currentTimetable.getExamsForStudent(student);
-        System.out.println("Exams found for student: " + exams.size());
-        for (Exam exam : exams) {
-            System.out.println("  - Exam: " + exam.getCourse().getCode() + " on " + exam.getSlot().getDate());
-        }
-
         showFilteredExams(MessageFormat.format(bundle.getString("search.timetableFor"), student.getName()), exams);
     }
 

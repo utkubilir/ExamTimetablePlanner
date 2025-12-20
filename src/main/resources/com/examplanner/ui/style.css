@@ -2034,6 +2034,7 @@
 .primary-button .icon-calendar-check {
     -fx-background-color: white;
 }
+
 /* ===== NEW USER MANUAL CONTROLS ===== */
 .small-button {
     -fx-background-color: white;
@@ -2087,7 +2088,7 @@
     -fx-background: transparent;
 }
 
-.manual-scroll-pane > .viewport {
+.manual-scroll-pane>.viewport {
     -fx-background-color: transparent;
 }
 
@@ -2096,7 +2097,7 @@
     -fx-background: transparent;
 }
 
-.dark-mode .manual-scroll-pane > .viewport {
+.dark-mode .manual-scroll-pane>.viewport {
     -fx-background-color: transparent;
 }
 
@@ -2105,11 +2106,330 @@
     -fx-text-fill: #F9FAFB;
 }
 
-.dark-mode .manual-section > .title {
+.dark-mode .manual-section>.title {
     -fx-text-fill: #F9FAFB;
 }
 
-.dark-mode .manual-section > .title > .text {
+.dark-mode .manual-section>.title>.text {
     -fx-fill: #F9FAFB;
     -fx-text-fill: #F9FAFB;
+}
+
+/* ===== SEARCHABLE DIALOG STYLES ===== */
+.searchable-dialog {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #E5E7EB;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 20, 0, 0, 10);
+}
+
+.searchable-dialog .dialog-pane {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 0;
+}
+
+.searchable-dialog .dialog-pane>.button-bar {
+    -fx-background-color: #F9FAFB;
+    -fx-padding: 15 20;
+    -fx-background-radius: 0 0 12 12;
+    -fx-border-color: #E5E7EB transparent transparent transparent;
+}
+
+.searchable-dialog .dialog-pane>.button-bar .button {
+    -fx-min-width: 80;
+}
+
+/* Dark Mode for Searchable Dialog */
+.dark-mode .searchable-dialog,
+.dark-mode .searchable-dialog .dialog-pane {
+    -fx-background-color: #1F2937;
+    -fx-border-color: #374151;
+}
+
+.dark-mode .searchable-dialog .dialog-pane>.button-bar {
+    -fx-background-color: #111827;
+    -fx-border-color: #374151 transparent transparent transparent;
+}
+
+/* Searchable Dialog Empty State */
+.searchable-dialog .empty-state {
+    -fx-background-color: #F9FAFB;
+    -fx-background-radius: 12;
+    -fx-padding: 40;
+}
+
+.dark-mode .searchable-dialog .empty-state {
+    -fx-background-color: #374151;
+}
+
+/* Searchable Dialog Badges */
+.searchable-dialog .student-badge {
+    -fx-font-size: 10px;
+    -fx-text-fill: #6B7280;
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 4;
+    -fx-padding: 2 6 2 6;
+}
+
+.dark-mode .searchable-dialog .student-badge {
+    -fx-text-fill: #9CA3AF;
+    -fx-background-color: #4B5563;
+}
+
+/* Recent Search Chips */
+.searchable-dialog .recent-chip {
+    -fx-font-size: 10px;
+    -fx-background-color: #EDE9FE;
+    -fx-text-fill: #7C3AED;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.searchable-dialog .recent-chip:hover {
+    -fx-background-color: #DDD6FE;
+}
+
+.dark-mode .searchable-dialog .recent-chip {
+    -fx-background-color: #4C1D95;
+    -fx-text-fill: #DDD6FE;
+}
+
+.dark-mode .searchable-dialog .recent-chip:hover {
+    -fx-background-color: #5B21B6;
+}
+
+/* Student List Cell Hover Enhancement */
+.searchable-dialog .student-list-view .list-cell:filled:hover {
+    -fx-background-color: #F3F4F6;
+}
+
+.dark-mode .searchable-dialog .student-list-view .list-cell:filled:hover {
+    -fx-background-color: #374151;
+}
+
+/* Student Info Badge - Light Mode */
+.student-info-badge {
+    -fx-font-size: 10px;
+    -fx-text-fill: #6B7280;
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 4;
+    -fx-padding: 2 6 2 6;
+}
+
+/* Student Info Badge - Dark Mode */
+.dark-mode .student-info-badge {
+    -fx-text-fill: #9CA3AF;
+    -fx-background-color: #4B5563;
+}
+
+/* Search Empty State - Light Mode */
+.search-empty-state {
+    -fx-background-color: #F9FAFB;
+    -fx-background-radius: 12;
+}
+
+/* Search Empty State - Dark Mode */
+.dark-mode .search-empty-state {
+    -fx-background-color: #374151;
+}
+
+/* Empty State Icon */
+.empty-state-icon {
+    -fx-fill: #9CA3AF;
+}
+
+.dark-mode .empty-state-icon {
+    -fx-fill: #6B7280;
+}
+
+/* Recent Search Chip - Light Mode */
+.recent-search-chip {
+    -fx-font-size: 10px;
+    -fx-background-color: #EDE9FE;
+    -fx-text-fill: #7C3AED;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.recent-search-chip:hover {
+    -fx-background-color: #DDD6FE;
+}
+
+/* Recent Search Chip - Dark Mode */
+.dark-mode .recent-search-chip {
+    -fx-background-color: #4C1D95;
+    -fx-text-fill: #DDD6FE;
+}
+
+.dark-mode .recent-search-chip:hover {
+    -fx-background-color: #5B21B6;
+}
+
+/* ===== COMPREHENSIVE DARK MODE FOR SEARCHABLE DIALOG ===== */
+
+/* Dialog Title */
+.dialog-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111827;
+}
+
+.dark-mode .dialog-title {
+    -fx-text-fill: #F9FAFB;
+}
+
+/* Dialog Subtitle */
+.dialog-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6B7280;
+}
+
+.dark-mode .dialog-subtitle {
+    -fx-text-fill: #9CA3AF;
+}
+
+/* Student Name Label */
+.student-name-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: #111827;
+}
+
+.dark-mode .student-name-label {
+    -fx-text-fill: #F9FAFB;
+}
+
+/* Sort Label */
+.sort-label {
+    -fx-font-size: 11px;
+}
+
+/* Result Count Label */
+.result-count-label {
+    -fx-font-size: 11px;
+}
+
+/* Empty State Label */
+.empty-state-label {
+    -fx-font-size: 14px;
+    -fx-text-alignment: center;
+}
+
+/* ListView Cells - Light Mode */
+.searchable-dialog .student-list-view {
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.searchable-dialog .student-list-view .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #111827;
+    -fx-padding: 0;
+}
+
+.searchable-dialog .student-list-view .list-cell:filled {
+    -fx-background-color: white;
+}
+
+.searchable-dialog .student-list-view .list-cell:filled:selected {
+    -fx-background-color: #EDE9FE;
+}
+
+/* ListView Cells - Dark Mode */
+.dark-mode .searchable-dialog .student-list-view,
+.searchable-dialog.dark-mode .student-list-view {
+    -fx-background-color: #1F2937;
+}
+
+.dark-mode .searchable-dialog .student-list-view .list-cell,
+.searchable-dialog.dark-mode .student-list-view .list-cell {
+    -fx-background-color: #1F2937;
+    -fx-text-fill: #F9FAFB;
+}
+
+.dark-mode .searchable-dialog .student-list-view .list-cell:filled,
+.searchable-dialog.dark-mode .student-list-view .list-cell:filled {
+    -fx-background-color: #1F2937;
+}
+
+.dark-mode .searchable-dialog .student-list-view .list-cell:filled:selected,
+.searchable-dialog.dark-mode .student-list-view .list-cell:filled:selected {
+    -fx-background-color: #4C1D95;
+}
+
+.dark-mode .searchable-dialog .student-list-view .list-cell:filled:hover,
+.searchable-dialog.dark-mode .student-list-view .list-cell:filled:hover {
+    -fx-background-color: #374151;
+}
+
+/* Card Icon in Dark Mode */
+.dark-mode .card-icon,
+.searchable-dialog.dark-mode .card-icon {
+    -fx-fill: #9CA3AF;
+}
+
+/* Search Icon in Dark Mode */
+.dark-mode .search-icon,
+.searchable-dialog.dark-mode .search-icon {
+    -fx-fill: #9CA3AF;
+}
+
+/* Modal Content Background */
+.dark-mode .modal-content,
+.searchable-dialog.dark-mode .modal-content {
+    -fx-background-color: #1F2937;
+}
+
+/* ComboBox in Dialog Dark Mode */
+.dark-mode .searchable-dialog .schedule-selector,
+.searchable-dialog.dark-mode .schedule-selector {
+    -fx-background-color: #374151;
+    -fx-text-fill: #F9FAFB;
+    -fx-border-color: #4B5563;
+}
+
+.dark-mode .searchable-dialog .schedule-selector .list-cell,
+.searchable-dialog.dark-mode .schedule-selector .list-cell {
+    -fx-text-fill: #F9FAFB;
+    -fx-background-color: #374151;
+}
+
+/* Search Bar in Dark Mode */
+.dark-mode .modern-search-bar,
+.searchable-dialog.dark-mode .modern-search-bar {
+    -fx-background-color: #374151;
+    -fx-border-color: #4B5563;
+}
+
+.dark-mode .modern-search-field,
+.searchable-dialog.dark-mode .modern-search-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #F9FAFB;
+    -fx-prompt-text-fill: #9CA3AF;
+}
+
+/* Scroll Bar in Dialog Dark Mode */
+.dark-mode .searchable-dialog .scroll-bar,
+.searchable-dialog.dark-mode .scroll-bar {
+    -fx-background-color: #1F2937;
+}
+
+.dark-mode .searchable-dialog .scroll-bar .thumb,
+.searchable-dialog.dark-mode .scroll-bar .thumb {
+    -fx-background-color: #4B5563;
+}
+
+.dark-mode .searchable-dialog .scroll-bar .track,
+.searchable-dialog.dark-mode .scroll-bar .track {
+    -fx-background-color: #1F2937;
+}
+
+/* Viewport Background in Dark Mode */
+.dark-mode .searchable-dialog .viewport,
+.searchable-dialog.dark-mode .viewport {
+    -fx-background-color: #1F2937;
 }
