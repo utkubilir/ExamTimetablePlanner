@@ -218,10 +218,19 @@
                   </Button>
                </HBox>
                
-               <!-- Edit Help Text -->
-               <HBox fx:id="tipBox" alignment="CENTER_LEFT" spacing="15" styleClass="tip-box">
-                  <FontIcon iconLiteral="fas-lightbulb" iconSize="18" styleClass="tip-icon"/>
-                  <Label fx:id="lblTimetableTip" text="Tip: Double-click a row to edit, or right-click for quick actions. All changes are validated in real-time." styleClass="tip-text"/>
+               <!-- Tip Box and Schedule Selector Row -->
+               <HBox alignment="CENTER_LEFT" spacing="15">
+                  <HBox fx:id="tipBox" alignment="CENTER_LEFT" spacing="10" styleClass="tip-box" HBox.hgrow="ALWAYS">
+                     <FontIcon iconLiteral="fas-lightbulb" iconSize="16" styleClass="tip-icon"/>
+                     <Label fx:id="lblTimetableTip" text="Tip: Double-click a row to edit, or right-click for quick actions." styleClass="tip-text"/>
+                  </HBox>
+                  
+                  <!-- Schedule Selector -->
+                  <HBox fx:id="scheduleSelectionBox" alignment="CENTER_LEFT" spacing="8" styleClass="schedule-box" visible="false" managed="false">
+                     <FontIcon iconLiteral="fas-calendar-alt" iconSize="14" styleClass="schedule-icon"/>
+                     <Label text="Schedule:" styleClass="schedule-label"/>
+                     <ComboBox fx:id="cmbScheduleSelector" onAction="#handleScheduleChange" prefWidth="110" styleClass="schedule-selector" />
+                  </HBox>
                </HBox>
 
                <TableView fx:id="examTableView" styleClass="exam-table" VBox.vgrow="ALWAYS">

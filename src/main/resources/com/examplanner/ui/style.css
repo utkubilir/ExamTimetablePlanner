@@ -988,6 +988,51 @@
     -fx-text-fill: #8B5CF6;
 }
 
+/* Schedule Selector ComboBox */
+.schedule-selector {
+    -fx-background-color: white;
+    -fx-border-color: #8B5CF6;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 4 8;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.schedule-selector:hover {
+    -fx-background-color: #F5F3FF;
+    -fx-border-color: #7C3AED;
+}
+
+.schedule-selector:focused {
+    -fx-border-color: #7C3AED;
+    -fx-effect: dropshadow(three-pass-box, rgba(139, 92, 246, 0.3), 4, 0, 0, 0);
+}
+
+.schedule-selector .list-cell {
+    -fx-text-fill: #5B21B6;
+    -fx-font-weight: bold;
+}
+
+/* Schedule Box Container */
+.schedule-box {
+    -fx-background-color: #F5F3FF;
+    -fx-border-color: #DDD6FE;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+}
+
+.schedule-icon {
+    -fx-icon-color: #8B5CF6;
+}
+
+.schedule-label {
+    -fx-text-fill: #5B21B6;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
 /* DatePicker Styles for Edit Dialog */
 .date-picker {
     -fx-background-color: white;

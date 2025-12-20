@@ -189,6 +189,10 @@ public class MainController {
     private javafx.scene.control.ComboBox<String> cmbSearchType;
     @FXML
     private Button btnClearSearch;
+    @FXML
+    private javafx.scene.control.ComboBox<String> cmbScheduleSelector;
+    @FXML
+    private HBox scheduleSelectionBox;
 
     @FXML
     private Label lblDashboardTitle;
@@ -216,6 +220,11 @@ public class MainController {
     private List<Enrollment> enrollments = new ArrayList<>();
 
     private ExamTimetable currentTimetable;
+
+    // Store all generated schedule options for quick switching
+    private ScheduleOptions cachedScheduleOptions;
+    private LocalDate cachedScheduleStartDate;
+    private int currentScheduleIndex = 0;
 
     // Edit history tracking
     private List<EditHistoryEntry> editHistory = new ArrayList<>();
@@ -923,6 +932,7 @@ public class MainController {
             sortedExams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
                     .thenComparing(e -> e.getSlot().getStartTime()));
             examTableView.setItems(FXCollections.observableArrayList(sortedExams));
+            examTableView.refresh();
             return;
         }
 
@@ -975,6 +985,7 @@ public class MainController {
         filteredExams.sort(Comparator.comparing((Exam e) -> e.getSlot().getDate())
                 .thenComparing(e -> e.getSlot().getStartTime()));
         examTableView.setItems(FXCollections.observableArrayList(filteredExams));
+        examTableView.refresh();
     }
 
     @FXML
@@ -1453,10 +1464,26 @@ public class MainController {
             System.out.println("User selected " + selected.getDays() + "-day schedule");
             System.out.println("Date range: " + startDate + " to " + actualEndDate);
 
+            // Cache all schedule options for quick switching later
+            this.cachedScheduleOptions = options;
+            this.cachedScheduleStartDate = startDate;
+            
+            // Find the index of selected option
+            List<ScheduleOptions.ScheduleOption> allOpts = options.getAllOptions();
+            for (int i = 0; i < allOpts.size(); i++) {
+                if (allOpts.get(i).getDays() == selected.getDays()) {
+                    this.currentScheduleIndex = i;
+                    break;
+                }
+            }
+
             this.currentTimetable = selected.getSchedule();
             repository.saveTimetable(currentTimetable);
 
             System.out.println("Timetable saved! Exams: " + currentTimetable.getExams().size());
+
+            // Update the schedule selector ComboBox
+            updateScheduleSelector();
 
             refreshTimetable();
             showTimetable();
@@ -1473,6 +1500,94 @@ public class MainController {
                             java.text.MessageFormat.format(bundle.getString("dialog.scheduleCreated.total"),
                                     currentTimetable.getExams().size()));
         }
+    }
+    
+    /**
+     * Update the schedule selector ComboBox with all available schedule options.
+     */
+    private void updateScheduleSelector() {
+        if (cmbScheduleSelector == null || cachedScheduleOptions == null) {
+            return;
+        }
+        
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM", bundle.getLocale());
+        
+        cmbScheduleSelector.getItems().clear();
+        
+        List<ScheduleOptions.ScheduleOption> allOpts = cachedScheduleOptions.getAllOptions();
+        for (ScheduleOptions.ScheduleOption opt : allOpts) {
+            LocalDate endDate = cachedScheduleStartDate.plusDays(opt.getDays() - 1);
+            String label;
+            if (bundle.getLocale().getLanguage().equals("tr")) {
+                label = opt.getDays() + " gün" + (opt.isOptimal() ? " ✓" : "");
+            } else {
+                label = opt.getDays() + " days" + (opt.isOptimal() ? " ✓" : "");
+            }
+            cmbScheduleSelector.getItems().add(label);
+        }
+        
+        // Select the current schedule
+        cmbScheduleSelector.getSelectionModel().select(currentScheduleIndex);
+        
+        // Show the selector
+        if (scheduleSelectionBox != null) {
+            scheduleSelectionBox.setVisible(true);
+            scheduleSelectionBox.setManaged(true);
+        }
+    }
+    
+    /**
+     * Handle schedule change from ComboBox selection.
+     */
+    @FXML
+    private void handleScheduleChange() {
+        if (cmbScheduleSelector == null || cachedScheduleOptions == null) {
+            return;
+        }
+        
+        int selectedIndex = cmbScheduleSelector.getSelectionModel().getSelectedIndex();
+        if (selectedIndex < 0 || selectedIndex == currentScheduleIndex) {
+            return; // No change or invalid
+        }
+        
+        List<ScheduleOptions.ScheduleOption> allOpts = cachedScheduleOptions.getAllOptions();
+        if (selectedIndex >= allOpts.size()) {
+            return;
+        }
+        
+        ScheduleOptions.ScheduleOption selected = allOpts.get(selectedIndex);
+        currentScheduleIndex = selectedIndex;
+        
+        System.out.println("Switching to " + selected.getDays() + "-day schedule");
+        
+        // Update timetable without regenerating
+        this.currentTimetable = selected.getSchedule();
+        repository.saveTimetable(currentTimetable);
+        
+        // Clear edit history since this is a different schedule
+        editHistory.clear();
+        
+        refreshTimetable();
+        
+        // Update subtitle with new date range
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", bundle.getLocale());
+        lblTimetableSubtitle.setText(cachedScheduleStartDate.format(dateFormatter) + " - " + 
+                bundle.getString("timetable.subtitle.suffix"));
+        
+        // Show brief notification
+        String msg = bundle.getLocale().getLanguage().equals("tr") 
+                ? selected.getDays() + " günlük programa geçildi" 
+                : "Switched to " + selected.getDays() + "-day schedule";
+        showInfo(bundle.getString("dialog.scheduleCreated.title"), msg);
+    }
+    
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        applyDarkModeToAlert(alert);
+        alert.showAndWait();
     }
 
     @FXML
@@ -3056,33 +3171,41 @@ public class MainController {
 
         // Actions column with Edit button
         colActions.setCellFactory(param -> new TableCell<Exam, Void>() {
-            private final Button editBtn = new Button(bundle.getString("action.edit"));
-            {
-                editBtn.setStyle(
+            private Button editBtn;
+            
+            private Button createEditButton() {
+                Button btn = new Button(bundle.getString("action.edit"));
+                btn.setStyle(
                         "-fx-background-color: transparent; -fx-text-fill: #8B5CF6; -fx-cursor: hand; " +
                                 "-fx-border-color: #8B5CF6; -fx-border-radius: 4; -fx-background-radius: 4; " +
                                 "-fx-font-size: 14px; -fx-padding: 4 10;");
-                editBtn.setOnMouseEntered(e -> editBtn.setStyle(
+                btn.setOnMouseEntered(e -> btn.setStyle(
                         "-fx-background-color: #8B5CF6; -fx-text-fill: white; -fx-cursor: hand; " +
                                 "-fx-border-color: #8B5CF6; -fx-border-radius: 4; -fx-background-radius: 4; " +
                                 "-fx-font-size: 14px; -fx-padding: 4 10;"));
-                editBtn.setOnMouseExited(e -> editBtn.setStyle(
+                btn.setOnMouseExited(e -> btn.setStyle(
                         "-fx-background-color: transparent; -fx-text-fill: #8B5CF6; -fx-cursor: hand; " +
                                 "-fx-border-color: #8B5CF6; -fx-border-radius: 4; -fx-background-radius: 4; " +
                                 "-fx-font-size: 14px; -fx-padding: 4 10;"));
-                editBtn.setOnAction(event -> {
-                    Exam exam = getTableView().getItems().get(getIndex());
-                    showExamDetails(exam);
-                });
+                return btn;
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
+                if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
                     setGraphic(null);
+                    setText(null);
                 } else {
+                    if (editBtn == null) {
+                        editBtn = createEditButton();
+                    }
+                    editBtn.setOnAction(event -> {
+                        Exam exam = getTableView().getItems().get(getIndex());
+                        showExamDetails(exam);
+                    });
                     setGraphic(editBtn);
+                    setText(null);
                 }
             }
         });
