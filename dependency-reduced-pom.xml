@@ -46,6 +46,7 @@
                 <transformer>
                   <mainClass>com.examplanner.ui.Launcher</mainClass>
                 </transformer>
+                <transformer />
               </transformers>
               <filters>
                 <filter>
