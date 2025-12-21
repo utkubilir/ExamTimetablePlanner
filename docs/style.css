@@ -1444,6 +1444,10 @@ body.dark-mode .tooltip-term::after {
     cursor: pointer;
     margin-bottom: 1rem;
     font-size: 0.9rem;
+    font-family: inherit;
+    /* Fixes font rendering */
+    appearance: none;
+    /* Removes default OS styling */
     transition: all 0.2s;
     display: flex;
     align-items: center;
@@ -1465,7 +1469,7 @@ body.dark-mode .tooltip-term::after {
     border: 1px solid var(--gray-300);
     color: var(--gray-600);
     font-family: inherit;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 /* Mobile Search Icon */
