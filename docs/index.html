@@ -124,6 +124,11 @@
             <a href="#limitations" class="nav-link">★ Limitations</a>
             <a href="#conclusion" class="nav-link">17. Conclusion</a>
             <a href="#references" class="nav-link">18. References</a>
+
+            <div class="nav-section-title">Resources</div>
+            <a href="CSV_SPEC.md" class="nav-link" target="_blank">CSV Specification</a>
+            <a href="BENCHMARKS.md" class="nav-link" target="_blank">Benchmarks</a>
+            <a href="TROUBLESHOOTING.md" class="nav-link" target="_blank">Troubleshooting</a>
         </nav>
     </aside>
 
@@ -172,6 +177,18 @@
             </div>
         </header>
 
+
+        <!-- TL;DR Summary -->
+        <div class="info-box tip" style="margin-bottom: 2rem;">
+            <div class="info-box-title">📋 TL;DR (30 seconds)</div>
+            <ul style="margin: 0; padding-left: 1.5rem;">
+                <li><strong>What:</strong> Desktop app that auto-generates conflict-free exam schedules</li>
+                <li><strong>How:</strong> CSP solver with backtracking + heuristics (binary search on days)</li>
+                <li><strong>Scale:</strong> Tested with 10k+ students, ~120 unit tests, generates in &lt;2s</li>
+                <li><strong>Run:</strong> <code>git clone ... &amp;&amp; mvn javafx:run</code></li>
+                <li><strong>Status:</strong> Functional prototype (academic project, not production-packaged)</li>
+            </ul>
+        </div>
         <!-- Section 1: Introduction -->
         <section id="introduction" class="section">
             <h2 class="section-title">
@@ -588,8 +605,8 @@ sequenceDiagram
                         </tr>
                         <tr>
                             <td><strong>Placement</strong></td>
-                            <td>O(N ^ P)</td>
-                            <td>Recursive backtracking where P is the number of possible slots.</td>
+                            <td>O(C × S × R)</td>
+                            <td>Backtracking: C=courses, S=time slots, R=classrooms.</td>
                         </tr>
                         <tr>
                             <td><strong>Validation</strong></td>
@@ -1190,7 +1207,7 @@ mvn javafx:run</code></pre>
             <div class="team-grid">
                 <div class="team-member">
                     <div class="team-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Doğan+Mert+İlhan&background=random"
+                        <img src="https://ui-avatars.com/api/?name=D+M&background=6366f1&color=fff"
                             alt="Doğan Mert İlhan">
                     </div>
                     <h4>Doğan Mert İlhan</h4>
