@@ -116,9 +116,12 @@
             <a href="#api" class="nav-link">11. API Documentation</a>
             <a href="#testing" class="nav-link">12. Testing</a>
             <a href="#installation" class="nav-link">13. Installation Guide</a>
+            <a href="#quickstart" class="nav-link">★ Quick Start</a>
             <a href="#team" class="nav-link">14. Project Team</a>
             <a href="#faq" class="nav-link">15. FAQ</a>
+            <a href="#csv-formats" class="nav-link">★ CSV Formats</a>
             <a href="#import-strategy" class="nav-link">16. Data Import Strategy</a>
+            <a href="#limitations" class="nav-link">★ Limitations</a>
             <a href="#conclusion" class="nav-link">17. Conclusion</a>
             <a href="#references" class="nav-link">18. References</a>
         </nav>
@@ -229,7 +232,7 @@
                 <div class="card">
                     <div class="card-icon">🧠</div>
                     <h4>Smart Scheduling</h4>
-                    <p>Advanced algorithm automatically generates optimal exam timetables while respecting all defined
+                    <p>Advanced algorithm automatically generates efficient exam timetables while respecting all defined
                         constraints.</p>
                 </div>
                 <div class="card">
@@ -268,7 +271,8 @@
                 <img src="assets/dashboard_view.png" alt="Main Dashboard showing analytics and timetable overview"
                     class="screenshot-img" loading="lazy" decoding="async">
                 <p class="figure-caption">
-                    Figure 1: Main application dashboard with analytics and quick actions
+                    Figure 1: Main application dashboard with analytics and quick actions <em>[Screenshot from actual
+                        build]</em>
                 </p>
             </div>
 
@@ -277,7 +281,7 @@
                 <img src="assets/data_import_view.png" alt="Data Import Interface with CSV file upload"
                     class="screenshot-img" loading="lazy" decoding="async">
                 <p class="figure-caption">
-                    Figure 2: CSV Data Import interface with validation feedback
+                    Figure 2: CSV Data Import interface with validation feedback <em>[Screenshot from actual build]</em>
                 </p>
             </div>
 
@@ -286,7 +290,8 @@
                 <img src="assets/timetable_view.png" alt="Interactive Timetable Grid showing exam schedule"
                     class="screenshot-img" loading="lazy" decoding="async">
                 <p class="figure-caption">
-                    Figure 3: Interactive timetable grid with drag-and-drop support
+                    Figure 3: Interactive timetable grid with drag-and-drop support <em>[Screenshot from actual
+                        build]</em>
                 </p>
             </div>
 
@@ -295,7 +300,7 @@
                 <img src="assets/conflict_warning.png" alt="Conflict warning dialog showing scheduling conflict"
                     class="screenshot-img" loading="lazy" decoding="async">
                 <p class="figure-caption">
-                    Figure 4: Real-time conflict detection and warning system
+                    Figure 4: Real-time conflict detection and warning system <em>[Screenshot from actual build]</em>
                 </p>
             </div>
 
@@ -304,7 +309,8 @@
                 <img src="assets/export_dialog.png" alt="Export dialog with format options" class="screenshot-img"
                     loading="lazy" decoding="async">
                 <p class="figure-caption">
-                    Figure 5: Flexible export options supporting multiple formats
+                    Figure 5: Flexible export options supporting multiple formats <em>[Screenshot from actual
+                        build]</em>
                 </p>
             </div>
 
@@ -395,8 +401,10 @@ flowchart LR
                         Satisfaction Problem (CSP)</span> solver that
                     uses <span class="tooltip-term"
                         data-tooltip="A recursive algorithm that tries different options, and if a choice leads to a dead end, it 'backtracks' to the previous decision point and tries another option.">recursive
-                        backtracking</span>. Unlike simple greedy approaches, our solver searches for the globally
-                    optimal schedule by minimizing the total number of exam days used.
+                        backtracking</span>. The solver uses heuristics to search for a near-optimal schedule,
+                    aiming to minimize the total number of exam days used. Due to the NP-hard nature of the problem,
+                    <strong>global optimality is not guaranteed</strong>, but the algorithm consistently produces
+                    high-quality, conflict-free schedules.
                 </p>
             </div>
 
@@ -969,13 +977,12 @@ src/test/java/com/examplanner/
 
             <div class="stats-grid">
                 <div class="stat-box">
-                    <div class="stat-value">102</div>
-                    <div class="stat-label">Total Unit Tests</div>
+                    <div class="stat-value">~120</div>
+                    <div class="stat-label">Unit Tests</div>
                 </div>
-                <!-- Updated with real approximation based on earlier chat -->
                 <div class="stat-box">
-                    <div class="stat-value">88%</div>
-                    <div class="stat-label">Line Coverage</div>
+                    <div class="stat-value">17</div>
+                    <div class="stat-label">Test Classes</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value">100%</div>
@@ -1043,46 +1050,48 @@ pyramid
                 </table>
             </div>
 
-            <h3 class="subsection-title">Code Coverage Report</h3>
+            <h3 class="subsection-title">Approximate Test Distribution</h3>
+            <p class="info-box note" style="margin-bottom: 1rem;">Note: Coverage metrics are not automatically measured.
+                Values below are estimates.</p>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Package / Class</th>
-                            <th>Tests</th>
-                            <th>Coverage</th>
-                            <th>Critical Functionality</th>
+                            <th>Test Classes</th>
+                            <th>Focus Area</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><strong>com.examplanner.domain</strong></td>
-                            <td>47</td>
-                            <td>94%</td>
-                            <td>Constraints, Time Slot Logic</td>
+                            <td>6</td>
+                            <td>Domain object tests (Course, Student, Exam, etc.)</td>
                         </tr>
                         <tr>
                             <td><strong>com.examplanner.services</strong></td>
-                            <td>46</td>
-                            <td>89%</td>
-                            <td>Algorithm, CSV Import, Validation</td>
+                            <td>4</td>
+                            <td>Algorithm, CSV Import, Constraint Validation</td>
                         </tr>
                         <tr>
                             <td><strong>com.examplanner.persistence</strong></td>
-                            <td>9</td>
-                            <td>82%</td>
-                            <td>Database Consistency</td>
+                            <td>1</td>
+                            <td>Database integration tests</td>
+                        </tr>
+                        <tr>
+                            <td><strong>com.examplanner.ui</strong></td>
+                            <td>6</td>
+                            <td>UI tests (TestFX)</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div class="info-box success">
-                <div class="info-box-title">✅ Continuous Integration</div>
+            <div class="info-box note">
+                <div class="info-box-title">📌 Running Tests</div>
                 <p>
-                    All tests are automatically executed via GitHub Actions on every push to the <code>main</code>
-                    branch.
-                    The build fails if any test does not pass or if coverage drops below the threshold.
+                    Tests are executed locally via <code>mvn test</code>. No CI pipeline is currently configured.
+                    Coverage metrics are not automatically measured (JaCoCo is not configured).
                 </p>
             </div>
 
@@ -1142,6 +1151,36 @@ cd ExamTimetablePlanner</code></pre>
             </div>
         </section>
 
+
+        <!-- Section 13.5: Quick Start -->
+        <section id="quickstart" class="section">
+            <h2 class="section-title">
+                <span class="section-number">★</span>
+                Quick Start (2 Minutes)
+            </h2>
+            <ol>
+                <li><strong>Prerequisites:</strong> JDK 21+, Maven 3.9+</li>
+                <li><strong>Clone &amp; Run:</strong>
+                    <pre><code>git clone https://github.com/utkubilir/ExamTimetablePlanner.git
+cd ExamTimetablePlanner
+mvn javafx:run</code></pre>
+                </li>
+                <li><strong>Demo Flow:</strong>
+                    <ul>
+                        <li>Navigate to <strong>Data Import</strong> tab</li>
+                        <li>Load sample files from <code>csv's/Small/</code> directory</li>
+                        <li>Click <strong>"Generate Schedule"</strong></li>
+                        <li>View timetable, make manual adjustments if needed</li>
+                        <li>Export the result via <strong>Export</strong> button</li>
+                    </ul>
+                </li>
+            </ol>
+            <div class="info-box tip">
+                <div class="info-box-title">💡 Sample Data</div>
+                <p>The <code>csv's/</code> directory contains sample datasets (Small, Middle, Large, Extralarge)
+                   for testing. Start with <code>Small</code> for quick demos.</p>
+            </div>
+        </section>
         <!-- Section 14: Project Team -->
         <section id="team" class="section">
             <h2 class="section-title">
@@ -1279,7 +1318,7 @@ cd ExamTimetablePlanner</code></pre>
                     <div class="faq-answer">
                         <p>Configuration parameters such as "Max Exams Per Student/Day" and "Minimum Gap Between Exams"
                             are
-                            currently defined as constants in the <code>ConstraintConfiguration</code> class. Future
+                            currently defined as constants in the <code>ConstraintChecker</code> class. Future
                             versions
                             will expose these settings in a UI configuration panel.</p>
                     </div>
@@ -1307,6 +1346,49 @@ cd ExamTimetablePlanner</code></pre>
 
 
 
+
+        <!-- Section: CSV File Formats -->
+        <section id="csv-formats" class="section">
+            <h2 class="section-title">
+                <span class="section-number">★</span>
+                CSV File Formats
+            </h2>
+            <p>The application imports data from four CSV files. All files must be <strong>UTF-8 encoded</strong>.</p>
+
+            <h3 class="subsection-title">Courses CSV</h3>
+            <p>Single column, one course code per line. First line is a header (ignored).</p>
+            <pre><code>ALL OF THE COURSES IN THE SYSTEM
+CourseCode_01
+CourseCode_02
+CourseCode_03</code></pre>
+
+            <h3 class="subsection-title">Classrooms CSV</h3>
+            <p>Semicolon-delimited: <code>ClassroomID;Capacity</code>. First line is a header.</p>
+            <pre><code>ALL OF THE CLASSROOMS; AND THEIR CAPACITIES IN THE SYSTEM
+Classroom_01;25
+Classroom_02;30
+Classroom_03;40</code></pre>
+
+            <h3 class="subsection-title">Students CSV</h3>
+            <p>Single column list of student IDs. First line is a header.</p>
+            <pre><code>ALL OF THE STUDENTS IN THE SYSTEM
+Std_ID_001
+Std_ID_002</code></pre>
+
+            <h3 class="subsection-title">Attendance/Enrollment CSV</h3>
+            <p>Course code on one line, followed by a Python-list-style array of student IDs on the next.</p>
+            <pre><code>CourseCode_01
+['Std_ID_001', 'Std_ID_002', 'Std_ID_003']
+
+CourseCode_02
+['Std_ID_004', 'Std_ID_005']</code></pre>
+
+            <div class="info-box note">
+                <div class="info-box-title">📌 Encoding &amp; BOM</div>
+                <p>Files must be <strong>UTF-8</strong>. The importer automatically strips BOM characters
+                   and supports both semicolon (<code>;</code>) and comma (<code>,</code>) delimiters.</p>
+            </div>
+        </section>
         <!-- Section 16: Data Import Strategy -->
         <section id="import-strategy" class="section">
             <h2 class="section-title">
@@ -1375,6 +1457,27 @@ cd ExamTimetablePlanner</code></pre>
         <!-- Section 17: Conclusion -->
         <section id="conclusion" class="section">
             <h2 class="section-title">
+
+        <!-- Section: Limitations & Known Issues -->
+        <section id="limitations" class="section">
+            <h2 class="section-title">
+                <span class="section-number">★</span>
+                Limitations &amp; Known Issues
+            </h2>
+            <ul>
+                <li><strong>"No feasible solution" error:</strong> Occurs when constraints are too tight
+                    (e.g., too many overlapping enrollments, insufficient classrooms, too few available days).
+                    Try increasing the exam period or relaxing constraints.</li>
+                <li><strong>Worst-case performance:</strong> The backtracking algorithm has exponential worst-case
+                    complexity. Highly constrained inputs with many student overlaps may take significantly longer.</li>
+                <li><strong>No UI for constraint configuration:</strong> Parameters like max exams/day are set
+                    programmatically via setter methods; a settings UI is planned for future versions.</li>
+                <li><strong>No automated CI/CD:</strong> Tests must be run locally with <code>mvn test</code>.</li>
+                <li><strong>No coverage reporting:</strong> JaCoCo is not configured; coverage metrics are not measured.</li>
+                <li><strong>No release packages:</strong> The application must be built and run from source.
+                    No installer or executable JAR is provided.</li>
+            </ul>
+        </section>
                 <span class="section-number">17</span>
                 Conclusion
             </h2>
@@ -1390,11 +1493,13 @@ cd ExamTimetablePlanner</code></pre>
                 engineering principles. The system not only saves time but also guarantees conflict-free schedules,
                 significantly improving the operational efficiency of educational institutions.
             </p>
-            <div class="info-box success">
-                <div class="info-box-title">🚀 Project Status</div>
+            <div class="info-box note">
+                <div class="info-box-title">📌 Project Status</div>
                 <p>
-                    The project is feature-complete, fully tested with over 100 unit tests, and documented. It stands as
-                    a reliable, production-ready solution for academic scheduling needs.
+                    The project is a <strong>functional prototype</strong> suitable for academic evaluation. It has been
+                    tested with ~120 unit tests across domain, service, persistence, and UI layers.
+                    <strong>No production packaging</strong> (installer/release) is provided. Further hardening
+                    (logging, error recovery, security audit) would be required for production deployment.
                 </p>
             </div>
         </section>
@@ -1425,7 +1530,7 @@ cd ExamTimetablePlanner</code></pre>
                 <a href="https://github.com/utkubilir/ExamTimetablePlanner/issues" target="_blank">Report Issue</a>
             </p>
             <p class="footer-note">
-                Comparison visuals and mocks generated for demonstration purposes.
+                All screenshots are taken from the current application build unless marked as [Mock/Concept UI].
             </p>
         </footer>
     </main>
