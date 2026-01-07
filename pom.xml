@@ -149,7 +149,6 @@
                     </includes>
                 </configuration>
             </plugin>
-            </plugin>
 
             <!-- JaCoCo Coverage Plugin -->
             <plugin>
@@ -170,6 +169,7 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
